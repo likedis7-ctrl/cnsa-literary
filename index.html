@@ -72,12 +72,16 @@ provider.addScope('email');
 
 async function login() {
   try {
+    // 항상 계정 선택 화면이 뜨도록 설정
+    provider.setCustomParameters({ prompt: 'select_account' });
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     const email = user.email || '';
     if (!email.endsWith('@cnsa.hs.kr')) {
       await signOut(auth);
-      toast('⚠️ @cnsa.hs.kr 이메일 계정만 가입할 수 있습니다.', 'error');
+      // 오류 메시지 표시 후 다시 계정 선택 팝업 열기
+      const modal = document.getElementById('wrong-account-modal');
+      if (modal) modal.style.display = 'flex';
       return;
     }
     const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -1089,7 +1093,24 @@ footer {
         <p class="desc">큰별문학상 온라인전시관 프로젝트를 지도해 주셨습니다.</p>
       </div>
     </div>
-    <p class="credits-note">이 사이트는 CNSA 학생들의 문학 활동을 지원하기 위해 제작되었습니다.<br>© 2026 큰별문학상 온라인전시관</p>
+    <p class="credits-note">이 사이트는 CNSA 학생들의 문학 활동을 지원하기 위해 제작되었습니다.<br>© 2025 큰별문학상 온라인전시관</p>
+  </div>
+</div>
+
+<!-- ── 잘못된 계정 모달 ── -->
+<div class="modal-overlay" id="wrong-account-modal">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:2.5rem;margin-bottom:.75rem">⚠️</div>
+    <h2 style="margin-bottom:.75rem">학교 계정으로 로그인해주세요</h2>
+    <p style="margin-bottom:1.5rem">이 서비스는 <strong>@cnsa.hs.kr</strong> 계정만 이용할 수 있습니다.<br>다른 계정으로 로그인하셨습니다.</p>
+    <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn-primary" onclick="document.getElementById('wrong-account-modal').style.display='none'; login()">
+        다른 계정으로 다시 로그인
+      </button>
+      <button class="btn-outline" onclick="document.getElementById('wrong-account-modal').style.display='none'">
+        닫기
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1108,7 +1129,7 @@ footer {
 </div>
 
 <footer>
-  © 2026 큰별문학상 온라인전시관 · CNSA
+  © 2025 큰별문학상 온라인전시관 · CNSA
 </footer>
 
 </body>
