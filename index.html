@@ -621,14 +621,25 @@ window.updateCharCount = updateCharCount;
 // 앱 초기화
 // =============================================
 function initApp() {
+  console.log('[initApp] 시작');
+
   // 로고
   const logo = document.getElementById('logo-home');
   if (logo) logo.addEventListener('click', () => navigateTo('home'));
+  else console.warn('[initApp] logo-home 없음');
 
-  // 네비게이션
-  document.querySelectorAll('.nav-link[data-page]').forEach(el => {
-    el.addEventListener('click', () => navigateTo(el.dataset.page));
-  });
+  // 네비게이션 - 각각 명시적으로 등록
+  const navIntro = document.querySelector('.nav-link[data-page="intro"]');
+  const navSubmit = document.querySelector('.nav-link[data-page="submit"]');
+  const navGallery = document.querySelector('.nav-link[data-page="gallery"]');
+  const navMypage = document.querySelector('.nav-link[data-page="mypage"]');
+  const navCredits = document.querySelector('.nav-link[data-page="credits"]');
+  if (navIntro) navIntro.addEventListener('click', () => navigateTo('intro'));
+  if (navSubmit) navSubmit.addEventListener('click', () => navigateTo('submit'));
+  if (navGallery) navGallery.addEventListener('click', () => navigateTo('gallery'));
+  if (navMypage) navMypage.addEventListener('click', () => navigateTo('mypage'));
+  if (navCredits) navCredits.addEventListener('click', () => navigateTo('credits'));
+  console.log('[initApp] 네비게이션 등록 완료', {navIntro:!!navIntro, navSubmit:!!navSubmit, navGallery:!!navGallery});
 
   // 로그인/로그아웃
   const btnLogin = document.getElementById('btn-login');
