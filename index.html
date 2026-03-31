@@ -202,6 +202,23 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
 .today-preview{font-family:var(--font-serif);font-size:.95rem;color:var(--ink2);line-height:1.9;margin-bottom:1.25rem;}
 .today-meta{display:flex;align-items:center;gap:1.5rem;font-size:.83rem;color:var(--ink3);}
 .today-read-btn{margin-left:auto;color:var(--gold);font-weight:500;}
+
+/* ── 관리자 페이지 ── */
+.admin-header{background:var(--ink);color:var(--paper);padding:2rem 2.5rem;border-radius:12px;margin-bottom:2rem;}
+.admin-header h1{font-family:var(--font-serif);font-size:1.6rem;margin-bottom:.25rem;}
+.admin-header p{font-size:.85rem;color:rgba(255,255,255,.6);}
+.admin-section{background:white;border:1px solid var(--paper3);border-radius:12px;padding:1.75rem;margin-bottom:1.5rem;}
+.admin-section h2{font-family:var(--font-serif);font-size:1.1rem;margin-bottom:.5rem;color:var(--ink);}
+.admin-desc{font-size:.88rem;color:var(--ink3);margin-bottom:1.25rem;}
+.admin-desc strong{color:var(--gold);font-size:1rem;}
+.admin-btn-group{display:flex;flex-direction:column;gap:.75rem;}
+.admin-mode-btn,.admin-dl-btn{display:flex;flex-direction:column;gap:.2rem;padding:1rem 1.25rem;border-radius:10px;border:2px solid var(--paper3);background:var(--paper);cursor:pointer;font-family:var(--font-sans);text-align:left;transition:all .15s;}
+.admin-mode-btn{font-size:.95rem;font-weight:500;color:var(--ink);}
+.admin-mode-btn span,.admin-dl-btn span{font-size:.78rem;color:var(--ink3);font-weight:400;}
+.admin-mode-btn:hover{border-color:var(--gold);background:#fff8ec;}
+.admin-mode-btn.active-mode{border-color:var(--gold);background:#fff8ec;color:var(--gold);}
+.admin-dl-btn{font-size:.92rem;font-weight:500;color:var(--ink);}
+.admin-dl-btn:hover{border-color:var(--prose);background:#edf5ef;}
 </style>
 </head>
 <body>
@@ -215,6 +232,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
       <span class="nav-link" data-page="gallery" onclick="navigateTo('gallery')">감상하기</span>
       <span class="nav-link" data-page="mypage" id="nav-mypage" onclick="navigateTo('mypage')" style="display:none">나의 서재</span>
       <span class="nav-link" data-page="credits" onclick="navigateTo('credits')">개발자 소개</span>
+      <span class="nav-link" data-page="admin" id="nav-admin" onclick="navigateTo('admin')" style="display:none">⚙️ 관리</span>
     </nav>
     <div class="nav-right">
       <span id="user-penname"></span>
@@ -319,6 +337,49 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   </div>
 </div>
 
+<!-- 관리자 페이지 -->
+<div class="page" id="page-admin">
+  <div class="page-inner">
+    <div class="admin-header">
+      <h1>⚙️ 관리자 페이지</h1>
+      <p>큰별문학상 온라인전시관 관리 콘솔</p>
+    </div>
+
+    <div class="admin-section">
+      <h2>📌 사이트 모드 설정</h2>
+      <p class="admin-desc">현재 모드: <strong id="current-mode-label">로딩 중...</strong></p>
+      <div class="admin-btn-group">
+        <button class="admin-mode-btn" id="btn-apply-mode" onclick="setSiteMode('apply')">
+          📝 응모기간 모드로 전환
+          <span>감상하기 비활성화 · 응모하기 활성화</span>
+        </button>
+        <button class="admin-mode-btn" id="btn-view-mode" onclick="setSiteMode('view')">
+          👀 감상기간 모드로 전환
+          <span>응모하기 비활성화 · 감상하기 활성화</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h2>📥 DB 다운로드</h2>
+      <div class="admin-btn-group">
+        <button class="admin-dl-btn" onclick="downloadUsersDB()">
+          👤 사용자계정 DB 다운로드
+          <span>이메일 · 필명 · 가입일시 (Excel)</span>
+        </button>
+        <button class="admin-dl-btn" onclick="downloadPostsDB()">
+          📄 응모작 DB 다운로드
+          <span>필명 · 카테고리 · 제목 · 소개 · 본문 · 좋아요 · 댓글수 (Excel)</span>
+        </button>
+        <button class="admin-dl-btn" onclick="downloadCommentsDB()">
+          💬 댓글 DB 다운로드
+          <span>필명 · 글제목 · 글작성자 · 댓글내용 · 좋아요수 (Excel)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 잘못된 계정 모달 -->
 <div class="modal-overlay" id="wrong-account-modal" style="display:none">
   <div class="modal" style="text-align:center">
@@ -367,6 +428,13 @@ let currentUserData = null;
 let allPosts = [];
 let galleryCategory = 'all';
 let gallerySearch = '';
+let siteMode = 'apply'; // 'apply'=응모기간, 'view'=감상기간
+
+function loadSiteMode(){
+  db.collection('config').doc('siteMode').get().then(doc=>{
+    if(doc.exists) siteMode = doc.data().mode || 'apply';
+  });
+}
 
 // ── 유틸 ──
 const $ = id => document.getElementById(id);
@@ -385,6 +453,14 @@ function toast(msg,type='info'){
 
 // ── 라우터 ──
 function navigateTo(page, param) {
+  if(page==='gallery' && siteMode==='apply' && !(currentUserData&&currentUserData.role==='admin')){
+    toast('감상은 감상기간 (5월 11일~14일)에만 가능합니다.','error');
+    return;
+  }
+  if(page==='submit' && siteMode==='view' && !(currentUserData&&currentUserData.role==='admin')){
+    toast('응모가 마감되었습니다.','error');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.style.display='none');
   document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
   const navEl = document.querySelector('.nav-link[data-page="'+page+'"]');
@@ -396,6 +472,7 @@ function navigateTo(page, param) {
   else if(page==='gallery') renderGallery();
   else if(page==='mypage') renderMyPage();
   else if(page==='post') renderPost(param);
+  else if(page==='admin') renderAdmin();
   window.scrollTo(0,0);
 }
 
@@ -478,6 +555,8 @@ function updateNavUI(){
   $('nav-mypage').style.display=on?'inline-block':'none';
   if(on) setText('user-penname',currentUserData.penName);
   else setText('user-penname','');
+  const adminNav=$('nav-admin');
+  if(adminNav) adminNav.style.display=(on&&currentUserData.role==='admin')?'':'none';
 }
 
 // ── 홈 ──
@@ -507,6 +586,13 @@ function renderHome(){
 
 // ── 응모하기 ──
 function renderSubmit(){
+  if(siteMode==='view'){
+    setHTML('submit-form-wrap',`<div class="center-msg" style="padding:4rem 1rem">
+      <p style="font-size:1.3rem;margin-bottom:.5rem">🔒 응모가 마감되었습니다.</p>
+      <p style="color:var(--ink3)">감상기간에는 응모가 불가합니다.</p>
+    </div>`);
+    return;
+  }
   if(!currentUser||!currentUserData){
     setHTML('submit-form-wrap',`<div class="center-msg"><p>로그인 후 응모할 수 있습니다.</p><button class="btn-primary" onclick="doLogin()">Google 로그인</button></div>`);
     return;
@@ -582,6 +668,13 @@ function submitPost(e){
 
 // ── 감상하기 ──
 function renderGallery(){
+  if(siteMode==='apply'){
+    setHTML('gallery-grid',`<div class="center-msg" style="padding:4rem 1rem">
+      <p style="font-size:1.3rem;margin-bottom:.5rem">📝 현재 응모기간입니다.</p>
+      <p style="color:var(--ink3)">감상은 감상기간 (5월 11일~14일)에만 가능합니다.</p>
+    </div>`);
+    return;
+  }
   if(!currentUser||!currentUserData){
     setHTML('gallery-grid',`<div class="center-msg" style="padding:4rem 1rem">
       <p style="font-size:1.1rem;margin-bottom:1.5rem">🔒 감상하기는 로그인 후 이용할 수 있습니다.</p>
@@ -640,7 +733,8 @@ function renderPost(postId){
     const isOwner=currentUser&&p.uid===currentUser.uid;
     const isAdmin=currentUserData&&currentUserData.role==='admin';
     const liked=currentUser&&(p.likes||[]).includes(currentUser.uid);
-    const actionBtns=(isOwner||isAdmin)?`<button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button>`:'';
+    const canEdit = isAdmin || (isOwner && siteMode!=='view');
+    const actionBtns=canEdit?`<button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button>`:'';
     setHTML('page-post',`<div class="page-inner">
       <button class="btn-back" onclick="navigateTo('gallery')">← 목록으로</button>
       <article class="post-detail">
@@ -863,7 +957,99 @@ function handlePaste(e){
   document.execCommand('insertText', false, text);
 }
 
+
+// ── 관리자 ──
+function renderAdmin(){
+  if(!currentUserData||currentUserData.role!=='admin'){
+    toast('관리자만 접근할 수 있습니다.','error');
+    navigateTo('home');
+    return;
+  }
+  // 현재 모드 표시
+  db.collection('config').doc('siteMode').get().then(doc=>{
+    const mode=doc.exists?doc.data().mode:'apply';
+    siteMode=mode;
+    setText('current-mode-label', mode==='apply'?'📝 응모기간 모드':'👀 감상기간 모드');
+    document.getElementById('btn-apply-mode').classList.toggle('active-mode', mode==='apply');
+    document.getElementById('btn-view-mode').classList.toggle('active-mode', mode==='view');
+  });
+}
+
+function setSiteMode(mode){
+  if(!currentUserData||currentUserData.role!=='admin') return;
+  db.collection('config').doc('siteMode').set({mode}).then(()=>{
+    siteMode=mode;
+    toast(mode==='apply'?'응모기간 모드로 변경되었습니다.':'감상기간 모드로 변경되었습니다.','success');
+    renderAdmin();
+  });
+}
+
+// CSV → Excel(xlsx) 없이 CSV 다운로드 (xlsx 라이브러리 없이)
+function downloadCSV(rows, filename){
+  const BOM='\uFEFF';
+  const csv=BOM+rows.map(r=>r.map(c=>{
+    const s=String(c===null||c===undefined?'':c);
+    return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadUsersDB(){
+  toast('사용자 DB 준비 중...','info');
+  db.collection('users').get().then(snap=>{
+    const rows=[['이메일','필명','가입일시']];
+    snap.docs.forEach(d=>{
+      const u=d.data();
+      const date=u.createdAt?u.createdAt.toDate().toLocaleString('ko-KR'):'';
+      rows.push([u.email||'',u.penName||'',date]);
+    });
+    downloadCSV(rows,'사용자계정DB.csv');
+    toast('사용자 DB 다운로드 완료!','success');
+  }).catch(e=>toast('오류: '+e.message,'error'));
+}
+
+function downloadPostsDB(){
+  toast('응모작 DB 준비 중...','info');
+  db.collection('posts').get().then(snap=>{
+    const rows=[['필명','카테고리','제목','작품소개','작품본문','좋아요수','댓글수']];
+    snap.docs.forEach(d=>{
+      const p=d.data();
+      const bodyText=(p.body||'').replace(/<[^>]*>/g,'');
+      rows.push([
+        p.penName||'', p.category||'', p.title||'',
+        p.intro||'', bodyText,
+        p.likeCount||0, p.commentCount||0
+      ]);
+    });
+    downloadCSV(rows,'응모작DB.csv');
+    toast('응모작 DB 다운로드 완료!','success');
+  }).catch(e=>toast('오류: '+e.message,'error'));
+}
+
+async function downloadCommentsDB(){
+  toast('댓글 DB 준비 중...','info');
+  try {
+    const postsSnap=await db.collection('posts').get();
+    const rows=[['필명','댓글달린글제목','글작성자','댓글내용','좋아요수']];
+    for(const postDoc of postsSnap.docs){
+      const p=postDoc.data();
+      const commentsSnap=await db.collection('posts').doc(postDoc.id).collection('comments').get();
+      commentsSnap.docs.forEach(cd=>{
+        const c=cd.data();
+        rows.push([c.penName||'',p.title||'',p.penName||'',c.body||'',c.likeCount||0]);
+      });
+    }
+    downloadCSV(rows,'댓글DB.csv');
+    toast('댓글 DB 다운로드 완료!','success');
+  } catch(e){ toast('오류: '+e.message,'error'); }
+}
+
 // ── 시작 ──
+loadSiteMode();
 navigateTo('home');
 </script>
 </body>
