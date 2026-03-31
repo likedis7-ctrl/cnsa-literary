@@ -406,7 +406,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.02</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.03</footer>
 
 <script>
 // ── Firebase 초기화 (compat 버전 - type=module 불필요) ──
@@ -668,7 +668,7 @@ function submitPost(e){
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   }).then(()=>{
     toast('작품이 성공적으로 응모되었습니다! 🌟','success');
-    navigateTo('gallery');
+    _doNavigate('gallery', null);
   }).catch(err=>{
     toast('응모 실패: '+err.message,'error');
     btn.disabled=false; btn.textContent='작품 응모하기 ✨';
