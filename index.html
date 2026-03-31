@@ -433,10 +433,10 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.06</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.07</footer>
 
 <script>
-// ── Firebase 초기화 (compat 버전 - type=module 불필요) ──
+//
 const firebaseConfig = {
   apiKey: "AIzaSyBGwvzMxCG7J5LN1x21s88LT04iJhWdTMs",
   authDomain: "cnsalit-efaf1.firebaseapp.com",
@@ -449,13 +449,13 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ── 상태 ──
+//
 let currentUser = null;
 let currentUserData = null;
 let allPosts = [];
 let galleryCategory = 'all';
 let gallerySearch = '';
-let siteMode = 'apply'; // 'apply'=응모기간, 'view'=감상기간
+let siteMode = 'apply'; //
 
 function loadSiteMode(){
   return db.collection('config').doc('siteMode').get().then(doc=>{
@@ -463,7 +463,7 @@ function loadSiteMode(){
   });
 }
 
-// ── 유틸 ──
+//
 const $ = id => document.getElementById(id);
 const setText = (id,v) => { const e=$(id); if(e) e.textContent=v; };
 const setHTML = (id,v) => { const e=$(id); if(e) e.innerHTML=v; };
@@ -478,9 +478,9 @@ function toast(msg,type='info'){
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3000);
 }
 
-// ── 라우터 ──
+//
 function navigateTo(page, param) {
-  // 항상 최신 siteMode로 체크
+  //
   db.collection('config').doc('siteMode').get().then(doc=>{
     if(doc.exists) siteMode = doc.data().mode || 'apply';
     if(page==='gallery' && siteMode==='apply' && !(currentUserData&&currentUserData.role==='admin')){
@@ -513,7 +513,7 @@ function _doNavigate(page, param) {
   window.scrollTo(0,0);
 }
 
-// ── 인증 ──
+//
 function doLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
@@ -596,7 +596,7 @@ function updateNavUI(){
   if(adminNav) adminNav.style.display=(on&&currentUserData.role==='admin')?'':'none';
 }
 
-// ── 홈 ──
+//
 function renderHome(){
   db.collection('posts').get().then(snap=>{
     if(snap.empty){setHTML('home-featured','<p class="empty-msg">아직 작품이 없습니다.</p>');return;}
@@ -621,7 +621,7 @@ function renderHome(){
   }).catch(e=>console.error(e));
 }
 
-// ── 응모하기 ──
+//
 function renderSubmit(){
   if(siteMode==='view'){
     setHTML('submit-form-wrap',`<div class="center-msg" style="padding:4rem 1rem">
@@ -703,7 +703,7 @@ function submitPost(e){
   });
 }
 
-// ── 감상하기 ──
+//
 function renderGallery(){
   if(siteMode==='apply'){
     setHTML('gallery-grid',`<div class="center-msg" style="padding:4rem 1rem">
@@ -760,10 +760,10 @@ function searchGallery(){
   filterAndRenderGallery();
 }
 
-// ── 작품 상세 ──
+//
 function renderPost(postId){
   if(!postId){navigateTo('gallery');return;}
-  // siteMode 최신값 DB에서 확인 후 렌더링
+  //
   Promise.all([
     db.collection('posts').doc(postId).get(),
     db.collection('config').doc('siteMode').get()
@@ -777,7 +777,7 @@ function renderPost(postId){
     const currentMode = modeDoc.exists ? modeDoc.data().mode : 'apply';
     siteMode = currentMode;
     const canEdit = isAdmin || (isOwner && currentMode !== 'view');
-    // 버튼은 id로 나중에 동적 추가
+    //
     const actionBtns=canEdit?`<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button></span>`:`<span id="post-action-btns"></span>`;
     setHTML('page-post',`<div class="page-inner">
       <button class="btn-back" onclick="navigateTo('gallery')">← 목록으로</button>
@@ -805,29 +805,21 @@ function renderPost(postId){
         </div>`:`<p class="login-prompt">댓글을 달려면 <button class="btn-link" onclick="doLogin()">로그인</button>하세요.</p>`}
       </section>
     </div>`);
-    // 본문 렌더링 - HTML 태그를 줄바꿈으로 변환
+    //
     const bodyEl = document.getElementById('post-body-content');
     if(bodyEl){
       const raw = p.body || '';
-      // div/p 태그를 줄바꿈으로, 나머지 위험 태그 제거, 서식 태그(b,i,strong,em,font)는 유지
-      const safe = raw
-        .replace(/<div><br\s*\/?><\/div>/gi, '
-')
-        .replace(/<div>/gi, '
-')
-        .replace(/<\/div>/gi, '')
-        .replace(/<br\s*\/?>/gi, '
-')
-        .replace(/<p><br\s*\/?><\/p>/gi, '
-')
-        .replace(/<p>/gi, '')
-        .replace(/<\/p>/gi, '
-')
-        .replace(/<span[^>]*>/gi, '')
-        .replace(/<\/span>/gi, '');
-      // 허용 태그(b,strong,i,em,font) 외 나머지 제거
-      const allowed = safe.replace(/<(?!\/?(b|strong|i|em|font)(\s[^>]*)?>)[^>]+>/gi, '');
-      bodyEl.innerHTML = allowed.replace(/\n/g, '<br>').replace(/^(<br\s*\/?>\s*)+/, '');
+      const tmp = document.createElement('div');
+      tmp.innerHTML = raw;
+      bodyEl.innerHTML = tmp.innerHTML
+        .split('<div>').join('<br>')
+        .split('</div>').join('')
+        .split('<p>').join('')
+        .split('</p>').join('<br>')
+        .split('<span>').join('')
+        .split('</span>').join('')
+        .replace(/<span[^>]*>/g, '')
+        .replace(/<br><br>/g, '<br>');
     }
     loadComments(postId);
   }).catch(e=>console.error(e));
@@ -1002,7 +994,7 @@ function saveEdit(e,postId){
   });
 }
 
-// ── 나의 서재 ──
+//
 function renderMyPage(){
   if(!currentUser||!currentUserData){
     setHTML('mypage-content',`<div class="center-msg"><p>로그인 후 이용할 수 있습니다.</p><button class="btn-primary" onclick="doLogin()">Google 로그인</button></div>`);
@@ -1025,7 +1017,7 @@ function renderMyPage(){
     setHTML('mypage-liked',html||'<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
   });
 
-  // 내가 댓글단 작품
+  //
   db.collectionGroup('comments').where('uid','==',currentUser.uid).get().then(snap=>{
     const postIds=[...new Set(snap.docs.map(d=>d.ref.parent.parent.id))];
     setText('mycommented-count',postIds.length);
@@ -1064,14 +1056,14 @@ function handlePaste(e){
 }
 
 
-// ── 관리자 ──
+//
 function renderAdmin(){
   if(!currentUserData||currentUserData.role!=='admin'){
     toast('관리자만 접근할 수 있습니다.','error');
     navigateTo('home');
     return;
   }
-  // 현재 모드 표시
+  //
   db.collection('config').doc('siteMode').get().then(doc=>{
     const mode=doc.exists?doc.data().mode:'apply';
     siteMode=mode;
@@ -1090,7 +1082,7 @@ function setSiteMode(mode){
   });
 }
 
-// CSV → Excel(xlsx) 없이 CSV 다운로드 (xlsx 라이브러리 없이)
+//
 function downloadCSV(rows, filename){
   const BOM='\uFEFF';
   const csv=BOM+rows.map(r=>r.map(c=>{
@@ -1167,7 +1159,7 @@ function closeNav(){
   nav.classList.remove('open');
   btn.classList.remove('open');
 }
-// ── 시작 ──
+//
 loadSiteMode();
 navigateTo('home');
 </script>
