@@ -845,18 +845,28 @@ function submitComment(postId){
   const input=$('comment-input');
   const body=input.value.trim();
   if(!body){toast('댓글을 입력해주세요.','error');return;}
+  const btn = document.querySelector('.comment-form .btn-primary');
+  if(btn){btn.disabled=true; btn.textContent='저장 중...';}
   db.collection('posts').doc(postId).collection('comments').add({
     uid:currentUser.uid, penName:currentUserData.penName,
     body, createdAt:firebase.firestore.FieldValue.serverTimestamp()
   }).then(()=>{
-    db.collection('posts').doc(postId).update({commentCount:firebase.firestore.FieldValue.increment(1)}).then(()=>{
-      db.collection('posts').doc(postId).get().then(s=>{
-        setText('comment-count',s.data().commentCount||0);
-        input.value='';
-        const cc=$('cmt-char'); if(cc) cc.textContent='0';
-        loadComments(postId);
-      });
+    return db.collection('posts').doc(postId).update({
+      commentCount:firebase.firestore.FieldValue.increment(1)
     });
+  }).then(()=>{
+    return db.collection('posts').doc(postId).get();
+  }).then(s=>{
+    const newCount = s.data().commentCount||0;
+    setText('comment-count', newCount);
+    input.value='';
+    const cc=$('cmt-char'); if(cc) cc.textContent='0';
+    if(btn){btn.disabled=false; btn.textContent='댓글 달기';}
+    loadComments(postId);
+    toast('댓글이 등록되었습니다.','success');
+  }).catch(e=>{
+    toast('댓글 등록 실패: '+e.message,'error');
+    if(btn){btn.disabled=false; btn.textContent='댓글 달기';}
   });
 }
 
