@@ -406,7 +406,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.03</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.04</footer>
 
 <script>
 // ── Firebase 초기화 (compat 버전 - type=module 불필요) ──
@@ -709,7 +709,6 @@ function filterAndRenderGallery(){
       <div>
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
         <h3>${escHtml(p.title||'제목 없음')}</h3>
-        <p class="intro-text">${escHtml(p.intro||'')}</p>
         <p class="body-preview">${escHtml(prev)}${prev.length>=100?'…':''}</p>
       </div>
       <div class="gallery-card-bottom">
@@ -759,9 +758,9 @@ function renderPost(postId){
           <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'')}</span>
           <h1 class="post-title">${escHtml(p.title||'')}</h1>
           <div class="post-meta"><span>✍ ${escHtml(p.penName||'')}</span><span>${formatDate(p.createdAt)}</span>${actionBtns}</div>
-          <blockquote class="post-intro">${escHtml(p.intro||'')}</blockquote>
+
         </header>
-        <div class="post-body">${p.body||''}</div>
+        <div class="post-body" id="post-body-content"></div>
         <div class="post-actions">
           <button class="btn-like ${liked?'liked':''}" id="like-btn" onclick="toggleLike('${postId}')">
             ${liked?'♥':'♡'} 좋아요 <span id="like-count">${p.likeCount||0}</span>
@@ -778,6 +777,25 @@ function renderPost(postId){
         </div>`:`<p class="login-prompt">댓글을 달려면 <button class="btn-link" onclick="doLogin()">로그인</button>하세요.</p>`}
       </section>
     </div>`);
+    // 본문 렌더링 - HTML 태그를 줄바꿈으로 변환
+    const bodyEl = document.getElementById('post-body-content');
+    if(bodyEl){
+      const rawBody = p.body || '';
+      // contenteditable div에서 생성된 HTML을 줄바꿈 텍스트로 변환
+      const bodyHtml = rawBody
+        .replace(/<div><br><\/div>/gi, '\n')
+        .replace(/<div>/gi, '\n')
+        .replace(/<\/div>/gi, '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<p>/gi, '')
+        .replace(/<\/p>/gi, '\n')
+        // 허용 태그: b, strong, i, em, font (색상/크기)
+        .replace(/<(b|strong|i|em|font[^>]*)>/gi, (m) => m)
+        .replace(/<\/(b|strong|i|em|font)>/gi, (m) => m)
+        // 나머지 태그 제거
+        .replace(/<(?!\/?(b|strong|i|em|font))[^>]+>/gi, '');
+      bodyEl.innerHTML = bodyHtml.replace(/\n/g, '<br>');
+    }
     loadComments(postId);
   }).catch(e=>console.error(e));
 }
