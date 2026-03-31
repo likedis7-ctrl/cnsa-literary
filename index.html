@@ -618,9 +618,9 @@ window.searchGallery = searchGallery;
 window.updateCharCount = updateCharCount;
 
 // =============================================
-// DOM 이벤트 바인딩 (module scope 문제 해결)
+// 앱 초기화
 // =============================================
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   // 로고
   const logo = document.getElementById('logo-home');
   if (logo) logo.addEventListener('click', () => navigateTo('home'));
@@ -656,10 +656,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnCloseWrong) btnCloseWrong.addEventListener('click', () => {
     document.getElementById('wrong-account-modal').style.display = 'none';
   });
-});
 
-// 초기 렌더
-navigateTo('home');
+  // 초기 렌더
+  navigateTo('home');
+}
+
+// module 스크립트는 DOM 준비 후 실행되므로 바로 호출
+initApp();
 </script>
 
 <style>
