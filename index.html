@@ -212,7 +212,13 @@ async function renderHome() {
 // =============================================
 // 응모하기
 // =============================================
-function renderSubmit() {
+async function renderSubmit() {
+  if (currentUser && !currentUserData) {
+    for (let i = 0; i < 20; i++) {
+      await new Promise(r => setTimeout(r, 100));
+      if (currentUserData) break;
+    }
+  }
   if (!currentUser || !currentUserData) {
     setHTML('page-submit', `<div class="page-inner center-msg">
       <p>로그인 후 응모할 수 있습니다.</p>
@@ -536,6 +542,12 @@ async function saveEdit(e, postId) {
 // 나의 서재
 // =============================================
 async function renderMyPage() {
+  if (currentUser && !currentUserData) {
+    for (let i = 0; i < 20; i++) {
+      await new Promise(r => setTimeout(r, 100));
+      if (currentUserData) break;
+    }
+  }
   if (!currentUser||!currentUserData) {
     setHTML('mypage-content', `<div class="center-msg"><p>로그인 후 이용할 수 있습니다.</p><button class="btn-primary" onclick="login()">Google 로그인</button></div>`);
     return;
@@ -1096,7 +1108,7 @@ footer {
 </div>
 
 <footer>
-  © 2025 큰별문학상 온라인전시관 · CNSA
+  © 2026 큰별문학상 온라인전시관 · CNSA
 </footer>
 
 </body>
