@@ -251,12 +251,12 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   <div class="header-inner">
     <span class="site-logo" onclick="navigateTo('home')">큰별문학상 <span>온라인전시관</span></span>
     <nav id="main-nav">
-      <span class="nav-link" data-page="intro" onclick="navigateTo('intro');closeNav()">문학상 소개</span>
-      <span class="nav-link" data-page="submit" onclick="navigateTo('submit');closeNav()">응모하기</span>
-      <span class="nav-link" data-page="gallery" onclick="navigateTo('gallery');closeNav()">감상하기</span>
-      <span class="nav-link" data-page="mypage" id="nav-mypage" onclick="navigateTo('mypage');closeNav()" style="display:none">나의 서재</span>
-      <span class="nav-link" data-page="credits" onclick="navigateTo('credits');closeNav()">개발자 소개</span>
-      <span class="nav-link" data-page="admin" id="nav-admin" onclick="navigateTo('admin');closeNav()" style="display:none">⚙️ 관리</span>
+      <span class="nav-link" data-page="intro" onclick="navigateTo('intro')">문학상 소개</span>
+      <span class="nav-link" data-page="submit" onclick="navigateTo('submit')">응모하기</span>
+      <span class="nav-link" data-page="gallery" onclick="navigateTo('gallery')">감상하기</span>
+      <span class="nav-link" data-page="mypage" id="nav-mypage" onclick="navigateTo('mypage')" style="display:none">나의 서재</span>
+      <span class="nav-link" data-page="credits" onclick="navigateTo('credits')">개발자 소개</span>
+      <span class="nav-link" data-page="admin" id="nav-admin" onclick="navigateTo('admin')" style="display:none">⚙️ 관리</span>
     </nav>
     <button class="hamburger" id="hamburger-btn" onclick="toggleNav()" aria-label="메뉴">
       <span></span><span></span><span></span>
@@ -433,7 +433,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.05</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.06</footer>
 
 <script>
 // ── Firebase 초기화 (compat 버전 - type=module 불필요) ──
@@ -497,6 +497,7 @@ function navigateTo(page, param) {
 }
 
 function _doNavigate(page, param) {
+  closeNav();
   document.querySelectorAll('.page').forEach(p=>p.style.display='none');
   document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
   const navEl = document.querySelector('.nav-link[data-page="'+page+'"]');
