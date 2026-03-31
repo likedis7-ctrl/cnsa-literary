@@ -406,7 +406,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.01</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.02</footer>
 
 <script>
 // ── Firebase 초기화 (compat 버전 - type=module 불필요) ──
@@ -750,7 +750,8 @@ function renderPost(postId){
     const currentMode = modeDoc.exists ? modeDoc.data().mode : 'apply';
     siteMode = currentMode;
     const canEdit = isAdmin || (isOwner && currentMode !== 'view');
-    const actionBtns=canEdit?`<button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button>`:'';
+    // 버튼은 id로 나중에 동적 추가
+    const actionBtns=canEdit?`<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button></span>`:`<span id="post-action-btns"></span>`;
     setHTML('page-post',`<div class="page-inner">
       <button class="btn-back" onclick="navigateTo('gallery')">← 목록으로</button>
       <article class="post-detail">
@@ -921,14 +922,22 @@ function _doEditPost(postId){
 
 function saveEdit(e,postId){
   e.preventDefault();
-  const cat=document.querySelector('input[name="ecat"]:checked');
-  const title=$('edit-title').value.trim();
-  const intro=$('edit-intro').value.trim();
-  const body=$('edit-body').value.trim();
-  if(!cat||!title||!intro||!body){toast('모든 항목을 입력하세요.','error');return;}
-  db.collection('posts').doc(postId).update({category:cat.value,title,intro,body,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{
-    toast('수정되었습니다.','success');
-    navigateTo('post',postId);
+  db.collection('config').doc('siteMode').get().then(mDoc=>{
+    const mode = mDoc.exists ? mDoc.data().mode : 'apply';
+    const isAdmin = currentUserData && currentUserData.role === 'admin';
+    if(mode === 'view' && !isAdmin){
+      toast('감상기간에는 수정할 수 없습니다.','error');
+      return;
+    }
+    const cat=document.querySelector('input[name="ecat"]:checked');
+    const title=$('edit-title').value.trim();
+    const intro=$('edit-intro').value.trim();
+    const body=$('edit-body').value.trim();
+    if(!cat||!title||!intro||!body){toast('모든 항목을 입력하세요.','error');return;}
+    db.collection('posts').doc(postId).update({category:cat.value,title,intro,body,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{
+      toast('수정되었습니다.','success');
+      navigateTo('post',postId);
+    });
   });
 }
 
