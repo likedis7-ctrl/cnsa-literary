@@ -361,7 +361,7 @@ function navigateTo(page, param) {
   const navEl = document.querySelector('.nav-link[data-page="'+page+'"]');
   if(navEl) navEl.classList.add('active');
   const pageEl = $('page-'+page);
-  if(pageEl) pageEl.style.display='';
+  if(pageEl) pageEl.style.display='block';
   if(page==='home') renderHome();
   else if(page==='submit') renderSubmit();
   else if(page==='gallery') renderGallery();
@@ -446,7 +446,7 @@ function updateNavUI(){
   const on=!!(currentUser&&currentUserData);
   $('btn-login').style.display=on?'none':'';
   $('btn-logout').style.display=on?'':'none';
-  $('nav-mypage').style.display=on?'':'none';
+  $('nav-mypage').style.display=on?'inline-block':'none';
   if(on) setText('user-penname',currentUserData.penName);
   else setText('user-penname','');
 }
