@@ -167,15 +167,39 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .center-msg{text-align:center;padding:4rem 1rem;}
 .center-msg p{color:var(--ink3);margin-bottom:1.5rem;}
 footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;padding:1.5rem;font-size:.78rem;}
-@media(max-width:640px){
-  .header-inner{flex-wrap:wrap;gap:.5rem;padding:.6rem 1rem;}
-  nav{gap:0;}
-  .nav-link{font-size:.75rem;padding:.3rem .45rem;}
+@media(max-width:768px){
+  /* 헤더 - 햄버거 메뉴 */
+  .header-inner{padding:.6rem 1rem;position:relative;}
+  .site-logo{font-size:1.1rem;}
+  nav{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,15,10,.97);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
+  nav.open{display:flex;}
+  .nav-link{font-size:1.1rem;padding:.75rem 2rem;color:rgba(255,255,255,.85);width:100%;text-align:center;border-radius:8px;}
+  .nav-link:hover,.nav-link.active{background:rgba(255,255,255,.1);color:var(--gold2);}
+  .hamburger{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:.5rem;z-index:300;}
+  .hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,.85);border-radius:2px;transition:all .2s;}
+  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .nav-right{gap:.35rem;}
+  #user-penname{display:none;}
+  /* 콘텐츠 */
   .home-cards,.gallery-grid{grid-template-columns:1fr;}
   .gallery-grid{padding:0 1rem 2rem;}
-  .post-detail{padding:1.5rem;}
-  .post-title{font-size:1.4rem;}
-  .gallery-controls{padding:1rem 1rem 0;}
+  .post-detail{padding:1.25rem;}
+  .post-title{font-size:1.3rem;}
+  .gallery-controls{padding:1rem 1rem 0;flex-direction:column;align-items:stretch;}
+  .cat-tabs{justify-content:center;}
+  .hero{padding:3.5rem 1.25rem 3rem;}
+  .hero-title{font-size:clamp(1.6rem,6vw,2.5rem);}
+  .today-card-inner{padding:1.5rem;}
+  .today-title{font-size:1.3rem;}
+  .page-inner{padding:1.5rem 1rem;}
+  .mypage-header{padding:1.5rem;}
+  .admin-btn-group{gap:.5rem;}
+  .editor-toolbar{gap:.3rem;}
+}
+@media(min-width:769px){
+  .hamburger{display:none;}
 }
 
 /* ── 본문 에디터 ── */
@@ -226,14 +250,17 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
 <header>
   <div class="header-inner">
     <span class="site-logo" onclick="navigateTo('home')">큰별문학상 <span>온라인전시관</span></span>
-    <nav>
-      <span class="nav-link" data-page="intro" onclick="navigateTo('intro')">문학상 소개</span>
-      <span class="nav-link" data-page="submit" onclick="navigateTo('submit')">응모하기</span>
-      <span class="nav-link" data-page="gallery" onclick="navigateTo('gallery')">감상하기</span>
-      <span class="nav-link" data-page="mypage" id="nav-mypage" onclick="navigateTo('mypage')" style="display:none">나의 서재</span>
-      <span class="nav-link" data-page="credits" onclick="navigateTo('credits')">개발자 소개</span>
-      <span class="nav-link" data-page="admin" id="nav-admin" onclick="navigateTo('admin')" style="display:none">⚙️ 관리</span>
+    <nav id="main-nav">
+      <span class="nav-link" data-page="intro" onclick="navigateTo('intro');closeNav()">문학상 소개</span>
+      <span class="nav-link" data-page="submit" onclick="navigateTo('submit');closeNav()">응모하기</span>
+      <span class="nav-link" data-page="gallery" onclick="navigateTo('gallery');closeNav()">감상하기</span>
+      <span class="nav-link" data-page="mypage" id="nav-mypage" onclick="navigateTo('mypage');closeNav()" style="display:none">나의 서재</span>
+      <span class="nav-link" data-page="credits" onclick="navigateTo('credits');closeNav()">개발자 소개</span>
+      <span class="nav-link" data-page="admin" id="nav-admin" onclick="navigateTo('admin');closeNav()" style="display:none">⚙️ 관리</span>
     </nav>
+    <button class="hamburger" id="hamburger-btn" onclick="toggleNav()" aria-label="메뉴">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-right">
       <span id="user-penname"></span>
       <button class="btn-login" id="btn-login" onclick="doLogin()">Google 로그인</button>
@@ -406,7 +433,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.04</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.05</footer>
 
 <script>
 // ── Firebase 초기화 (compat 버전 - type=module 불필요) ──
@@ -780,21 +807,26 @@ function renderPost(postId){
     // 본문 렌더링 - HTML 태그를 줄바꿈으로 변환
     const bodyEl = document.getElementById('post-body-content');
     if(bodyEl){
-      const rawBody = p.body || '';
-      // contenteditable div에서 생성된 HTML을 줄바꿈 텍스트로 변환
-      const bodyHtml = rawBody
-        .replace(/<div><br><\/div>/gi, '\n')
-        .replace(/<div>/gi, '\n')
+      const raw = p.body || '';
+      // div/p 태그를 줄바꿈으로, 나머지 위험 태그 제거, 서식 태그(b,i,strong,em,font)는 유지
+      const safe = raw
+        .replace(/<div><br\s*\/?><\/div>/gi, '
+')
+        .replace(/<div>/gi, '
+')
         .replace(/<\/div>/gi, '')
-        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<br\s*\/?>/gi, '
+')
+        .replace(/<p><br\s*\/?><\/p>/gi, '
+')
         .replace(/<p>/gi, '')
-        .replace(/<\/p>/gi, '\n')
-        // 허용 태그: b, strong, i, em, font (색상/크기)
-        .replace(/<(b|strong|i|em|font[^>]*)>/gi, (m) => m)
-        .replace(/<\/(b|strong|i|em|font)>/gi, (m) => m)
-        // 나머지 태그 제거
-        .replace(/<(?!\/?(b|strong|i|em|font))[^>]+>/gi, '');
-      bodyEl.innerHTML = bodyHtml.replace(/\n/g, '<br>');
+        .replace(/<\/p>/gi, '
+')
+        .replace(/<span[^>]*>/gi, '')
+        .replace(/<\/span>/gi, '');
+      // 허용 태그(b,strong,i,em,font) 외 나머지 제거
+      const allowed = safe.replace(/<(?!\/?(b|strong|i|em|font)(\s[^>]*)?>)[^>]+>/gi, '');
+      bodyEl.innerHTML = allowed.replace(/\n/g, '<br>').replace(/^(<br\s*\/?>\s*)+/, '');
     }
     loadComments(postId);
   }).catch(e=>console.error(e));
@@ -1121,6 +1153,19 @@ async function downloadCommentsDB(){
   } catch(e){ toast('오류: '+e.message,'error'); }
 }
 
+
+function toggleNav(){
+  const nav = document.getElementById('main-nav');
+  const btn = document.getElementById('hamburger-btn');
+  nav.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+function closeNav(){
+  const nav = document.getElementById('main-nav');
+  const btn = document.getElementById('hamburger-btn');
+  nav.classList.remove('open');
+  btn.classList.remove('open');
+}
 // ── 시작 ──
 loadSiteMode();
 navigateTo('home');
