@@ -617,6 +617,47 @@ window.setGalleryCategory = setGalleryCategory;
 window.searchGallery = searchGallery;
 window.updateCharCount = updateCharCount;
 
+// =============================================
+// DOM 이벤트 바인딩 (module scope 문제 해결)
+// =============================================
+document.addEventListener('DOMContentLoaded', () => {
+  // 로고
+  const logo = document.getElementById('logo-home');
+  if (logo) logo.addEventListener('click', () => navigateTo('home'));
+
+  // 네비게이션
+  document.querySelectorAll('.nav-link[data-page]').forEach(el => {
+    el.addEventListener('click', () => navigateTo(el.dataset.page));
+  });
+
+  // 로그인/로그아웃
+  const btnLogin = document.getElementById('btn-login');
+  if (btnLogin) btnLogin.addEventListener('click', login);
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) btnLogout.addEventListener('click', logout);
+
+  // 히어로 버튼
+  const heroGallery = document.getElementById('hero-gallery-btn');
+  if (heroGallery) heroGallery.addEventListener('click', () => navigateTo('gallery'));
+  const heroSubmit = document.getElementById('hero-submit-btn');
+  if (heroSubmit) heroSubmit.addEventListener('click', () => navigateTo('submit'));
+
+  // 필명 모달 엔터키
+  const pennameInput = document.getElementById('penname-input');
+  if (pennameInput) pennameInput.addEventListener('keydown', e => { if (e.key === 'Enter') savePenName(); });
+
+  // 잘못된 계정 모달 버튼
+  const btnRelogin = document.getElementById('btn-relogin');
+  if (btnRelogin) btnRelogin.addEventListener('click', () => {
+    document.getElementById('wrong-account-modal').style.display = 'none';
+    login();
+  });
+  const btnCloseWrong = document.getElementById('btn-close-wrong-modal');
+  if (btnCloseWrong) btnCloseWrong.addEventListener('click', () => {
+    document.getElementById('wrong-account-modal').style.display = 'none';
+  });
+});
+
 // 초기 렌더
 navigateTo('home');
 </script>
@@ -976,18 +1017,18 @@ footer {
 <!-- ── HEADER ── -->
 <header>
   <div class="header-inner">
-    <span class="site-logo" onclick="navigateTo('home')">큰별문학상 <span>온라인전시관</span></span>
+    <span class="site-logo" id="logo-home">큰별문학상 <span>온라인전시관</span></span>
     <nav>
-      <span class="nav-link" data-page="intro" onclick="navigateTo('intro')">문학상 소개</span>
-      <span class="nav-link" data-page="submit" onclick="navigateTo('submit')">응모하기</span>
-      <span class="nav-link" data-page="gallery" onclick="navigateTo('gallery')">감상하기</span>
-      <span class="nav-link" data-page="mypage" id="nav-mypage" onclick="navigateTo('mypage')" style="display:none">나의 서재</span>
-      <span class="nav-link" data-page="credits" onclick="navigateTo('credits')">개발자 소개</span>
+      <span class="nav-link" data-page="intro">문학상 소개</span>
+      <span class="nav-link" data-page="submit">응모하기</span>
+      <span class="nav-link" data-page="gallery">감상하기</span>
+      <span class="nav-link" data-page="mypage" id="nav-mypage" style="display:none">나의 서재</span>
+      <span class="nav-link" data-page="credits">개발자 소개</span>
     </nav>
     <div class="nav-right">
       <span id="user-penname"></span>
-      <button class="btn-login" id="btn-login" onclick="login()">Google 로그인</button>
-      <button class="btn-logout" id="btn-logout" onclick="logout()" style="display:none">로그아웃</button>
+      <button class="btn-login" id="btn-login">Google 로그인</button>
+      <button class="btn-logout" id="btn-logout" style="display:none">로그아웃</button>
     </div>
   </div>
 </header>
@@ -999,8 +1040,8 @@ footer {
     <h1 class="hero-title">글로 피어나는<br><em>별빛 이야기</em></h1>
     <p class="hero-sub">큰별문학상에 응모된 학생들의 소중한 작품들을 만나보세요.</p>
     <div class="hero-cta">
-      <button class="cta-primary" onclick="navigateTo('gallery')">작품 감상하기</button>
-      <button class="cta-secondary" onclick="navigateTo('submit')">작품 응모하기</button>
+      <button class="cta-primary" id="hero-gallery-btn">작품 감상하기</button>
+      <button class="cta-secondary" id="hero-submit-btn">작품 응모하기</button>
     </div>
   </section>
   <section class="home-section">
@@ -1104,10 +1145,10 @@ footer {
     <h2 style="margin-bottom:.75rem">학교 계정으로 로그인해주세요</h2>
     <p style="margin-bottom:1.5rem">이 서비스는 <strong>@cnsa.hs.kr</strong> 계정만 이용할 수 있습니다.<br>다른 계정으로 로그인하셨습니다.</p>
     <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
-      <button class="btn-primary" onclick="document.getElementById('wrong-account-modal').style.display='none'; login()">
+      <button class="btn-primary" id="btn-relogin">
         다른 계정으로 다시 로그인
       </button>
-      <button class="btn-outline" onclick="document.getElementById('wrong-account-modal').style.display='none'">
+      <button class="btn-outline" id="btn-close-wrong-modal">
         닫기
       </button>
     </div>
