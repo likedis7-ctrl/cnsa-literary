@@ -661,8 +661,12 @@ function initApp() {
   navigateTo('home');
 }
 
-// module 스크립트는 DOM 준비 후 실행되므로 바로 호출
-initApp();
+// window.onload: 모든 리소스 로딩 완료 후 실행 (가장 안전)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 </script>
 
 <style>
