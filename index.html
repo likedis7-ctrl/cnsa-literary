@@ -177,6 +177,31 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   .post-title{font-size:1.4rem;}
   .gallery-controls{padding:1rem 1rem 0;}
 }
+
+/* ── 본문 에디터 ── */
+.editor-toolbar{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:var(--paper2);border:1.5px solid var(--paper3);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;flex-wrap:wrap;}
+.tb-btn{padding:.25rem .6rem;border:1.5px solid var(--paper3);border-radius:4px;background:white;cursor:pointer;font-size:.85rem;transition:all .15s;}
+.tb-btn:hover{border-color:var(--gold);background:#fff8ec;}
+.tb-select{padding:.25rem .5rem;border:1.5px solid var(--paper3);border-radius:4px;font-family:var(--font-sans);font-size:.82rem;background:white;cursor:pointer;}
+.tb-color{width:32px;height:28px;padding:1px;border:1.5px solid var(--paper3);border-radius:4px;cursor:pointer;}
+.tb-clear{font-size:.75rem;color:var(--ink3);}
+.body-editor{width:100%;min-height:280px;padding:.75rem 1rem;border:1.5px solid var(--paper3);border-radius:0 0 var(--radius) var(--radius);font-family:var(--font-serif);font-size:.95rem;background:white;color:var(--ink);line-height:1.9;outline:none;transition:border-color .15s;}
+.body-editor:focus{border-color:var(--gold);}
+.body-editor:empty::before{content:attr(placeholder);color:var(--ink3);pointer-events:none;}
+/* ── 댓글 좋아요 ── */
+.comment-actions{margin-top:.4rem;}
+.btn-comment-like{background:none;border:1px solid var(--paper3);border-radius:20px;padding:.15rem .7rem;font-size:.8rem;color:var(--ink3);cursor:pointer;transition:all .15s;}
+.btn-comment-like:hover{border-color:var(--red);color:var(--red);}
+.btn-comment-like.liked{border-color:var(--red);color:var(--red);background:#fff2f0;}
+/* ── 오늘의 감상작 ── */
+.today-card{cursor:pointer;transition:all .2s;}
+.today-card:hover .today-card-inner{transform:translateY(-2px);box-shadow:0 12px 32px var(--shadow);border-color:var(--gold);}
+.today-card-inner{background:white;border:1px solid var(--paper3);border-radius:14px;padding:2rem 2.5rem;transition:all .2s;}
+.today-title{font-family:var(--font-serif);font-size:1.6rem;font-weight:700;margin:.5rem 0 .75rem;color:var(--ink);}
+.today-intro{font-size:.9rem;color:var(--gold);font-style:italic;margin-bottom:.75rem;}
+.today-preview{font-family:var(--font-serif);font-size:.95rem;color:var(--ink2);line-height:1.9;margin-bottom:1.25rem;}
+.today-meta{display:flex;align-items:center;gap:1.5rem;font-size:.83rem;color:var(--ink3);}
+.today-read-btn{margin-left:auto;color:var(--gold);font-weight:500;}
 </style>
 </head>
 <body>
@@ -210,8 +235,8 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
     </div>
   </section>
   <section class="home-section">
-    <h2 class="home-section-title">✨ 인기 작품</h2>
-    <div class="home-cards" id="home-featured"><p class="empty-msg">불러오는 중...</p></div>
+    <h2 class="home-section-title">📖 오늘의 감상작</h2>
+    <div id="home-featured"><p class="empty-msg">불러오는 중...</p></div>
   </section>
 </div>
 
@@ -266,6 +291,10 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
     <div class="mypage-section">
       <h2>♥ 좋아요한 작품 <span class="count" id="myliked-count">0</span></h2>
       <div id="mypage-liked"></div>
+    </div>
+    <div class="mypage-section">
+      <h2>💬 댓글단 작품 <span class="count" id="mycommented-count">0</span></h2>
+      <div id="mypage-commented"></div>
     </div>
   </div>
 </div>
@@ -453,19 +482,26 @@ function updateNavUI(){
 
 // ── 홈 ──
 function renderHome(){
-  db.collection('posts').orderBy('likeCount','desc').limit(6).get().then(snap=>{
-    let html='';
-    snap.docs.forEach(d=>{
-      const p={id:d.id,...d.data()};
-      const prev=(p.body||'').substring(0,80);
-      html+=`<div class="home-card" onclick="navigateTo('post','${p.id}')">
+  db.collection('posts').get().then(snap=>{
+    if(snap.empty){setHTML('home-featured','<p class="empty-msg">아직 작품이 없습니다.</p>');return;}
+    const docs=snap.docs;
+    const random=docs[Math.floor(Math.random()*docs.length)];
+    const p={id:random.id,...random.data()};
+    const bodyText=(p.body||'').replace(/<[^>]*>/g,'');
+    const prev=bodyText.substring(0,120);
+    setHTML('home-featured',`<div class="today-card" onclick="navigateTo('post','${p.id}')">
+      <div class="today-card-inner">
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
-        <h3>${escHtml(p.title||'')}</h3>
-        <p>${escHtml(prev)}${prev.length>=80?'…':''}</p>
-        <div class="card-meta"><span>✍ ${escHtml(p.penName||'')}</span><span>♥ ${p.likeCount||0}</span></div>
-      </div>`;
-    });
-    setHTML('home-featured',html||'<p class="empty-msg">아직 작품이 없습니다.</p>');
+        <h2 class="today-title">${escHtml(p.title||'')}</h2>
+        <p class="today-intro">${escHtml(p.intro||'')}</p>
+        <p class="today-preview">${escHtml(prev)}${bodyText.length>120?'…':''}</p>
+        <div class="today-meta">
+          <span>✍ ${escHtml(p.penName||'')}</span>
+          <span>♥ ${p.likeCount||0}</span>
+          <span class="today-read-btn">작품 읽기 →</span>
+        </div>
+      </div>
+    </div>`);
   }).catch(e=>console.error(e));
 }
 
@@ -493,7 +529,24 @@ function renderSubmit(){
     </div>
     <div class="form-group">
       <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count">0</span>/3000자</span></label>
-      <textarea id="submit-body" rows="16" maxlength="3000" placeholder="작품 본문을 입력하세요" required oninput="document.getElementById('body-count').textContent=this.value.length"></textarea>
+      <div class="editor-toolbar">
+        <button type="button" class="tb-btn" onclick="execFmt('bold')" title="굵게"><b>B</b></button>
+        <button type="button" class="tb-btn" onclick="execFmt('italic')" title="기울임"><i>I</i></button>
+        <select class="tb-select" onchange="execFmt('fontSize',this.value);this.selectedIndex=0" title="글자 크기">
+          <option value="">크기</option>
+          <option value="1">작게</option>
+          <option value="3">보통</option>
+          <option value="5">크게</option>
+          <option value="7">매우 크게</option>
+        </select>
+        <input type="color" class="tb-color" onchange="execFmt('foreColor',this.value)" title="글자 색상" value="#1a1714">
+        <button type="button" class="tb-btn tb-clear" onclick="clearFmt()" title="서식 초기화">초기화</button>
+      </div>
+      <div id="submit-body-editor" class="body-editor" contenteditable="true" 
+        oninput="syncBodyEditor()"
+        onpaste="handlePaste(event)"
+        placeholder="작품 본문을 입력하세요 (최대 3000자)"></div>
+      <input type="hidden" id="submit-body">
     </div>
     <div class="form-actions">
       <button type="submit" class="btn-primary" id="submit-btn">작품 응모하기 ✨</button>
@@ -508,7 +561,8 @@ function submitPost(e){
   if(!cat){toast('카테고리를 선택해주세요.','error');return;}
   const title=$('submit-title').value.trim();
   const intro=$('submit-intro').value.trim();
-  const body=$('submit-body').value.trim();
+  const bodyEl=$('submit-body-editor');
+  const body=bodyEl?bodyEl.innerHTML.trim():$('submit-body').value.trim();
   if(!title||!intro||!body){toast('모든 항목을 입력해주세요.','error');return;}
   const btn=$('submit-btn');
   btn.disabled=true; btn.textContent='제출 중...';
@@ -528,6 +582,13 @@ function submitPost(e){
 
 // ── 감상하기 ──
 function renderGallery(){
+  if(!currentUser||!currentUserData){
+    setHTML('gallery-grid',`<div class="center-msg" style="padding:4rem 1rem">
+      <p style="font-size:1.1rem;margin-bottom:1.5rem">🔒 감상하기는 로그인 후 이용할 수 있습니다.</p>
+      <button class="btn-primary" onclick="doLogin()">Google 로그인</button>
+    </div>`);
+    return;
+  }
   db.collection('posts').orderBy('createdAt','desc').get().then(snap=>{
     allPosts=snap.docs.map(d=>({id:d.id,...d.data()}));
     filterAndRenderGallery();
@@ -589,7 +650,7 @@ function renderPost(postId){
           <div class="post-meta"><span>✍ ${escHtml(p.penName||'')}</span><span>${formatDate(p.createdAt)}</span>${actionBtns}</div>
           <blockquote class="post-intro">${escHtml(p.intro||'')}</blockquote>
         </header>
-        <div class="post-body">${escHtml(p.body||'').replace(/\n/g,'<br>')}</div>
+        <div class="post-body">${p.body||''}</div>
         <div class="post-actions">
           <button class="btn-like ${liked?'liked':''}" id="like-btn" onclick="toggleLike('${postId}')">
             ${liked?'♥':'♡'} 좋아요 <span id="like-count">${p.likeCount||0}</span>
@@ -632,9 +693,39 @@ function loadComments(postId){
     snap.docs.forEach(d=>{
       const c={id:d.id,...d.data()};
       const canDel=currentUser&&(c.uid===currentUser.uid||(currentUserData&&currentUserData.role==='admin'));
-      html+=`<div class="comment"><div class="comment-header"><strong>${escHtml(c.penName||'')}</strong><span class="comment-date">${formatDate(c.createdAt)}</span>${canDel?`<button class="btn-link btn-danger-text" onclick="deleteComment('${postId}','${c.id}')">삭제</button>`:''}</div><p>${escHtml(c.body||'').replace(/\n/g,'<br>')}</p></div>`;
+      const liked=currentUser&&(c.likes||[]).includes(currentUser.uid);
+      const likeCount=c.likeCount||0;
+      html+=`<div class="comment">
+        <div class="comment-header">
+          <strong>${escHtml(c.penName||'')}</strong>
+          <span class="comment-date">${formatDate(c.createdAt)}</span>
+          ${canDel?`<button class="btn-link btn-danger-text" onclick="deleteComment('${postId}','${c.id}')">삭제</button>`:''}
+        </div>
+        <p>${escHtml(c.body||'').replace(/\n/g,'<br>')}</p>
+        <div class="comment-actions">
+          <button class="btn-comment-like ${liked?'liked':''}" onclick="toggleCommentLike('${postId}','${c.id}',this)">
+            ${liked?'♥':'♡'} <span class="clike-count">${likeCount}</span>
+          </button>
+        </div>
+      </div>`;
     });
     setHTML('comments-list',html||'<p class="empty-msg">첫 댓글을 남겨보세요.</p>');
+  });
+}
+
+function toggleCommentLike(postId, commentId, btn){
+  if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
+  const ref=db.collection('posts').doc(postId).collection('comments').doc(commentId);
+  ref.get().then(snap=>{
+    const liked=(snap.data().likes||[]).includes(currentUser.uid);
+    ref.update({
+      likes: liked?firebase.firestore.FieldValue.arrayRemove(currentUser.uid):firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+      likeCount: firebase.firestore.FieldValue.increment(liked?-1:1)
+    }).then(()=>{
+      const newCount=(snap.data().likeCount||0)+(liked?-1:1);
+      btn.innerHTML=(liked?'♡':'♥')+' <span class="clike-count">'+newCount+'</span>';
+      btn.classList.toggle('liked',!liked);
+    });
   });
 }
 
@@ -733,6 +824,43 @@ function renderMyPage(){
     posts.forEach(p=>{html+=`<div class="mypage-item" onclick="navigateTo('post','${p.id}')"><span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span><strong>${escHtml(p.title||'')}</strong><span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span></div>`;});
     setHTML('mypage-liked',html||'<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
   });
+
+  // 내가 댓글단 작품
+  db.collectionGroup('comments').where('uid','==',currentUser.uid).get().then(snap=>{
+    const postIds=[...new Set(snap.docs.map(d=>d.ref.parent.parent.id))];
+    setText('mycommented-count',postIds.length);
+    if(postIds.length===0){setHTML('mypage-commented','<p class="empty-msg">댓글단 작품이 없습니다.</p>');return;}
+    Promise.all(postIds.map(id=>db.collection('posts').doc(id).get())).then(docs=>{
+      let html='';
+      docs.forEach(doc=>{
+        if(!doc.exists) return;
+        const p={id:doc.id,...doc.data()};
+        html+=`<div class="mypage-item" onclick="navigateTo('post','${p.id}')"><span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span><strong>${escHtml(p.title||'')}</strong><span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span></div>`;
+      });
+      setHTML('mypage-commented',html||'<p class="empty-msg">댓글단 작품이 없습니다.</p>');
+    });
+  });
+}
+
+
+function execFmt(cmd, val){
+  document.getElementById('submit-body-editor').focus();
+  document.execCommand(cmd, false, val||null);
+}
+function clearFmt(){
+  document.getElementById('submit-body-editor').focus();
+  document.execCommand('removeFormat', false, null);
+}
+function syncBodyEditor(){
+  const editor = document.getElementById('submit-body-editor');
+  if(!editor) return;
+  const text = editor.innerText || '';
+  document.getElementById('body-count').textContent = text.length;
+}
+function handlePaste(e){
+  e.preventDefault();
+  const text = (e.clipboardData||window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
 }
 
 // ── 시작 ──
