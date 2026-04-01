@@ -792,7 +792,7 @@ function filterAndRenderGallery(){
   var pagePosts=posts.slice(pageStart,pageStart+GALLERY_PER_PAGE);
   var html='';
   
-  // === 줄바꿈 반영 및 작품소개 숨김 처리 ===
+  // === 줄바꿈 반영 및 작품소개 숨김 처리 적용 ===
   pagePosts.forEach(function(p){
     var bodyText=(p.body||'')
       .replace(/<div><br><\/div>/gi,'\n')
@@ -1124,14 +1124,15 @@ function renderMyPage(){
     setHTML('mypage-posts', html||'<p class="empty-msg">작성한 작품이 없습니다.</p>');
   });
 
-  // === 좋아요한 작품 (5개 출력 및 더보기) ===
+  // === 좋아요한 작품 (5개 출력 및 더보기 오류 수정) ===
   db.collection('posts').where('likes','array-contains',currentUser.uid).get().then(function(snap){
     var posts = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     setText('myliked-count', posts.length);
     var html = '';
     posts.forEach(function(p, i){
-      var hiddenStyle = i >= 5 ? 'style="display:none;" class="extra-liked"' : '';
-      html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')" ${hiddenStyle}>
+      var extraClass = i >= 5 ? ' extra-liked' : '';
+      var hiddenStyle = i >= 5 ? 'style="display:none;"' : '';
+      html += `<div class="mypage-item${extraClass}" onclick="navigateTo('post','${p.id}')" ${hiddenStyle}>
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
         <strong>${escHtml(p.title||'')}</strong>
         <span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span>
@@ -1143,40 +1144,61 @@ function renderMyPage(){
     setHTML('mypage-liked', html||'<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
   });
 
+  // === 댓글단 작품 (출력 형식 변경 및 더보기 추가) ===
   setText('mycommented-count','...');
   setHTML('mypage-commented','<p class="empty-msg">불러오는 중...</p>');
   db.collection('posts').get().then(function(postsSnap){
-    var commentedIds = [];
+    var commentedItems = [];
     var checks = postsSnap.docs.map(function(pd){
       return db.collection('posts').doc(pd.id).collection('comments')
-        .where('uid','==',currentUser.uid).limit(1).get()
-        .then(function(cs){ if(!cs.empty) commentedIds.push(pd.id); });
+        .where('uid','==',currentUser.uid).orderBy('createdAt','desc').limit(1).get()
+        .then(function(cs){ 
+          if(!cs.empty) {
+            var cData = cs.docs[0].data();
+            commentedItems.push({
+              postId: pd.id,
+              postData: pd.data(),
+              commentBody: cData.body,
+              commentDate: cData.createdAt
+            });
+          } 
+        });
     });
     Promise.all(checks).then(function(){
-      setText('mycommented-count', commentedIds.length);
-      if(commentedIds.length===0){
+      // 댓글 최신순 정렬
+      commentedItems.sort(function(a, b) {
+         var ta = a.commentDate ? (a.commentDate.toMillis ? a.commentDate.toMillis() : new Date(a.commentDate).getTime()) : 0;
+         var tb = b.commentDate ? (b.commentDate.toMillis ? b.commentDate.toMillis() : new Date(b.commentDate).getTime()) : 0;
+         return tb - ta;
+      });
+
+      setText('mycommented-count', commentedItems.length);
+      if(commentedItems.length===0){
         setHTML('mypage-commented','<p class="empty-msg">댓글단 작품이 없습니다.</p>');
         return;
       }
-      Promise.all(commentedIds.map(function(id){ return db.collection('posts').doc(id).get(); }))
-        .then(function(docs){
-          var validDocs = docs.filter(function(doc){ return doc.exists; });
-          var html = '';
-          // === 댓글단 작품 (5개 출력 및 더보기) ===
-          validDocs.forEach(function(doc, i){
-            var p = Object.assign({id:doc.id},doc.data());
-            var hiddenStyle = i >= 5 ? 'style="display:none;" class="extra-commented"' : '';
-            html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')" ${hiddenStyle}>
-              <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
-              <strong>${escHtml(p.title||'')}</strong>
-              <span class="mypage-item-meta">${formatDate(p.createdAt)} · ♥${p.likeCount||0}</span>
-            </div>`;
-          });
-          if(validDocs.length > 5){
-            html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-commented').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
-          }
-          setHTML('mypage-commented', html||'<p class="empty-msg">댓글단 작품이 없습니다.</p>');
-        });
+      
+      var html = '';
+      commentedItems.forEach(function(item, i){
+        var extraClass = i >= 5 ? ' extra-commented' : '';
+        var hiddenStyle = i >= 5 ? 'style="display:none;"' : '';
+        var p = item.postData;
+        var cBody = item.commentBody || '';
+        if(cBody.length > 30) cBody = cBody.substring(0, 30) + '...';
+
+        html += `<div class="mypage-item${extraClass}" onclick="navigateTo('post','${item.postId}')" ${hiddenStyle} style="align-items:flex-start; flex-direction:column; gap:0.4rem;">
+          <div style="font-size:0.95rem; color:var(--ink); line-height:1.5; word-break:keep-all; width:100%;">💬 "${escHtml(cBody)}"</div>
+          <div style="display:flex; align-items:center; gap:0.5rem; width:100%;">
+            <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
+            <strong style="font-size:0.85rem; color:var(--ink2); font-weight:500;">${escHtml(p.title||'')}</strong>
+          </div>
+        </div>`;
+      });
+      if(commentedItems.length > 5){
+        html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-commented').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
+      }
+      setHTML('mypage-commented', html);
+      
     }).catch(function(e){
       console.error('댓글단 작품 오류:',e);
       setHTML('mypage-commented','<p class="empty-msg">불러오지 못했습니다.</p>');
