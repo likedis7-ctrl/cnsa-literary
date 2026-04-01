@@ -21,9 +21,9 @@
   --font-serif:'Noto Serif KR',serif;--font-sans:'Noto Sans KR',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;}
-body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.7;}
-header{background:var(--ink);color:var(--paper);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px var(--shadow);}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.7;overflow-x:hidden;}
+header{background:var(--ink);color:var(--paper);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px var(--shadow);width:100%;max-width:100vw;}
 .header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;}
 .site-logo{font-family:var(--font-serif);font-size:1.25rem;font-weight:700;color:var(--gold2);letter-spacing:-.02em;white-space:nowrap;cursor:pointer;}
 .site-logo span{color:var(--paper);font-weight:300;font-size:.9rem;margin-left:.4rem;opacity:.7;}
@@ -39,7 +39,7 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .btn-logout:hover{background:rgba(255,255,255,.25);}
 .page{display:none;min-height:80vh;}
 .page-inner{max-width:800px;margin:0 auto;padding:2.5rem 1.5rem;}
-.hero{background:linear-gradient(160deg,var(--ink) 0%,#2d1f0e 100%);color:var(--paper);text-align:center;padding:5rem 1.5rem 4rem;position:relative;overflow:hidden;}
+.hero{background:linear-gradient(160deg,var(--ink) 0%,#2d1f0e 100%);color:var(--paper);text-align:center;padding:5rem 1.5rem 4rem;position:relative;overflow:hidden;width:100%;max-width:100%;}
 .hero::before{content:'大';position:absolute;font-family:var(--font-serif);font-size:40vw;color:rgba(255,255,255,.03);top:-10%;left:50%;transform:translateX(-50%);pointer-events:none;}
 .hero-eyebrow{font-size:.78rem;letter-spacing:.25em;color:var(--gold2);margin-bottom:1rem;opacity:.9;}
 .hero-title{font-family:var(--font-serif);font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.2;margin-bottom:1rem;color:var(--paper);}
@@ -172,7 +172,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   .header-inner{padding:.6rem 1rem;position:relative;}
   .site-logo{font-size:1.1rem;}
   nav{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,15,10,.97);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
-  nav.open{display:flex;}
+  nav.open{display:flex;overflow-x:hidden;}
   .nav-link{font-size:1.1rem;padding:.75rem 2rem;color:rgba(255,255,255,.85);width:100%;text-align:center;border-radius:8px;}
   .nav-link:hover,.nav-link.active{background:rgba(255,255,255,.1);color:var(--gold2);}
   .hamburger{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:.5rem;z-index:300;}
@@ -433,7 +433,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.07</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.08</footer>
 
 <script>
 //
@@ -603,14 +603,13 @@ function renderHome(){
     const docs=snap.docs;
     const random=docs[Math.floor(Math.random()*docs.length)];
     const p={id:random.id,...random.data()};
-    const bodyText=(p.body||'').replace(/<[^>]*>/g,'');
+    const bodyText=(p.body||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
     const prev=bodyText.substring(0,120);
     setHTML('home-featured',`<div class="today-card" onclick="navigateTo('post','${p.id}')">
       <div class="today-card-inner">
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
         <h2 class="today-title">${escHtml(p.title||'')}</h2>
-        <p class="today-intro">${escHtml(p.intro||'')}</p>
-        <p class="today-preview">${escHtml(prev)}${bodyText.length>120?'…':''}</p>
+          <p class="today-preview">${escHtml(prev)}${bodyText.length>120?'…':''}</p>
         <div class="today-meta">
           <span>✍ ${escHtml(p.penName||'')}</span>
           <span>♥ ${p.likeCount||0}</span>
@@ -732,7 +731,9 @@ function filterAndRenderGallery(){
   if(s) posts=posts.filter(p=>(p.title||'').toLowerCase().includes(s)||(p.body||'').toLowerCase().includes(s)||(p.penName||'').toLowerCase().includes(s));
   let html='';
   posts.forEach(p=>{
-    const prev=(p.body||'').substring(0,100);
+    const rawBody=(p.body||'');
+    const plainBody=rawBody.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+    const prev=plainBody.substring(0,100);
     html+=`<article class="gallery-card" onclick="navigateTo('post','${p.id}')">
       <div>
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
