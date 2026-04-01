@@ -497,12 +497,12 @@ function toast(msg,type='info'){
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3000);
 }
 
-// === 수정된 라우터 함수: 문법 오류 해결 및 즉시 전환 반영 ===
+// === 수정된 라우터 함수 ===
 function navigateTo(page, param) {
   // 1. 화면 즉시 전환 (먹통 방지)
   _doNavigate(page, param);
 
-  // 2. 비동기 권한/모드 체크 (전환 후 제한된 페이지면 튕겨내기)
+  // 2. 비동기 권한/모드 체크
   db.collection('config').doc('siteMode').get().then(doc=>{
     if(doc.exists) siteMode = doc.data().mode || 'apply';
     if(page==='gallery' && siteMode==='apply' && !(currentUserData&&currentUserData.role==='admin')){
@@ -636,7 +636,6 @@ function renderHome(){
       .replace(/\n\n+/g,'\n')
       .trim();
     const prev=bodyText.substring(0,120);
-    // === 템플릿 리터럴로 수정 ===
     setHTML('home-featured',`<div class="today-card" onclick="navigateTo('post','${p.id}')">
       <div class="today-card-inner">
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
@@ -793,15 +792,25 @@ function filterAndRenderGallery(){
   var pagePosts=posts.slice(pageStart,pageStart+GALLERY_PER_PAGE);
   var html='';
   
-  // === 문법 오류(Syntax Error)를 일으키던 작은따옴표를 템플릿 리터럴로 수정 ===
+  // === 줄바꿈 반영 및 작품소개 숨김 처리 ===
   pagePosts.forEach(function(p){
-    var prev=(p.body||'').replace(/<[^>]*>/g,'').substring(0,100);
+    var bodyText=(p.body||'')
+      .replace(/<div><br><\/div>/gi,'\n')
+      .replace(/<div>/gi,'\n')
+      .replace(/<\/div>/gi,'')
+      .replace(/<br\s*\/?>/gi,'\n')
+      .replace(/<p>/gi,'')
+      .replace(/<\/p>/gi,'\n')
+      .replace(/<[^>]*>/g,'')
+      .replace(/\n\n+/g,'\n')
+      .trim();
+    var prev=bodyText.substring(0,100);
+
     html += `<article class="gallery-card" onclick="navigateTo('post','${p.id}')">
       <div>
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
         <h3>${escHtml(p.title||'제목 없음')}</h3>
-        <p class="intro-text">${escHtml(p.intro||'')}</p>
-        <p class="body-preview">${escHtml(prev)}${prev.length>=100?'…':''}</p>
+        <p class="body-preview" style="white-space:pre-line">${escHtml(prev)}${bodyText.length>100?'…':''}</p>
       </div>
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
@@ -1100,11 +1109,11 @@ function renderMyPage(){
   setText('mypage-penname', currentUserData.penName);
   setText('mypage-email', currentUserData.email||'');
 
+  // 내가 쓴 작품 (전체 출력 유지)
   db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc').get().then(function(snap){
     var posts = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     setText('mypost-count', posts.length);
     var html = '';
-    // === 문법 오류 템플릿 리터럴 수정 ===
     posts.forEach(function(p){
       html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
@@ -1115,18 +1124,22 @@ function renderMyPage(){
     setHTML('mypage-posts', html||'<p class="empty-msg">작성한 작품이 없습니다.</p>');
   });
 
+  // === 좋아요한 작품 (5개 출력 및 더보기) ===
   db.collection('posts').where('likes','array-contains',currentUser.uid).get().then(function(snap){
     var posts = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     setText('myliked-count', posts.length);
     var html = '';
-    // === 문법 오류 템플릿 리터럴 수정 ===
-    posts.forEach(function(p){
-      html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
+    posts.forEach(function(p, i){
+      var hiddenStyle = i >= 5 ? 'style="display:none;" class="extra-liked"' : '';
+      html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')" ${hiddenStyle}>
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
         <strong>${escHtml(p.title||'')}</strong>
         <span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span>
       </div>`;
     });
+    if(posts.length > 5){
+      html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-liked').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
+    }
     setHTML('mypage-liked', html||'<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
   });
 
@@ -1147,17 +1160,21 @@ function renderMyPage(){
       }
       Promise.all(commentedIds.map(function(id){ return db.collection('posts').doc(id).get(); }))
         .then(function(docs){
+          var validDocs = docs.filter(function(doc){ return doc.exists; });
           var html = '';
-          // === 문법 오류 템플릿 리터럴 수정 ===
-          docs.forEach(function(doc){
-            if(!doc.exists) return;
+          // === 댓글단 작품 (5개 출력 및 더보기) ===
+          validDocs.forEach(function(doc, i){
             var p = Object.assign({id:doc.id},doc.data());
-            html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
+            var hiddenStyle = i >= 5 ? 'style="display:none;" class="extra-commented"' : '';
+            html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')" ${hiddenStyle}>
               <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
               <strong>${escHtml(p.title||'')}</strong>
               <span class="mypage-item-meta">${formatDate(p.createdAt)} · ♥${p.likeCount||0}</span>
             </div>`;
           });
+          if(validDocs.length > 5){
+            html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-commented').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
+          }
           setHTML('mypage-commented', html||'<p class="empty-msg">댓글단 작품이 없습니다.</p>');
         });
     }).catch(function(e){
