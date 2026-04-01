@@ -26,7 +26,7 @@ body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);min-h
 header{background:#B3AB8D;color:var(--ink);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px var(--shadow);width:100%;max-width:100vw;}
 .header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;}
 .site-logo{font-family:var(--font-serif);font-size:1.25rem;font-weight:700;color:var(--ink);letter-spacing:-.02em;white-space:nowrap;cursor:pointer;}
-.site-logo span{color:var(--ink2);font-weight:300;font-size:.9rem;margin-left:.4rem;opacity:.8;}
+.site-logo span{color:var(--ink2);font-weight:300;font-size:.9rem;margin-left:.4rem;opacity:.7;}
 nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .nav-link{font-size:.82rem;padding:.4rem .7rem;border-radius:6px;color:rgba(26,23,20,.75);cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none;}
 .nav-link:hover,.nav-link.active{color:var(--ink);background:rgba(26,23,20,.12);font-weight:500;}
@@ -102,7 +102,7 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .btn-back:hover{color:var(--gold);}
 .post-detail{background:white;border:1px solid var(--paper3);border-radius:12px;padding:2.5rem;}
 .post-header{margin-bottom:2rem;padding:1.75rem 2rem;background:rgba(179,171,141,.12);border-radius:10px;border-left:4px solid #B3AB8D;}
-.post-title{font-family:var(--font-serif);font-size:1.8rem;font-weight:700;margin:.75rem 0 .75rem;line-height:1.3;}
+.post-title{font-family:var(--font-serif);font-size:1.8rem;font-weight:700;margin:.5rem 0 .75rem;line-height:1.3;}
 .post-meta{display:flex;align-items:center;gap:1.25rem;font-size:.85rem;color:var(--ink2);flex-wrap:wrap;margin-top:.75rem;padding-top:.75rem;border-top:1px solid rgba(179,171,141,.35);}
 .post-intro{border-left:3px solid var(--gold);padding:.75rem 1.25rem;color:var(--ink2);font-style:italic;font-family:var(--font-serif);background:var(--paper2);border-radius:0 6px 6px 0;margin-top:.5rem;}
 .post-body{font-family:var(--font-serif);font-size:1.05rem;line-height:2;color:var(--ink);white-space:pre-wrap;margin:2rem 0;}
@@ -453,7 +453,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.10</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.11</footer>
 
 <script>
 //
@@ -758,97 +758,98 @@ function renderGallery(){
 
 function filterAndRenderGallery(){
   var posts = allPosts.slice();
-  if(galleryCategory !== 'all') posts = posts.filter(function(p){ return p.category === galleryCategory; });
-  var s = gallerySearch.toLowerCase();
-  if(s) posts = posts.filter(function(p){
-    return (p.title||'').toLowerCase().indexOf(s) > -1 ||
-           (p.body||'').toLowerCase().indexOf(s) > -1 ||
-           (p.penName||'').toLowerCase().indexOf(s) > -1;
+  if(galleryCategory!=='all') posts=posts.filter(function(p){return p.category===galleryCategory;});
+  var s=gallerySearch.toLowerCase();
+  if(s) posts=posts.filter(function(p){
+    return (p.title||'').toLowerCase().indexOf(s)>-1||
+           (p.body||'').replace(/<[^>]*>/g,'').toLowerCase().indexOf(s)>-1||
+           (p.penName||'').toLowerCase().indexOf(s)>-1;
   });
-  if(gallerySort === 'random'){
-    for(var i=posts.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=posts[i]; posts[i]=posts[j]; posts[j]=tmp; }
-  } else if(gallerySort === '가나다'){
-    posts.sort(function(a,b){ return (a.title||'').localeCompare(b.title||'','ko'); });
-  } else if(gallerySort === '좋아요'){
-    posts.sort(function(a,b){ return (b.likeCount||0)-(a.likeCount||0); });
-  } else if(gallerySort === '댓글'){
-    posts.sort(function(a,b){ return (b.commentCount||0)-(a.commentCount||0); });
-  } else if(gallerySort === '최신'){
+  if(gallerySort==='random'){
+    for(var i=posts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=posts[i];posts[i]=posts[j];posts[j]=t;}
+  }else if(gallerySort==='가나다'){
+    posts.sort(function(a,b){return(a.title||'').localeCompare(b.title||'','ko');});
+  }else if(gallerySort==='좋아요'){
+    posts.sort(function(a,b){return(b.likeCount||0)-(a.likeCount||0);});
+  }else if(gallerySort==='댓글'){
+    posts.sort(function(a,b){return(b.commentCount||0)-(a.commentCount||0);});
+  }else if(gallerySort==='최신'){
     posts.sort(function(a,b){
-      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return tb - ta;
+      var ta=a.createdAt?(a.createdAt.toMillis?a.createdAt.toMillis():new Date(a.createdAt).getTime()):0;
+      var tb=b.createdAt?(b.createdAt.toMillis?b.createdAt.toMillis():new Date(b.createdAt).getTime()):0;
+      return tb-ta;
     });
-  } else if(gallerySort === '등록'){
+  }else if(gallerySort==='등록'){
     posts.sort(function(a,b){
-      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return ta - tb;
+      var ta=a.createdAt?(a.createdAt.toMillis?a.createdAt.toMillis():new Date(a.createdAt).getTime()):0;
+      var tb=b.createdAt?(b.createdAt.toMillis?b.createdAt.toMillis():new Date(b.createdAt).getTime()):0;
+      return ta-tb;
     });
   }
-  var total = posts.length;
-  var totalPages = Math.max(1, Math.ceil(total / GALLERY_PER_PAGE));
-  if(galleryPage > totalPages) galleryPage = 1;
-  var start = (galleryPage - 1) * GALLERY_PER_PAGE;
-  var pagePosts = posts.slice(start, start + GALLERY_PER_PAGE);
-  var html = '';
+  var total=posts.length;
+  var totalPages=Math.max(1,Math.ceil(total/GALLERY_PER_PAGE));
+  if(galleryPage>totalPages)galleryPage=1;
+  var pageStart=(galleryPage-1)*GALLERY_PER_PAGE;
+  var pagePosts=posts.slice(pageStart,pageStart+GALLERY_PER_PAGE);
+  var html='';
   pagePosts.forEach(function(p){
-    var prev = (p.body||'').replace(/<[^>]*>/g,'').substring(0,100);
-    html += '<article class="gallery-card" onclick="navigateTo('post','' + p.id + '')">'
-      + '<div>'
-      + '<span class="cat-badge ' + (p.category==='운문'?'badge-verse':'badge-prose') + '">' + escHtml(p.category||'산문') + '</span>'
-      + '<h3>' + escHtml(p.title||'제목 없음') + '</h3>'
-      + '<p class="intro-text">' + escHtml(p.intro||'') + '</p>'
-      + '<p class="body-preview">' + escHtml(prev) + (prev.length>=100?'…':'') + '</p>'
-      + '</div>'
-      + '<div class="gallery-card-bottom">'
-      + '<span class="author">✍ ' + escHtml(p.penName||'') + '</span>'
-      + '<span>' + formatDate(p.createdAt) + '</span>'
-      + '<span>♥ ' + (p.likeCount||0) + '</span>'
-      + '</div>'
-      + '</article>';
+    var prev=(p.body||'').replace(/<[^>]*>/g,'').substring(0,100);
+    html+='<article class="gallery-card" onclick="navigateTo('post',''+p.id+'')">'+
+      '<div>'+
+      '<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category||'산문')+'</span>'+
+      '<h3>'+escHtml(p.title||'제목 없음')+'</h3>'+
+      '<p class="intro-text">'+escHtml(p.intro||'')+'</p>'+
+      '<p class="body-preview">'+escHtml(prev)+(prev.length>=100?'…':'')+'</p>'+
+      '</div>'+
+      '<div class="gallery-card-bottom">'+
+      '<span class="author">✍ '+escHtml(p.penName||'')+'</span>'+
+      '<span>'+formatDate(p.createdAt)+'</span>'+
+      '<span>♥ '+(p.likeCount||0)+'</span>'+
+      '</div>'+
+      '</article>';
   });
-  var pageHtml = '';
-  if(totalPages > 1){
-    pageHtml = '<div class="pagination">';
-    pageHtml += '<button class="page-btn" onclick="setGalleryPage(' + (galleryPage-1) + ')" ' + (galleryPage<=1?'disabled':'') + '>‹</button>';
-    for(var i=1; i<=totalPages; i++){
-      if(i===1 || i===totalPages || Math.abs(i-galleryPage)<=2){
-        pageHtml += '<button class="page-btn ' + (i===galleryPage?'active':'') + '" onclick="setGalleryPage(' + i + ')">' + i + '</button>';
-      } else if(Math.abs(i-galleryPage)===3){
-        pageHtml += '<span class="page-ellipsis">…</span>';
+  var pageHtml='';
+  if(totalPages>1){
+    pageHtml='<div class="pagination">';
+    pageHtml+='<button class="page-btn" onclick="setGalleryPage('+(galleryPage-1)+')" '+(galleryPage<=1?'disabled':'')+'>‹</button>';
+    for(var pi=1;pi<=totalPages;pi++){
+      if(pi===1||pi===totalPages||Math.abs(pi-galleryPage)<=2){
+        pageHtml+='<button class="page-btn '+(pi===galleryPage?'active':'')+'" onclick="setGalleryPage('+pi+')">'+pi+'</button>';
+      }else if(Math.abs(pi-galleryPage)===3){
+        pageHtml+='<span class="page-ellipsis">…</span>';
       }
     }
-    pageHtml += '<button class="page-btn" onclick="setGalleryPage(' + (galleryPage+1) + ')" ' + (galleryPage>=totalPages?'disabled':'') + '>›</button>';
-    pageHtml += '</div>';
+    pageHtml+='<button class="page-btn" onclick="setGalleryPage('+(galleryPage+1)+')" '+(galleryPage>=totalPages?'disabled':'')+'>›</button>';
+    pageHtml+='</div>';
   }
-  var countHtml = '<p class="gallery-count">전체 ' + total + '개 작품 · ' + galleryPage + '/' + totalPages + ' 페이지</p>';
-  setHTML('gallery-grid', (html||'<p class="empty-msg">해당하는 작품이 없습니다.</p>') + pageHtml + countHtml);
+  var countHtml='<p class="gallery-count">전체 '+total+'개 작품 · '+galleryPage+'/'+totalPages+' 페이지</p>';
+  setHTML('gallery-grid',(html||'<p class="empty-msg">해당하는 작품이 없습니다.</p>')+pageHtml+countHtml);
 }
 
 function setGalleryPage(page){
-  var totalPages = Math.ceil(allPosts.length / GALLERY_PER_PAGE) || 1;
-  if(page < 1 || page > totalPages) return;
-  galleryPage = page;
+  var tp=Math.ceil(allPosts.length/GALLERY_PER_PAGE)||1;
+  if(page<1||page>tp)return;
+  galleryPage=page;
   filterAndRenderGallery();
   document.getElementById('page-gallery').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function setGallerySort(sort){
-  gallerySort = sort;
-  galleryPage = 1;
-  document.querySelectorAll('.sort-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.sort===sort); });
+  gallerySort=sort;
+  galleryPage=1;
+  document.querySelectorAll('.sort-btn').forEach(function(b){b.classList.toggle('active',b.dataset.sort===sort);});
   filterAndRenderGallery();
 }
 
-
 function setGalleryCategory(cat){
+  galleryPage=1;
   galleryCategory=cat;
   document.querySelectorAll('.cat-tab').forEach(t=>t.classList.toggle('active',t.dataset.cat===cat));
   filterAndRenderGallery();
 }
 
 function searchGallery(){
+  galleryPage=1;
   gallerySearch=$('gallery-search').value;
   filterAndRenderGallery();
 }
@@ -871,7 +872,7 @@ function renderPost(postId){
     siteMode = currentMode;
     const canEdit = isAdmin || (isOwner && currentMode !== 'view');
     //
-    const actionBtns=canEdit?`<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button></span>`:`<span id="post-action-btns"></span>`;
+    const actionBtns = canEdit ? '<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost(\''+ postId +'\')">수정</button><button class="btn-danger btn-sm" onclick="deletePost(\''+ postId +'\')">삭제</button></span>' : '<span id="post-action-btns"></span>';
     setHTML('page-post',`<div class="page-inner">
       <button class="btn-back" onclick="navigateTo('gallery')">← 목록으로</button>
       <article class="post-detail">
@@ -1097,73 +1098,68 @@ function renderMyPage(){
   setText('mypage-email', currentUserData.email||'');
 
   db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc').get().then(function(snap){
-    var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    var posts = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     setText('mypost-count', posts.length);
     var html = '';
     posts.forEach(function(p){
-      html += '<div class="mypage-item" onclick="navigateTo('post','' + p.id + '')">'
-        + '<span class="cat-badge ' + (p.category==='운문'?'badge-verse':'badge-prose') + '">' + escHtml(p.category) + '</span>'
-        + '<strong>' + escHtml(p.title||'') + '</strong>'
-        + '<span class="mypage-item-meta">' + formatDate(p.createdAt) + ' · ♥' + (p.likeCount||0) + '</span>'
-        + '</div>';
+      html += '<div class="mypage-item" onclick="navigateTo('post',''+p.id+'')">'+
+        '<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category)+'</span>'+
+        '<strong>'+escHtml(p.title||'')+'</strong>'+
+        '<span class="mypage-item-meta">'+formatDate(p.createdAt)+' · ♥'+(p.likeCount||0)+'</span>'+
+        '</div>';
     });
-    setHTML('mypage-posts', html || '<p class="empty-msg">작성한 작품이 없습니다.</p>');
+    setHTML('mypage-posts', html||'<p class="empty-msg">작성한 작품이 없습니다.</p>');
   });
 
   db.collection('posts').where('likes','array-contains',currentUser.uid).get().then(function(snap){
-    var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    var posts = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     setText('myliked-count', posts.length);
     var html = '';
     posts.forEach(function(p){
-      html += '<div class="mypage-item" onclick="navigateTo('post','' + p.id + '')">'
-        + '<span class="cat-badge ' + (p.category==='운문'?'badge-verse':'badge-prose') + '">' + escHtml(p.category) + '</span>'
-        + '<strong>' + escHtml(p.title||'') + '</strong>'
-        + '<span class="mypage-item-meta">✍ ' + escHtml(p.penName||'') + ' · ♥' + (p.likeCount||0) + '</span>'
-        + '</div>';
+      html += '<div class="mypage-item" onclick="navigateTo('post',''+p.id+'')">'+
+        '<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category)+'</span>'+
+        '<strong>'+escHtml(p.title||'')+'</strong>'+
+        '<span class="mypage-item-meta">✍ '+escHtml(p.penName||'')+' · ♥'+(p.likeCount||0)+'</span>'+
+        '</div>';
     });
-    setHTML('mypage-liked', html || '<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
+    setHTML('mypage-liked', html||'<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
   });
 
-  setText('mycommented-count', '...');
-  setHTML('mypage-commented', '<p class="empty-msg">불러오는 중...</p>');
+  setText('mycommented-count','...');
+  setHTML('mypage-commented','<p class="empty-msg">불러오는 중...</p>');
   db.collection('posts').get().then(function(postsSnap){
-    var allPostDocs = postsSnap.docs;
-    var commentedPostIds = [];
-    var checks = allPostDocs.map(function(postDoc){
-      return db.collection('posts').doc(postDoc.id)
-        .collection('comments').where('uid','==',currentUser.uid).limit(1).get()
-        .then(function(cmtSnap){
-          if(!cmtSnap.empty) commentedPostIds.push(postDoc.id);
-        });
+    var commentedIds = [];
+    var checks = postsSnap.docs.map(function(pd){
+      return db.collection('posts').doc(pd.id).collection('comments')
+        .where('uid','==',currentUser.uid).limit(1).get()
+        .then(function(cs){ if(!cs.empty) commentedIds.push(pd.id); });
     });
     Promise.all(checks).then(function(){
-      setText('mycommented-count', commentedPostIds.length);
-      if(commentedPostIds.length === 0){
-        setHTML('mypage-commented', '<p class="empty-msg">댓글단 작품이 없습니다.</p>');
+      setText('mycommented-count', commentedIds.length);
+      if(commentedIds.length===0){
+        setHTML('mypage-commented','<p class="empty-msg">댓글단 작품이 없습니다.</p>');
         return;
       }
-      Promise.all(commentedPostIds.map(function(id){
-        return db.collection('posts').doc(id).get();
-      })).then(function(docs){
-        var html = '';
-        docs.forEach(function(doc){
-          if(!doc.exists) return;
-          var p = Object.assign({id:doc.id}, doc.data());
-          html += '<div class="mypage-item" onclick="navigateTo('post','' + p.id + '')">'
-            + '<span class="cat-badge ' + (p.category==='운문'?'badge-verse':'badge-prose') + '">' + escHtml(p.category) + '</span>'
-            + '<strong>' + escHtml(p.title||'') + '</strong>'
-            + '<span class="mypage-item-meta">' + formatDate(p.createdAt) + ' · ♥' + (p.likeCount||0) + '</span>'
-            + '</div>';
+      Promise.all(commentedIds.map(function(id){ return db.collection('posts').doc(id).get(); }))
+        .then(function(docs){
+          var html = '';
+          docs.forEach(function(doc){
+            if(!doc.exists) return;
+            var p = Object.assign({id:doc.id},doc.data());
+            html += '<div class="mypage-item" onclick="navigateTo('post',''+p.id+'')">'+
+              '<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category)+'</span>'+
+              '<strong>'+escHtml(p.title||'')+'</strong>'+
+              '<span class="mypage-item-meta">'+formatDate(p.createdAt)+' · ♥'+(p.likeCount||0)+'</span>'+
+              '</div>';
+          });
+          setHTML('mypage-commented', html||'<p class="empty-msg">댓글단 작품이 없습니다.</p>');
         });
-        setHTML('mypage-commented', html || '<p class="empty-msg">댓글단 작품이 없습니다.</p>');
-      });
     }).catch(function(e){
-      console.error('댓글단 작품 오류:', e);
-      setHTML('mypage-commented', '<p class="empty-msg">불러오지 못했습니다.</p>');
+      console.error('댓글단 작품 오류:',e);
+      setHTML('mypage-commented','<p class="empty-msg">불러오지 못했습니다.</p>');
     });
   });
 }
-
 
 function execFmt(cmd, val){
   document.getElementById('submit-body-editor').focus();
@@ -1286,16 +1282,12 @@ function toggleNav(){
 function closeNav(){
   const nav = document.getElementById('main-nav');
   const btn = document.getElementById('hamburger-btn');
-  if(nav) nav.classList.remove('open');
-  if(btn) btn.classList.remove('open');
+  if(nav)nav.classList.remove('open');
+  if(btn)btn.classList.remove('open');
 }
 //
-if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', function(){ loadSiteMode(); navigateTo('home'); });
-} else {
-  loadSiteMode();
-  navigateTo('home');
-}
+loadSiteMode();
+navigateTo('home');
 </script>
 </body>
 </html>
