@@ -1286,12 +1286,16 @@ function toggleNav(){
 function closeNav(){
   const nav = document.getElementById('main-nav');
   const btn = document.getElementById('hamburger-btn');
-  nav.classList.remove('open');
-  btn.classList.remove('open');
+  if(nav) nav.classList.remove('open');
+  if(btn) btn.classList.remove('open');
 }
 //
-loadSiteMode();
-navigateTo('home');
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', function(){ loadSiteMode(); navigateTo('home'); });
+} else {
+  loadSiteMode();
+  navigateTo('home');
+}
 </script>
 </body>
 </html>
