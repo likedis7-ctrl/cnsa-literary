@@ -6,7 +6,6 @@
 <title>큰별문학상 온라인전시관</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-<!-- Firebase (type="module" 없이 CDN 방식) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -384,7 +383,6 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<!-- 관리자 페이지 -->
 <div class="page" id="page-admin">
   <div class="page-inner">
     <div class="admin-header">
@@ -427,7 +425,6 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<!-- 잘못된 계정 모달 -->
 <div class="modal-overlay" id="wrong-account-modal" style="display:none">
   <div class="modal" style="text-align:center">
     <div style="font-size:2.5rem;margin-bottom:.75rem">⚠️</div>
@@ -440,7 +437,6 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<!-- 필명 모달 -->
 <div class="modal-overlay" id="penname-modal" style="display:none">
   <div class="modal">
     <h2>✨ 필명 설정</h2>
@@ -501,22 +497,25 @@ function toast(msg,type='info'){
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3000);
 }
 
-//
+// === 수정된 라우터 함수: 문법 오류 해결 및 즉시 전환 반영 ===
 function navigateTo(page, param) {
-  //
+  // 1. 화면 즉시 전환 (먹통 방지)
+  _doNavigate(page, param);
+
+  // 2. 비동기 권한/모드 체크 (전환 후 제한된 페이지면 튕겨내기)
   db.collection('config').doc('siteMode').get().then(doc=>{
     if(doc.exists) siteMode = doc.data().mode || 'apply';
     if(page==='gallery' && siteMode==='apply' && !(currentUserData&&currentUserData.role==='admin')){
       toast('감상은 감상기간 (5월 11일~14일)에만 가능합니다.','error');
+      _doNavigate('home');
       return;
     }
     if(page==='submit' && siteMode==='view' && !(currentUserData&&currentUserData.role==='admin')){
       toast('응모가 마감되었습니다.','error');
+      _doNavigate('gallery');
       return;
     }
-    _doNavigate(page, param);
-  }).catch(()=>_doNavigate(page, param));
-  return;
+  }).catch(e=>console.log(e));
 }
 
 function _doNavigate(page, param) {
@@ -637,6 +636,7 @@ function renderHome(){
       .replace(/\n\n+/g,'\n')
       .trim();
     const prev=bodyText.substring(0,120);
+    // === 템플릿 리터럴로 수정 ===
     setHTML('home-featured',`<div class="today-card" onclick="navigateTo('post','${p.id}')">
       <div class="today-card-inner">
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
@@ -792,22 +792,25 @@ function filterAndRenderGallery(){
   var pageStart=(galleryPage-1)*GALLERY_PER_PAGE;
   var pagePosts=posts.slice(pageStart,pageStart+GALLERY_PER_PAGE);
   var html='';
+  
+  // === 문법 오류(Syntax Error)를 일으키던 작은따옴표를 템플릿 리터럴로 수정 ===
   pagePosts.forEach(function(p){
     var prev=(p.body||'').replace(/<[^>]*>/g,'').substring(0,100);
-    html+='<article class="gallery-card" onclick="navigateTo('post',''+p.id+'')">'+
-      '<div>'+
-      '<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category||'산문')+'</span>'+
-      '<h3>'+escHtml(p.title||'제목 없음')+'</h3>'+
-      '<p class="intro-text">'+escHtml(p.intro||'')+'</p>'+
-      '<p class="body-preview">'+escHtml(prev)+(prev.length>=100?'…':'')+'</p>'+
-      '</div>'+
-      '<div class="gallery-card-bottom">'+
-      '<span class="author">✍ '+escHtml(p.penName||'')+'</span>'+
-      '<span>'+formatDate(p.createdAt)+'</span>'+
-      '<span>♥ '+(p.likeCount||0)+'</span>'+
-      '</div>'+
-      '</article>';
+    html += `<article class="gallery-card" onclick="navigateTo('post','${p.id}')">
+      <div>
+        <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
+        <h3>${escHtml(p.title||'제목 없음')}</h3>
+        <p class="intro-text">${escHtml(p.intro||'')}</p>
+        <p class="body-preview">${escHtml(prev)}${prev.length>=100?'…':''}</p>
+      </div>
+      <div class="gallery-card-bottom">
+        <span class="author">✍ ${escHtml(p.penName||'')}</span>
+        <span>${formatDate(p.createdAt)}</span>
+        <span>♥ ${p.likeCount||0}</span>
+      </div>
+    </article>`;
   });
+  
   var pageHtml='';
   if(totalPages>1){
     pageHtml='<div class="pagination">';
@@ -872,7 +875,7 @@ function renderPost(postId){
     siteMode = currentMode;
     const canEdit = isAdmin || (isOwner && currentMode !== 'view');
     //
-    const actionBtns = canEdit ? '<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost(\''+ postId +'\')">수정</button><button class="btn-danger btn-sm" onclick="deletePost(\''+ postId +'\')">삭제</button></span>' : '<span id="post-action-btns"></span>';
+    const actionBtns = canEdit ? `<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button></span>` : `<span id="post-action-btns"></span>`;
     setHTML('page-post',`<div class="page-inner">
       <button class="btn-back" onclick="navigateTo('gallery')">← 목록으로</button>
       <article class="post-detail">
@@ -1101,12 +1104,13 @@ function renderMyPage(){
     var posts = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     setText('mypost-count', posts.length);
     var html = '';
+    // === 문법 오류 템플릿 리터럴 수정 ===
     posts.forEach(function(p){
-      html += '<div class="mypage-item" onclick="navigateTo('post',''+p.id+'')">'+
-        '<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category)+'</span>'+
-        '<strong>'+escHtml(p.title||'')+'</strong>'+
-        '<span class="mypage-item-meta">'+formatDate(p.createdAt)+' · ♥'+(p.likeCount||0)+'</span>'+
-        '</div>';
+      html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
+        <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
+        <strong>${escHtml(p.title||'')}</strong>
+        <span class="mypage-item-meta">${formatDate(p.createdAt)} · ♥${p.likeCount||0}</span>
+      </div>`;
     });
     setHTML('mypage-posts', html||'<p class="empty-msg">작성한 작품이 없습니다.</p>');
   });
@@ -1115,12 +1119,13 @@ function renderMyPage(){
     var posts = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     setText('myliked-count', posts.length);
     var html = '';
+    // === 문법 오류 템플릿 리터럴 수정 ===
     posts.forEach(function(p){
-      html += '<div class="mypage-item" onclick="navigateTo('post',''+p.id+'')">'+
-        '<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category)+'</span>'+
-        '<strong>'+escHtml(p.title||'')+'</strong>'+
-        '<span class="mypage-item-meta">✍ '+escHtml(p.penName||'')+' · ♥'+(p.likeCount||0)+'</span>'+
-        '</div>';
+      html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
+        <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
+        <strong>${escHtml(p.title||'')}</strong>
+        <span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span>
+      </div>`;
     });
     setHTML('mypage-liked', html||'<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
   });
@@ -1143,14 +1148,15 @@ function renderMyPage(){
       Promise.all(commentedIds.map(function(id){ return db.collection('posts').doc(id).get(); }))
         .then(function(docs){
           var html = '';
+          // === 문법 오류 템플릿 리터럴 수정 ===
           docs.forEach(function(doc){
             if(!doc.exists) return;
             var p = Object.assign({id:doc.id},doc.data());
-            html += '<div class="mypage-item" onclick="navigateTo('post',''+p.id+'')">'+
-              '<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category)+'</span>'+
-              '<strong>'+escHtml(p.title||'')+'</strong>'+
-              '<span class="mypage-item-meta">'+formatDate(p.createdAt)+' · ♥'+(p.likeCount||0)+'</span>'+
-              '</div>';
+            html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
+              <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
+              <strong>${escHtml(p.title||'')}</strong>
+              <span class="mypage-item-meta">${formatDate(p.createdAt)} · ♥${p.likeCount||0}</span>
+            </div>`;
           });
           setHTML('mypage-commented', html||'<p class="empty-msg">댓글단 작품이 없습니다.</p>');
         });
