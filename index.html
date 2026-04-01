@@ -1092,41 +1092,80 @@ function saveEdit(e,postId){
 //
 function renderMyPage(){
   if(!currentUser||!currentUserData){
-    setHTML('mypage-content',`<div class="center-msg"><p>로그인 후 이용할 수 있습니다.</p><button class="btn-primary" onclick="doLogin()">Google 로그인</button></div>`);
+    setHTML('mypage-content','<div class="center-msg"><p>로그인 후 이용할 수 있습니다.</p><button class="btn-primary" onclick="doLogin()">Google 로그인</button></div>');
     return;
   }
   setText('mypage-penname',currentUserData.penName);
   setText('mypage-email',currentUserData.email||'');
-  db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc').get().then(snap=>{
-    const posts=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // 내가 쓴 작품
+  db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc').get().then(function(snap){
+    var posts=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
     setText('mypost-count',posts.length);
-    let html='';
-    posts.forEach(p=>{html+=`<div class="mypage-item" onclick="navigateTo('post','${p.id}')"><span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span><strong>${escHtml(p.title||'')}</strong><span class="mypage-item-meta">${formatDate(p.createdAt)} · ♥${p.likeCount||0}</span></div>`;});
+    var html='';
+    posts.forEach(function(p){
+      html+='<div class="mypage-item" onclick="navigateTo('post',''+p.id+'')">'
+        +'<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category)+'</span>'
+        +'<strong>'+escHtml(p.title||'')+'</strong>'
+        +'<span class="mypage-item-meta">'+formatDate(p.createdAt)+' · ♥'+(p.likeCount||0)+'</span>'
+        +'</div>';
+    });
     setHTML('mypage-posts',html||'<p class="empty-msg">작성한 작품이 없습니다.</p>');
   });
-  db.collection('posts').where('likes','array-contains',currentUser.uid).get().then(snap=>{
-    const posts=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // 좋아요한 작품
+  db.collection('posts').where('likes','array-contains',currentUser.uid).get().then(function(snap){
+    var posts=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
     setText('myliked-count',posts.length);
-    let html='';
-    posts.forEach(p=>{html+=`<div class="mypage-item" onclick="navigateTo('post','${p.id}')"><span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span><strong>${escHtml(p.title||'')}</strong><span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span></div>`;});
+    var html='';
+    posts.forEach(function(p){
+      html+='<div class="mypage-item" onclick="navigateTo('post',''+p.id+'')">'
+        +'<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category)+'</span>'
+        +'<strong>'+escHtml(p.title||'')+'</strong>'
+        +'<span class="mypage-item-meta">✍ '+escHtml(p.penName||'')+' · ♥'+(p.likeCount||0)+'</span>'
+        +'</div>';
+    });
     setHTML('mypage-liked',html||'<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
   });
 
-  //
-  db.collectionGroup('comments').where('uid','==',currentUser.uid).get().then(snap=>{
-    const postIds=[...new Set(snap.docs.map(d=>d.ref.parent.parent.id))];
-    setText('mycommented-count',postIds.length);
-    if(postIds.length===0){setHTML('mypage-commented','<p class="empty-msg">댓글단 작품이 없습니다.</p>');return;}
-    Promise.all(postIds.map(id=>db.collection('posts').doc(id).get())).then(docs=>{
-      let html='';
-      docs.forEach(doc=>{
-        if(!doc.exists) return;
-        const p={id:doc.id,...doc.data()};
-        html+=`<div class="mypage-item" onclick="navigateTo('post','${p.id}')"><span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span><strong>${escHtml(p.title||'')}</strong><span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span></div>`;
+  // 내가 댓글단 작품
+  (function(){
+    db.collection('posts').get().then(function(postsSnap){
+      var commentedPostIds=[];
+      var checks=postsSnap.docs.map(function(postDoc){
+        return db.collection('posts').doc(postDoc.id)
+          .collection('comments').where('uid','==',currentUser.uid).limit(1).get()
+          .then(function(cmtSnap){
+            if(!cmtSnap.empty) commentedPostIds.push(postDoc.id);
+          });
       });
-      setHTML('mypage-commented',html||'<p class="empty-msg">댓글단 작품이 없습니다.</p>');
+      return Promise.all(checks).then(function(){
+        setText('mycommented-count',commentedPostIds.length);
+        if(commentedPostIds.length===0){
+          setHTML('mypage-commented','<p class="empty-msg">댓글단 작품이 없습니다.</p>');
+          return;
+        }
+        return Promise.all(commentedPostIds.map(function(id){
+          return db.collection('posts').doc(id).get();
+        })).then(function(docs){
+          var html='';
+          docs.forEach(function(doc){
+            if(!doc.exists) return;
+            var p=Object.assign({id:doc.id},doc.data());
+            html+='<div class="mypage-item" onclick="navigateTo('post',''+p.id+'')">'
+              +'<span class="cat-badge '+(p.category==='운문'?'badge-verse':'badge-prose')+'">'+escHtml(p.category)+'</span>'
+              +'<strong>'+escHtml(p.title||'')+'</strong>'
+              +'<span class="mypage-item-meta">'+formatDate(p.createdAt)+' · ♥'+(p.likeCount||0)+'</span>'
+              +'</div>';
+          });
+          setHTML('mypage-commented',html||'<p class="empty-msg">댓글단 작품이 없습니다.</p>');
+        });
+      });
+    }).catch(function(e){
+      console.error('댓글단 작품 오류:',e);
+      setHTML('mypage-commented','<p class="empty-msg">불러오지 못했습니다.</p>');
     });
-  });
+  })();
 }
 
 
@@ -2399,22 +2438,6 @@ function renderMyPage(){
     let html='';
     posts.forEach(p=>{html+=`<div class="mypage-item" onclick="navigateTo('post','${p.id}')"><span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span><strong>${escHtml(p.title||'')}</strong><span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span></div>`;});
     setHTML('mypage-liked',html||'<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
-  });
-
-  //
-  db.collectionGroup('comments').where('uid','==',currentUser.uid).get().then(snap=>{
-    const postIds=[...new Set(snap.docs.map(d=>d.ref.parent.parent.id))];
-    setText('mycommented-count',postIds.length);
-    if(postIds.length===0){setHTML('mypage-commented','<p class="empty-msg">댓글단 작품이 없습니다.</p>');return;}
-    Promise.all(postIds.map(id=>db.collection('posts').doc(id).get())).then(docs=>{
-      let html='';
-      docs.forEach(doc=>{
-        if(!doc.exists) return;
-        const p={id:doc.id,...doc.data()};
-        html+=`<div class="mypage-item" onclick="navigateTo('post','${p.id}')"><span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span><strong>${escHtml(p.title||'')}</strong><span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span></div>`;
-      });
-      setHTML('mypage-commented',html||'<p class="empty-msg">댓글단 작품이 없습니다.</p>');
-    });
   });
 }
 
