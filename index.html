@@ -449,7 +449,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.11</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.12</footer>
 
 <script>
 //
@@ -792,7 +792,6 @@ function filterAndRenderGallery(){
   var pagePosts=posts.slice(pageStart,pageStart+GALLERY_PER_PAGE);
   var html='';
   
-  // === 줄바꿈 반영 및 작품소개 숨김 처리 적용 ===
   pagePosts.forEach(function(p){
     var bodyText=(p.body||'')
       .replace(/<div><br><\/div>/gi,'\n')
@@ -806,18 +805,18 @@ function filterAndRenderGallery(){
       .trim();
     var prev=bodyText.substring(0,100);
 
-    html += `<article class="gallery-card" onclick="navigateTo('post','${p.id}')">
-      <div>
-        <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
-        <h3>${escHtml(p.title||'제목 없음')}</h3>
-        <p class="body-preview" style="white-space:pre-line">${escHtml(prev)}${bodyText.length>100?'…':''}</p>
-      </div>
-      <div class="gallery-card-bottom">
-        <span class="author">✍ ${escHtml(p.penName||'')}</span>
-        <span>${formatDate(p.createdAt)}</span>
-        <span>♥ ${p.likeCount||0}</span>
-      </div>
-    </article>`;
+    html += '<article class="gallery-card" onclick="navigateTo(\'post\',\'' + p.id + '\')">'
+      + '<div>'
+      + '<span class="cat-badge ' + (p.category==='운문'?'badge-verse':'badge-prose') + '">' + escHtml(p.category||'산문') + '</span>'
+      + '<h3>' + escHtml(p.title||'제목 없음') + '</h3>'
+      + '<p class="body-preview" style="white-space:pre-line">' + escHtml(prev) + (bodyText.length>100?'…':'') + '</p>'
+      + '</div>'
+      + '<div class="gallery-card-bottom">'
+      + '<span class="author">✍ ' + escHtml(p.penName||'') + '</span>'
+      + '<span>' + formatDate(p.createdAt) + '</span>'
+      + '<span>♥ ' + (p.likeCount||0) + '</span>'
+      + '</div>'
+      + '</article>';
   });
   
   var pageHtml='';
@@ -884,7 +883,7 @@ function renderPost(postId){
     siteMode = currentMode;
     const canEdit = isAdmin || (isOwner && currentMode !== 'view');
     //
-    const actionBtns = canEdit ? `<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button></span>` : `<span id="post-action-btns"></span>`;
+    const actionBtns = canEdit ? '<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost(\''+ postId +'\')">수정</button><button class="btn-danger btn-sm" onclick="deletePost(\''+ postId +'\')">삭제</button></span>' : '<span id="post-action-btns"></span>';
     setHTML('page-post',`<div class="page-inner">
       <button class="btn-back" onclick="navigateTo('gallery')">← 목록으로</button>
       <article class="post-detail">
@@ -1109,52 +1108,69 @@ function renderMyPage(){
   setText('mypage-penname', currentUserData.penName);
   setText('mypage-email', currentUserData.email||'');
 
-  // 내가 쓴 작품 (전체 출력 유지)
-  db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc').get().then(function(snap){
-    var posts = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+  // 내가 쓴 작품
+  db.collection('posts').where('uid','==',currentUser.uid).get().then(function(snap){
+    var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    posts.sort(function(a,b){
+      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+      return tb - ta;
+    });
     setText('mypost-count', posts.length);
     var html = '';
     posts.forEach(function(p){
-      html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
-        <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
-        <strong>${escHtml(p.title||'')}</strong>
-        <span class="mypage-item-meta">${formatDate(p.createdAt)} · ♥${p.likeCount||0}</span>
-      </div>`;
+      html += '<div class="mypage-item" onclick="navigateTo(\'post\',\'' + p.id + '\')">'
+        + '<span class="cat-badge ' + (p.category==='운문'?'badge-verse':'badge-prose') + '">' + escHtml(p.category) + '</span>'
+        + '<strong>' + escHtml(p.title||'') + '</strong>'
+        + '<span class="mypage-item-meta">' + formatDate(p.createdAt) + ' · ♥' + (p.likeCount||0) + '</span>'
+        + '</div>';
     });
-    setHTML('mypage-posts', html||'<p class="empty-msg">작성한 작품이 없습니다.</p>');
+    setHTML('mypage-posts', html || '<p class="empty-msg">작성한 작품이 없습니다.</p>');
   });
 
-  // === 좋아요한 작품 (5개 출력 및 더보기 오류 수정) ===
+  // 좋아요한 작품
   db.collection('posts').where('likes','array-contains',currentUser.uid).get().then(function(snap){
-    var posts = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+    var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    posts.sort(function(a,b){
+      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+      return tb - ta;
+    });
     setText('myliked-count', posts.length);
     var html = '';
     posts.forEach(function(p, i){
       var extraClass = i >= 5 ? ' extra-liked' : '';
       var hiddenStyle = i >= 5 ? 'style="display:none;"' : '';
-      html += `<div class="mypage-item${extraClass}" onclick="navigateTo('post','${p.id}')" ${hiddenStyle}>
-        <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
-        <strong>${escHtml(p.title||'')}</strong>
-        <span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span>
-      </div>`;
+      html += '<div class="mypage-item' + extraClass + '" onclick="navigateTo(\'post\',\'' + p.id + '\')" ' + hiddenStyle + '>'
+        + '<span class="cat-badge ' + (p.category==='운문'?'badge-verse':'badge-prose') + '">' + escHtml(p.category) + '</span>'
+        + '<strong>' + escHtml(p.title||'') + '</strong>'
+        + '<span class="mypage-item-meta">✍ ' + escHtml(p.penName||'') + ' · ♥' + (p.likeCount||0) + '</span>'
+        + '</div>';
     });
     if(posts.length > 5){
-      html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-liked').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
+      html += '<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll(\'.extra-liked\').forEach(function(el){el.style.display=\'\';}); this.style.display=\'none\';">더보기 ↓</button>';
     }
-    setHTML('mypage-liked', html||'<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
+    setHTML('mypage-liked', html || '<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
   });
 
-  // === 댓글단 작품 (출력 형식 변경 및 더보기 추가) ===
-  setText('mycommented-count','...');
-  setHTML('mypage-commented','<p class="empty-msg">불러오는 중...</p>');
+  // === 댓글단 작품 (에러 수정 및 디자인 변경) ===
+  setText('mycommented-count', '...');
+  setHTML('mypage-commented', '<p class="empty-msg">불러오는 중...</p>');
   db.collection('posts').get().then(function(postsSnap){
     var commentedItems = [];
     var checks = postsSnap.docs.map(function(pd){
+      // 복합 색인 에러 방지를 위해 orderBy 제거
       return db.collection('posts').doc(pd.id).collection('comments')
-        .where('uid','==',currentUser.uid).orderBy('createdAt','desc').limit(1).get()
+        .where('uid','==',currentUser.uid).get()
         .then(function(cs){ 
           if(!cs.empty) {
-            var cData = cs.docs[0].data();
+            var cmts = cs.docs.map(function(d){ return d.data(); });
+            cmts.sort(function(a,b){
+              var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+              var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+              return tb - ta; 
+            });
+            var cData = cmts[0]; 
             commentedItems.push({
               postId: pd.id,
               postData: pd.data(),
@@ -1186,16 +1202,16 @@ function renderMyPage(){
         var cBody = item.commentBody || '';
         if(cBody.length > 30) cBody = cBody.substring(0, 30) + '...';
 
-        html += `<div class="mypage-item${extraClass}" onclick="navigateTo('post','${item.postId}')" ${hiddenStyle} style="align-items:flex-start; flex-direction:column; gap:0.4rem;">
-          <div style="font-size:0.95rem; color:var(--ink); line-height:1.5; word-break:keep-all; width:100%;">💬 "${escHtml(cBody)}"</div>
-          <div style="display:flex; align-items:center; gap:0.5rem; width:100%;">
-            <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category)}</span>
-            <strong style="font-size:0.85rem; color:var(--ink2); font-weight:500;">${escHtml(p.title||'')}</strong>
-          </div>
-        </div>`;
+        html += '<div class="mypage-item' + extraClass + '" onclick="navigateTo(\'post\',\'' + item.postId + '\')" ' + hiddenStyle + ' style="align-items:flex-start; flex-direction:column; gap:0.4rem;">'
+          + '<div style="font-size:0.95rem; color:var(--ink); line-height:1.5; word-break:keep-all; width:100%;">💬 "' + escHtml(cBody) + '"</div>'
+          + '<div style="display:flex; align-items:center; gap:0.5rem; width:100%;">'
+          + '<span class="cat-badge ' + (p.category==='운문'?'badge-verse':'badge-prose') + '">' + escHtml(p.category) + '</span>'
+          + '<strong style="font-size:0.85rem; color:var(--ink2); font-weight:500;">' + escHtml(p.title||'') + '</strong>'
+          + '</div>'
+          + '</div>';
       });
       if(commentedItems.length > 5){
-        html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-commented').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
+        html += '<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll(\'.extra-commented\').forEach(function(el){el.style.display=\'\';}); this.style.display=\'none\';">더보기 ↓</button>';
       }
       setHTML('mypage-commented', html);
       
