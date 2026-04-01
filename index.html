@@ -226,6 +226,15 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 .today-meta{display:flex;align-items:center;gap:1.5rem;font-size:.83rem;color:var(--ink3);}
 .today-read-btn{margin-left:auto;color:var(--gold);font-weight:500;}
 
+/* ── 작가의 다른 작품 ── */
+.author-other-posts { margin-top: 3rem; padding-top: 2rem; border-top: 2px dashed var(--paper3); }
+.author-other-posts h3 { font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 1rem; color: var(--ink); }
+.other-post-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.other-post-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: var(--paper2); border-radius: var(--radius); cursor: pointer; transition: all .15s; }
+.other-post-item:hover { background: var(--paper3); }
+.other-post-item-title { font-weight: 500; font-size: 0.95rem; color: var(--ink); }
+.other-post-item-meta { font-size: 0.8rem; color: var(--ink3); }
+
 /* ── 관리자 페이지 ── */
 .admin-header{background:#B3AB8D;color:var(--ink);padding:2rem 2.5rem;border-radius:12px;margin-bottom:2rem;}
 .admin-header h1{font-family:var(--font-serif);font-size:1.6rem;margin-bottom:.25rem;}
@@ -449,7 +458,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.12</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.14</footer>
 
 <script>
 //
@@ -651,7 +660,28 @@ function renderHome(){
   }).catch(e=>console.error(e));
 }
 
-//
+// === 운문 2편 동시 응모를 위한 UI 토글 함수 ===
+function togglePoemForm() {
+  const cat = document.querySelector('input[name="category"]:checked');
+  const p1Title = document.getElementById('part1-title');
+  const p2Form = document.getElementById('form-part-2');
+  const title2 = document.getElementById('submit-title2');
+  const intro2 = document.getElementById('submit-intro2');
+
+  if (cat && cat.value === '운문') {
+    if(p1Title) p1Title.style.display = 'block';
+    if(p2Form) p2Form.style.display = 'block';
+    if(title2) title2.required = true;
+    if(intro2) intro2.required = true;
+  } else {
+    if(p1Title) p1Title.style.display = 'none';
+    if(p2Form) p2Form.style.display = 'none';
+    if(title2) title2.required = false;
+    if(intro2) intro2.required = false;
+  }
+}
+
+// === 수정된 응모하기 렌더링 (운문 2편 지원) ===
 function renderSubmit(){
   if(siteMode==='view'){
     setHTML('submit-form-wrap',`<div class="center-msg" style="padding:4rem 1rem">
@@ -664,67 +694,132 @@ function renderSubmit(){
     setHTML('submit-form-wrap',`<div class="center-msg"><p>로그인 후 응모할 수 있습니다.</p><button class="btn-primary" onclick="doLogin()">Google 로그인</button></div>`);
     return;
   }
-  $('submit-form-wrap').innerHTML=`<form onsubmit="submitPost(event)">
+  $('submit-form-wrap').innerHTML=`<form id="submission-form" onsubmit="submitPost(event)">
     <div class="form-group">
       <label>카테고리 <span class="required">*</span></label>
       <div class="radio-group">
-        <label class="radio-label"><input type="radio" name="category" value="운문" required> 운문 (시, 시조 등)</label>
-        <label class="radio-label"><input type="radio" name="category" value="산문"> 산문 (수필, 소설 등)</label>
+        <label class="radio-label"><input type="radio" name="category" value="운문" onchange="togglePoemForm()" required> 운문 (시 2편 필수 제출)</label>
+        <label class="radio-label"><input type="radio" name="category" value="산문" onchange="togglePoemForm()"> 산문 (1편 제출)</label>
       </div>
     </div>
-    <div class="form-group">
-      <label>작품 제목 <span class="required">*</span></label>
-      <input type="text" id="submit-title" maxlength="50" placeholder="작품 제목을 입력하세요" required>
-    </div>
-    <div class="form-group">
-      <label>작품 소개 <span class="required">*</span> <span class="char-info"><span id="intro-count">0</span>/200자</span></label>
-      <textarea id="submit-intro" rows="3" maxlength="200" placeholder="작품을 간단히 소개해주세요" required oninput="document.getElementById('intro-count').textContent=this.value.length"></textarea>
-    </div>
-    <div class="form-group">
-      <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count">0</span>/3000자</span></label>
-      <div class="editor-toolbar">
-        <button type="button" class="tb-btn" onclick="execFmt('bold')" title="굵게"><b>B</b></button>
-        <button type="button" class="tb-btn" onclick="execFmt('italic')" title="기울임"><i>I</i></button>
-        <select class="tb-select" onchange="execFmt('fontSize',this.value);this.selectedIndex=0" title="글자 크기">
-          <option value="">크기</option>
-          <option value="1">작게</option>
-          <option value="3">보통</option>
-          <option value="5">크게</option>
-          <option value="7">매우 크게</option>
-        </select>
-        <input type="color" class="tb-color" onchange="execFmt('foreColor',this.value)" title="글자 색상" value="#1a1714">
-        <button type="button" class="tb-btn tb-clear" onclick="clearFmt()" title="서식 초기화">초기화</button>
+
+    <div id="form-part-1">
+      <h3 class="part-title" id="part1-title" style="display:none; margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:2px solid var(--paper3); color:var(--gold);">📝 제1편</h3>
+      <div class="form-group">
+        <label>작품 제목 <span class="required">*</span></label>
+        <input type="text" id="submit-title" maxlength="50" placeholder="작품 제목을 입력하세요" required>
       </div>
-      <div id="submit-body-editor" class="body-editor" contenteditable="true" 
-        oninput="syncBodyEditor()"
-        onpaste="handlePaste(event)"
-        placeholder="작품 본문을 입력하세요 (최대 3000자)"></div>
-      <input type="hidden" id="submit-body">
+      <div class="form-group">
+        <label>작품 소개 <span class="required">*</span> <span class="char-info"><span id="intro-count">0</span>/200자</span></label>
+        <textarea id="submit-intro" rows="3" maxlength="200" placeholder="작품을 간단히 소개해주세요" required oninput="document.getElementById('intro-count').textContent=this.value.length"></textarea>
+      </div>
+      <div class="form-group">
+        <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count">0</span>/3000자</span></label>
+        <div class="editor-toolbar">
+          <button type="button" class="tb-btn" onclick="execFmt('bold', null, 'submit-body-editor')" title="굵게"><b>B</b></button>
+          <button type="button" class="tb-btn" onclick="execFmt('italic', null, 'submit-body-editor')" title="기울임"><i>I</i></button>
+          <select class="tb-select" onchange="execFmt('fontSize', this.value, 'submit-body-editor');this.selectedIndex=0" title="글자 크기">
+            <option value="">크기</option>
+            <option value="1">작게</option>
+            <option value="3">보통</option>
+            <option value="5">크게</option>
+            <option value="7">매우 크게</option>
+          </select>
+          <input type="color" class="tb-color" onchange="execFmt('foreColor', this.value, 'submit-body-editor')" title="글자 색상" value="#1a1714">
+          <button type="button" class="tb-btn tb-clear" onclick="clearFmt('submit-body-editor')" title="서식 초기화">초기화</button>
+        </div>
+        <div id="submit-body-editor" class="body-editor" contenteditable="true" 
+          oninput="syncBodyEditor('submit-body-editor', 'body-count')"
+          onpaste="handlePaste(event)"
+          placeholder="작품 본문을 입력하세요 (최대 3000자)"></div>
+      </div>
     </div>
+
+    <div id="form-part-2" style="display:none; margin-top:3rem; padding-top:2rem; border-top:2px dashed var(--gold);">
+      <h3 class="part-title" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:2px solid var(--paper3); color:var(--gold);">📝 제2편</h3>
+      <div class="form-group">
+        <label>작품 제목 <span class="required">*</span></label>
+        <input type="text" id="submit-title2" maxlength="50" placeholder="두 번째 작품 제목을 입력하세요">
+      </div>
+      <div class="form-group">
+        <label>작품 소개 <span class="required">*</span> <span class="char-info"><span id="intro-count2">0</span>/200자</span></label>
+        <textarea id="submit-intro2" rows="3" maxlength="200" placeholder="두 번째 작품을 간단히 소개해주세요" oninput="document.getElementById('intro-count2').textContent=this.value.length"></textarea>
+      </div>
+      <div class="form-group">
+        <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count2">0</span>/3000자</span></label>
+        <div class="editor-toolbar">
+          <button type="button" class="tb-btn" onclick="execFmt('bold', null, 'submit-body-editor2')" title="굵게"><b>B</b></button>
+          <button type="button" class="tb-btn" onclick="execFmt('italic', null, 'submit-body-editor2')" title="기울임"><i>I</i></button>
+          <select class="tb-select" onchange="execFmt('fontSize', this.value, 'submit-body-editor2');this.selectedIndex=0" title="글자 크기">
+            <option value="">크기</option>
+            <option value="1">작게</option>
+            <option value="3">보통</option>
+            <option value="5">크게</option>
+            <option value="7">매우 크게</option>
+          </select>
+          <input type="color" class="tb-color" onchange="execFmt('foreColor', this.value, 'submit-body-editor2')" title="글자 색상" value="#1a1714">
+          <button type="button" class="tb-btn tb-clear" onclick="clearFmt('submit-body-editor2')" title="서식 초기화">초기화</button>
+        </div>
+        <div id="submit-body-editor2" class="body-editor" contenteditable="true" 
+          oninput="syncBodyEditor('submit-body-editor2', 'body-count2')"
+          onpaste="handlePaste(event)"
+          placeholder="두 번째 작품 본문을 입력하세요 (최대 3000자)"></div>
+      </div>
+    </div>
+
     <div class="form-actions">
       <button type="submit" class="btn-primary" id="submit-btn">작품 응모하기 ✨</button>
     </div>
   </form>`;
 }
 
+// === 수정된 제출 로직 (2편 동시 처리 및 DB 완전 분리 보장) ===
 function submitPost(e){
   e.preventDefault();
   if(!currentUser||!currentUserData){toast('로그인이 필요합니다.','error');return;}
   const cat=document.querySelector('input[name="category"]:checked');
   if(!cat){toast('카테고리를 선택해주세요.','error');return;}
-  const title=$('submit-title').value.trim();
-  const intro=$('submit-intro').value.trim();
-  const bodyEl=$('submit-body-editor');
-  const body=bodyEl?bodyEl.innerHTML.trim():$('submit-body').value.trim();
-  if(!title||!intro||!body){toast('모든 항목을 입력해주세요.','error');return;}
+
+  const title1=$('submit-title').value.trim();
+  const intro1=$('submit-intro').value.trim();
+  const bodyEl1=$('submit-body-editor');
+  const body1=bodyEl1?bodyEl1.innerHTML.trim():'';
+
+  if(!title1||!intro1||!body1){toast('제1편의 모든 항목을 입력해주세요.','error');return;}
+
+  let isPoem = (cat.value === '운문');
+  let title2 = '', intro2 = '', body2 = '';
+
+  if(isPoem) {
+    title2=$('submit-title2').value.trim();
+    intro2=$('submit-intro2').value.trim();
+    const bodyEl2=$('submit-body-editor2');
+    body2=bodyEl2?bodyEl2.innerHTML.trim():'';
+    if(!title2||!intro2||!body2){toast('제2편의 모든 항목을 입력해주세요.','error');return;}
+  }
+
   const btn=$('submit-btn');
   btn.disabled=true; btn.textContent='제출 중...';
-  db.collection('posts').add({
-    category:cat.value, title, intro, body,
+
+  let promises = [];
+
+  promises.push(db.collection('posts').add({
+    category:cat.value, title:title1, intro:intro1, body:body1,
     uid:currentUser.uid, penName:currentUserData.penName,
     likeCount:0, likes:[], commentCount:0,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>{
+  }));
+
+  if(isPoem) {
+    promises.push(db.collection('posts').add({
+      category:cat.value, title:title2, intro:intro2, body:body2,
+      uid:currentUser.uid, penName:currentUserData.penName,
+      likeCount:0, likes:[], commentCount:0,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    }));
+  }
+
+  Promise.all(promises).then(()=>{
     toast('작품이 성공적으로 응모되었습니다! 🌟','success');
     _doNavigate('gallery', null);
   }).catch(err=>{
@@ -868,7 +963,9 @@ function searchGallery(){
 //
 function renderPost(postId){
   if(!postId){navigateTo('gallery');return;}
-  //
+  
+  let otherPostsHtml = '<div id="author-other-posts-container"></div>';
+
   Promise.all([
     db.collection('posts').doc(postId).get(),
     db.collection('config').doc('siteMode').get()
@@ -900,6 +997,7 @@ function renderPost(postId){
           </button>
         </div>
       </article>
+      ${otherPostsHtml}
       <section class="comments-section">
         <h2>댓글 <span id="comment-count">${p.commentCount||0}</span></h2>
         <div id="comments-list"></div>
@@ -926,6 +1024,30 @@ function renderPost(postId){
         .replace(/<span[^>]*>/g, '')
         .replace(/<br><br>/g, '<br>');
     }
+
+    if (p.uid) {
+      db.collection('posts').where('uid', '==', p.uid).get().then(authorSnap => {
+        let otherPosts = [];
+        authorSnap.forEach(d => {
+          if(d.id !== postId) {
+            otherPosts.push({id: d.id, ...d.data()});
+          }
+        });
+        
+        if(otherPosts.length > 0) {
+          let listHtml = '<div class="author-other-posts"><h3>📖 이 작가의 다른 작품</h3><div class="other-post-list">';
+          otherPosts.forEach(op => {
+            listHtml += `<div class="other-post-item" onclick="navigateTo('post', '${op.id}')">
+              <span class="other-post-item-title">${escHtml(op.title)}</span>
+              <span class="other-post-item-meta">♥ ${op.likeCount||0} · 💬 ${op.commentCount||0}</span>
+            </div>`;
+          });
+          listHtml += '</div></div>';
+          setHTML('author-other-posts-container', listHtml);
+        }
+      }).catch(e => console.warn("다른 작품 로드 실패:", e));
+    }
+
     loadComments(postId);
   }).catch(e=>console.error(e));
 }
@@ -1108,14 +1230,8 @@ function renderMyPage(){
   setText('mypage-penname', currentUserData.penName);
   setText('mypage-email', currentUserData.email||'');
 
-  // 내가 쓴 작품
-  db.collection('posts').where('uid','==',currentUser.uid).get().then(function(snap){
+  db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc').get().then(function(snap){
     var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
-    posts.sort(function(a,b){
-      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return tb - ta;
-    });
     setText('mypost-count', posts.length);
     var html = '';
     posts.forEach(function(p){
@@ -1128,7 +1244,6 @@ function renderMyPage(){
     setHTML('mypage-posts', html || '<p class="empty-msg">작성한 작품이 없습니다.</p>');
   });
 
-  // 좋아요한 작품
   db.collection('posts').where('likes','array-contains',currentUser.uid).get().then(function(snap){
     var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
     posts.sort(function(a,b){
@@ -1153,13 +1268,11 @@ function renderMyPage(){
     setHTML('mypage-liked', html || '<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
   });
 
-  // === 댓글단 작품 (에러 수정 및 디자인 변경) ===
   setText('mycommented-count', '...');
   setHTML('mypage-commented', '<p class="empty-msg">불러오는 중...</p>');
   db.collection('posts').get().then(function(postsSnap){
     var commentedItems = [];
     var checks = postsSnap.docs.map(function(pd){
-      // 복합 색인 에러 방지를 위해 orderBy 제거
       return db.collection('posts').doc(pd.id).collection('comments')
         .where('uid','==',currentUser.uid).get()
         .then(function(cs){ 
@@ -1181,7 +1294,6 @@ function renderMyPage(){
         });
     });
     Promise.all(checks).then(function(){
-      // 댓글 최신순 정렬
       commentedItems.sort(function(a, b) {
          var ta = a.commentDate ? (a.commentDate.toMillis ? a.commentDate.toMillis() : new Date(a.commentDate).getTime()) : 0;
          var tb = b.commentDate ? (b.commentDate.toMillis ? b.commentDate.toMillis() : new Date(b.commentDate).getTime()) : 0;
@@ -1222,19 +1334,20 @@ function renderMyPage(){
   });
 }
 
-function execFmt(cmd, val){
-  document.getElementById('submit-body-editor').focus();
-  document.execCommand(cmd, false, val||null);
+// === 에디터 툴바 기능 업데이트 (폼 2개 처리용 파라미터 적용) ===
+function execFmt(cmd, val, editorId){
+  var ed = document.getElementById(editorId || 'submit-body-editor');
+  if(ed) { ed.focus(); document.execCommand(cmd, false, val||null); }
 }
-function clearFmt(){
-  document.getElementById('submit-body-editor').focus();
-  document.execCommand('removeFormat', false, null);
+function clearFmt(editorId){
+  var ed = document.getElementById(editorId || 'submit-body-editor');
+  if(ed) { ed.focus(); document.execCommand('removeFormat', false, null); }
 }
-function syncBodyEditor(){
-  const editor = document.getElementById('submit-body-editor');
+function syncBodyEditor(editorId, countId){
+  const editor = document.getElementById(editorId || 'submit-body-editor');
   if(!editor) return;
   const text = editor.innerText || '';
-  document.getElementById('body-count').textContent = text.length;
+  document.getElementById(countId || 'body-count').textContent = text.length;
 }
 function handlePaste(e){
   e.preventDefault();
