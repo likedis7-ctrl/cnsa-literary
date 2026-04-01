@@ -433,7 +433,7 @@ footer{background:var(--ink);color:rgba(255,255,255,.4);text-align:center;paddin
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.08</footer>
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.09</footer>
 
 <script>
 //
@@ -603,13 +603,22 @@ function renderHome(){
     const docs=snap.docs;
     const random=docs[Math.floor(Math.random()*docs.length)];
     const p={id:random.id,...random.data()};
-    const bodyText=(p.body||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+    const bodyText=(p.body||'')
+      .replace(/<div><br><\/div>/gi,'\n')
+      .replace(/<div>/gi,'\n')
+      .replace(/<\/div>/gi,'')
+      .replace(/<br\s*\/?>/gi,'\n')
+      .replace(/<p>/gi,'')
+      .replace(/<\/p>/gi,'\n')
+      .replace(/<[^>]*>/g,'')
+      .replace(/\n\n+/g,'\n')
+      .trim();
     const prev=bodyText.substring(0,120);
     setHTML('home-featured',`<div class="today-card" onclick="navigateTo('post','${p.id}')">
       <div class="today-card-inner">
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
         <h2 class="today-title">${escHtml(p.title||'')}</h2>
-          <p class="today-preview">${escHtml(prev)}${bodyText.length>120?'…':''}</p>
+          <p class="today-preview" style="white-space:pre-line">${escHtml(prev)}${bodyText.length>120?'…':''}</p>
         <div class="today-meta">
           <span>✍ ${escHtml(p.penName||'')}</span>
           <span>♥ ${p.likeCount||0}</span>
@@ -732,13 +741,22 @@ function filterAndRenderGallery(){
   let html='';
   posts.forEach(p=>{
     const rawBody=(p.body||'');
-    const plainBody=rawBody.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+    const plainBody=rawBody
+      .replace(/<div><br><\/div>/gi,'\n')
+      .replace(/<div>/gi,'\n')
+      .replace(/<\/div>/gi,'')
+      .replace(/<br\s*\/?>/gi,'\n')
+      .replace(/<p>/gi,'')
+      .replace(/<\/p>/gi,'\n')
+      .replace(/<[^>]*>/g,'')
+      .replace(/\n\n+/g,'\n')
+      .trim();
     const prev=plainBody.substring(0,100);
     html+=`<article class="gallery-card" onclick="navigateTo('post','${p.id}')">
       <div>
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
         <h3>${escHtml(p.title||'제목 없음')}</h3>
-        <p class="body-preview">${escHtml(prev)}${prev.length>=100?'…':''}</p>
+        <p class="body-preview" style="white-space:pre-line">${escHtml(prev)}${prev.length>=100?'…':''}</p>
       </div>
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
