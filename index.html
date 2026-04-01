@@ -282,7 +282,10 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <span></span><span></span><span></span>
     </button>
     <div class="nav-right">
-      <span id="user-penname"></span>
+      <div style="display:flex; align-items:center;">
+        <span id="user-penname" style="font-size:.8rem;color:var(--ink);font-weight:500;white-space:nowrap;margin-right:0.5rem;"></span>
+        <button id="btn-penname-change" onclick="openPenNameChangeModal()" style="display:none; font-size:0.7rem; padding:0.15rem 0.4rem; background:transparent; border:1px solid var(--gold); color:var(--gold); border-radius:4px; cursor:pointer; margin-right:0.5rem; font-family:var(--font-sans);">필명변경신청</button>
+      </div>
       <button class="btn-login" id="btn-login" onclick="doLogin()">Google 로그인</button>
       <button class="btn-logout" id="btn-logout" onclick="doLogout()" style="display:none">로그아웃</button>
     </div>
@@ -415,6 +418,13 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     </div>
 
     <div class="admin-section">
+      <h2>🔄 필명 변경 신청 관리</h2>
+      <div id="admin-penname-requests">
+        <p class="empty-msg">불러오는 중...</p>
+      </div>
+    </div>
+
+    <div class="admin-section">
       <h2>📥 DB 다운로드</h2>
       <div class="admin-btn-group">
         <button class="admin-dl-btn" onclick="downloadUsersDB()">
@@ -451,14 +461,26 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <h2>✨ 필명 설정</h2>
     <p>큰별문학상 온라인전시관에 처음 오셨군요! 사용할 필명을 설정해주세요.</p>
     <input type="text" id="penname-input" placeholder="필명 입력 (2~10자)" maxlength="10">
-    <p class="modal-hint">⚠️ 필명은 한 번 설정하면 변경이 어렵습니다. 신중히 선택하세요.</p>
+    <p class="modal-hint">⚠️ 필명은 한 번 설정하면 임의로 변경이 어렵습니다. 신중히 선택하세요.</p>
     <div class="modal-actions">
       <button class="btn-primary" onclick="savePenName()">필명으로 시작하기</button>
     </div>
   </div>
 </div>
 
-<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.15</footer>
+<div class="modal-overlay" id="penname-change-modal" style="display:none">
+  <div class="modal">
+    <h2>📝 필명 변경 신청</h2>
+    <p>새롭게 사용하고 싶은 필명을 입력해주세요. 관리자 승인 후 변경됩니다.</p>
+    <input type="text" id="penname-change-input" placeholder="새 필명 입력 (2~10자)" maxlength="10">
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="document.getElementById('penname-change-modal').style.display='none'" style="margin-right:0.5rem;">취소</button>
+      <button class="btn-primary" onclick="requestPenNameChange()">신청하기</button>
+    </div>
+  </div>
+</div>
+
+<footer>© 2025 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.16</footer>
 
 <script>
 //
@@ -506,7 +528,7 @@ function toast(msg,type='info'){
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3000);
 }
 
-// === 수정된 라우터 함수 ===
+// === 라우터 함수 ===
 function navigateTo(page, param) {
   _doNavigate(page, param);
 
@@ -585,13 +607,17 @@ function showPenNameModal(user){
   $('penname-input').onkeydown=e=>{ if(e.key==='Enter') savePenName(); };
 }
 
+// === 최초 가입: 필명 저장 및 중복 확인 ===
 function savePenName(){
   const m=$('penname-modal');
   const penName=$('penname-input').value.trim();
   if(!penName){toast('필명을 입력해주세요.','error');return;}
   if(penName.length<2||penName.length>10){toast('필명은 2~10자로 입력해주세요.','error');return;}
+  
+  // 중복 확인 로직
   db.collection('users').where('penName','==',penName).get().then(snap=>{
     if(!snap.empty){toast('이미 사용중인 필명입니다.','error');return;}
+    
     db.collection('users').doc(m.dataset.uid).set({
       uid:m.dataset.uid, email:m.dataset.email, penName,
       role:'student', createdAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -599,6 +625,37 @@ function savePenName(){
       m.style.display='none';
       toast('환영합니다, '+penName+' 님! 🎉','success');
     });
+  });
+}
+
+// === 필명 변경 신청 로직 ===
+function openPenNameChangeModal() {
+  $('penname-change-input').value = '';
+  $('penname-change-modal').style.display = 'flex';
+  $('penname-change-input').focus();
+}
+
+function requestPenNameChange() {
+  const newPenName = $('penname-change-input').value.trim();
+  if(!newPenName){toast('새 필명을 입력해주세요.','error');return;}
+  if(newPenName.length<2 || newPenName.length>10){toast('필명은 2~10자로 입력해주세요.','error');return;}
+  if(newPenName === currentUserData.penName) {toast('현재 필명과 동일합니다.','error');return;}
+
+  // 신청 시 중복 확인 로직
+  db.collection('users').where('penName','==',newPenName).get().then(snap=>{
+    if(!snap.empty){toast('이미 사용중인 필명입니다.','error');return;}
+
+    db.collection('penNameRequests').add({
+      uid: currentUser.uid,
+      email: currentUserData.email,
+      oldPenName: currentUserData.penName,
+      newPenName: newPenName,
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      $('penname-change-modal').style.display = 'none';
+      toast('필명 변경 신청이 완료되었습니다.', 'success');
+    }).catch(e => toast('신청 실패: ' + e.message, 'error'));
   });
 }
 
@@ -625,8 +682,15 @@ function updateNavUI(){
   $('btn-login').style.display=on?'none':'';
   $('btn-logout').style.display=on?'':'none';
   $('nav-mypage').style.display=on?'inline-block':'none';
-  if(on) setText('user-penname',currentUserData.penName);
-  else setText('user-penname','');
+  if(on) {
+    setText('user-penname',currentUserData.penName);
+    const btnChange = $('btn-penname-change');
+    if(btnChange) btnChange.style.display = 'inline-block';
+  } else {
+    setText('user-penname','');
+    const btnChange = $('btn-penname-change');
+    if(btnChange) btnChange.style.display = 'none';
+  }
   const adminNav=$('nav-admin');
   if(adminNav) adminNav.style.display=(on&&currentUserData.role==='admin')?'':'none';
 }
@@ -740,7 +804,7 @@ function renderSubmit(){
             <option value="1">작게</option>
             <option value="3">보통</option>
             <option value="5">크게</option>
-            <option value="7">매우 크게</option>
+            <option value="7">매 큰게</option>
           </select>
           <input type="color" class="tb-color" onchange="execFmt('foreColor', this.value, 'submit-body-editor')" title="글자 색상" value="#1a1714">
           <button type="button" class="tb-btn tb-clear" onclick="clearFmt('submit-body-editor')" title="서식 초기화">초기화</button>
@@ -902,6 +966,7 @@ function filterAndRenderGallery(){
   var start = (galleryPage - 1) * GALLERY_PER_PAGE;
   var pagePosts = posts.slice(start, start + GALLERY_PER_PAGE);
   var html = '';
+  
   pagePosts.forEach(function(p){
     var bodyText=(p.body||'')
       .replace(/<div><br><\/div>/gi,'\n')
@@ -1379,7 +1444,7 @@ function handlePaste(e){
 }
 
 
-//
+// === 관리자 페이지 및 필명 변경 관리 로직 추가 ===
 function renderAdmin(){
   if(!currentUserData||currentUserData.role!=='admin'){
     toast('관리자만 접근할 수 있습니다.','error');
@@ -1393,6 +1458,88 @@ function renderAdmin(){
     setText('current-mode-label', mode==='apply'?'📝 응모기간 모드':'👀 감상기간 모드');
     document.getElementById('btn-apply-mode').classList.toggle('active-mode', mode==='apply');
     document.getElementById('btn-view-mode').classList.toggle('active-mode', mode==='view');
+  });
+
+  loadPenNameRequests();
+}
+
+function loadPenNameRequests() {
+  const container = $('admin-penname-requests');
+  if(!container) return;
+  db.collection('penNameRequests').get().then(snap => {
+    let reqs = [];
+    snap.forEach(doc => {
+      const data = doc.data();
+      if(data.status === 'pending') {
+        reqs.push({id: doc.id, ...data});
+      }
+    });
+    if(reqs.length === 0) {
+      setHTML('admin-penname-requests', '<p class="empty-msg">대기 중인 필명 변경 신청이 없습니다.</p>');
+      return;
+    }
+    reqs.sort((a,b) => {
+      const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+      const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+      return ta - tb; // 오래된 순
+    });
+
+    let html = '<div style="display:flex; flex-direction:column; gap:0.5rem;">';
+    reqs.forEach(r => {
+      html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--paper2); border-radius:var(--radius); border:1px solid var(--paper3);">
+        <div>
+          <strong style="color:var(--ink);">${escHtml(r.oldPenName)}</strong>
+          <span style="color:var(--ink3); margin:0 0.5rem;">→</span>
+          <strong style="color:var(--gold);">${escHtml(r.newPenName)}</strong>
+          <div style="font-size:0.75rem; color:var(--ink3); margin-top:0.2rem;">${escHtml(r.email)} | ${formatDate(r.createdAt)}</div>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn-primary btn-sm" onclick="approvePenName('${r.id}', '${r.uid}', '${r.newPenName}')">승인</button>
+          <button class="btn-danger btn-sm" onclick="rejectPenName('${r.id}')">거부</button>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    setHTML('admin-penname-requests', html);
+  }).catch(e => console.log('필명 변경 신청 로드 에러:', e));
+}
+
+function approvePenName(reqId, uid, newPenName) {
+  if(!confirm(`필명을 '${newPenName}'(으)로 변경 승인하시겠습니까?`)) return;
+
+  // 승인 시 중복 재확인
+  db.collection('users').where('penName','==',newPenName).get().then(snap => {
+    if(!snap.empty) {
+      toast('이미 다른 사용자가 등록한 필명입니다. 거부 처리해주세요.', 'error');
+      return;
+    }
+
+    db.collection('users').doc(uid).update({ penName: newPenName }).then(() => {
+      return db.collection('penNameRequests').doc(reqId).update({ status: 'approved', processedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }).then(() => {
+      // 본인이 변경되었을 경우 즉시 UI 반영
+      if(currentUser && currentUser.uid === uid) {
+         currentUserData.penName = newPenName;
+         updateNavUI();
+      }
+      // 작성된 글의 필명 일괄 업데이트
+      db.collection('posts').where('uid','==',uid).get().then(postSnap => {
+        postSnap.forEach(pDoc => pDoc.ref.update({ penName: newPenName }));
+      });
+      toast('필명 변경이 승인되었습니다.', 'success');
+      loadPenNameRequests();
+    }).catch(e => toast('승인 실패: ' + e.message, 'error'));
+  });
+}
+
+function rejectPenName(reqId) {
+  if(!confirm('해당 필명 변경 신청을 거부(취소)하시겠습니까?')) return;
+  db.collection('penNameRequests').doc(reqId).update({
+    status: 'rejected',
+    processedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    toast('거부 처리되었습니다.', 'info');
+    loadPenNameRequests();
   });
 }
 
