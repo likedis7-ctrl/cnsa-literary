@@ -6,20 +6,11 @@
 <title>큰별문학상 온라인전시관</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✍️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
 <style>
-:root {
-  --ink:#1a1714;--ink2:#4a4641;--ink3:#8a8580;
-  --paper:#fdf8f2;--paper2:#f5ede0;--paper3:#ece0cc;
-  --gold:#c8922a;--gold2:#e8b84a;
-  --verse:#5a3e8c;--prose:#2a6b4a;--red:#c0392b;
-  --shadow:rgba(50,30,10,.1);--radius:8px;
-  --font-serif:'Noto Serif KR',serif;--font-sans:'Noto Sans KR',sans-serif;
-}
+:root{--ink:#1a1714;--ink2:#4a4641;--ink3:#8a8580;--paper:#fdf8f2;--paper2:#f5ede0;--paper3:#ece0cc;--gold:#c8922a;--gold2:#e8b84a;--verse:#5a3e8c;--prose:#2a6b4a;--red:#c0392b;--shadow:rgba(50,30,10,.1);--radius:8px;--font-serif:'Noto Serif KR',serif;--font-sans:'Noto Sans KR',sans-serif;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;overflow-x:hidden;}
 body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.7;overflow-x:hidden;}
@@ -87,69 +78,53 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .gallery-search-wrap input{width:100%;padding:.5rem 1rem .5rem 2.2rem;border:1.5px solid var(--paper3);border-radius:20px;font-family:var(--font-sans);font-size:.88rem;background:white;color:var(--ink);}
 .gallery-search-wrap input:focus{outline:none;border-color:var(--gold);}
 .gallery-search-wrap::before{content:'🔍';position:absolute;left:.7rem;top:.45rem;font-size:.85rem;}
-
-/* ── 갤러리 그리드 & 리스트 뷰 스타일 ── */
 .gallery-grid{max-width:1100px;margin:1.5rem auto;padding:0 1.5rem 3rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;}
 .gallery-card{background:white;border:1px solid var(--paper3);border-radius:10px;padding:1.25rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;justify-content:space-between;}
 .gallery-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow);border-color:var(--gold);}
 .gallery-card h3{font-family:var(--font-serif);font-size:1.05rem;font-weight:700;margin:.5rem 0 .4rem;}
-.intro-text{font-size:.82rem;color:var(--gold);font-style:italic;margin-bottom:.4rem;}
 .body-preview{font-size:.85rem;color:var(--ink3);line-height:1.6;}
 .gallery-card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--paper2);font-size:.78rem;color:var(--ink3);}
-
-/* 목록뷰(List View) 적용 시 */
-.gallery-grid.list-view { display:flex; flex-direction:column; gap:1rem; }
-.gallery-grid.list-view .gallery-card { flex-direction:row; align-items:center; justify-content:space-between; gap:1.5rem; padding:1rem 1.5rem; }
-.gallery-grid.list-view .gallery-card > div:first-child { flex:1; display:flex; flex-direction:column; align-items:flex-start; }
-.gallery-grid.list-view .gallery-card h3 { margin: 0.3rem 0; }
-.gallery-grid.list-view .gallery-card p.body-preview { display:none; } /* 본문 미리보기 숨김 */
-.gallery-grid.list-view .gallery-card-bottom { margin-top:0; padding-top:0; border-top:none; flex-direction:column; align-items:flex-end; justify-content:center; gap:0.3rem; min-width:100px; }
-
+.gallery-grid.list-view{display:flex;flex-direction:column;gap:1rem;}
+.gallery-grid.list-view .gallery-card{flex-direction:row;align-items:center;justify-content:space-between;gap:1.5rem;padding:1rem 1.5rem;}
+.gallery-grid.list-view .gallery-card > div:first-child{flex:1;display:flex;flex-direction:column;align-items:flex-start;}
+.gallery-grid.list-view .gallery-card h3{margin:.3rem 0;}
+.gallery-grid.list-view .gallery-card p.body-preview{display:none;}
+.gallery-grid.list-view .gallery-card-bottom{margin-top:0;padding-top:0;border-top:none;flex-direction:column;align-items:flex-end;justify-content:center;gap:.3rem;min-width:100px;}
 .author{font-weight:500;}
 .cat-badge{display:inline-block;padding:.15rem .6rem;border-radius:10px;font-size:.72rem;font-weight:500;letter-spacing:.03em;}
 .badge-verse{background:#ede9f8;color:var(--verse);}
 .badge-prose{background:#e8f2ec;color:var(--prose);}
-
-/* ── 비평 게시판 전용 디자인 ── */
 .badge-critique{background:#fdf2e9;color:#b45309;border:1px solid #fde68a;}
-.page-critique-header { max-width:1100px; margin: 1.5rem auto 1rem; padding: 2rem; background: linear-gradient(135deg, #fffaf0 0%, #fdf2e9 100%); border-radius: 12px; border: 1px solid #f9e4d4; text-align: center; }
-.page-critique-header h1 { font-family: var(--font-serif); font-size: 1.8rem; color: #b45309; margin-bottom: 0.5rem; }
-.page-critique-header p { font-size: 0.95rem; color: var(--ink2); margin-bottom:0; }
-#critique-grid .gallery-card { background: #fffdfa; border-left: 4px solid #eab308; }
-#critique-grid .gallery-card:hover { border-color: #b45309; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(180, 83, 9, 0.12); }
-
+.page-critique-header{max-width:1100px;margin:1.5rem auto 1rem;padding:2rem;background:linear-gradient(135deg,#fffaf0 0%,#fdf2e9 100%);border-radius:12px;border:1px solid #f9e4d4;text-align:center;}
+.page-critique-header h1{font-family:var(--font-serif);font-size:1.8rem;color:#b45309;margin-bottom:.5rem;}
+.page-critique-header p{font-size:.95rem;color:var(--ink2);margin-bottom:0;}
+#critique-grid .gallery-card{background:#fffdfa;border-left:4px solid #eab308;}
+#critique-grid .gallery-card:hover{border-color:#b45309;transform:translateY(-2px);box-shadow:0 8px 24px rgba(180,83,9,.12);}
 .btn-back{display:inline-block;margin-bottom:1.5rem;font-size:.85rem;color:var(--ink3);background:none;border:none;cursor:pointer;padding:.3rem 0;transition:color .15s;}
 .btn-back:hover{color:var(--gold);}
-
-/* ── 작품 상세 뷰어 & 테마 ── */
-.post-detail{background:white;border:1px solid var(--paper3);border-radius:12px;padding:2.5rem; transition:all 0.3s ease;}
+.post-detail{background:white;border:1px solid var(--paper3);border-radius:12px;padding:2.5rem;transition:all 0.3s ease;}
 .post-header{margin-bottom:2rem;padding:1.75rem 2rem;background:rgba(179,171,141,.12);border-radius:10px;border-left:4px solid #B3AB8D;}
 .post-title{font-family:var(--font-serif);font-size:1.8rem;font-weight:700;margin:.5rem 0 .75rem;line-height:1.3;}
 .post-meta{display:flex;align-items:center;gap:1.25rem;font-size:.85rem;color:var(--ink2);flex-wrap:wrap;margin-top:.75rem;padding-top:.75rem;border-top:1px solid rgba(179,171,141,.35);}
 .post-intro{border-left:3px solid var(--gold);padding:.75rem 1.25rem;color:var(--ink2);font-style:italic;font-family:var(--font-serif);background:var(--paper2);border-radius:0 6px 6px 0;margin-top:.5rem;}
-.post-body{font-family:var(--font-serif);font-size:1.05rem;line-height:2;color:var(--ink);white-space:pre-wrap;margin:2rem 0; transition:all 0.3s ease;}
-
-/* 테마 클래스 */
-.post-detail.theme-sepia { background:#f4ecd8; border-color:#e6d8b8; }
-.post-detail.theme-sepia .post-title, .post-detail.theme-sepia .post-body, .post-detail.theme-sepia .post-meta { color:#433422; }
-.post-detail.theme-dark { background:#1a1714; border-color:#332f2a; }
-.post-detail.theme-dark .post-title, .post-detail.theme-dark .post-body, .post-detail.theme-dark .post-meta { color:#e8e6e1; }
-.post-detail.theme-dark .post-header { background:rgba(255,255,255,0.05); border-left-color:var(--gold); }
-.post-detail.text-sm .post-body { font-size: 0.95rem; line-height: 1.8; }
-.post-detail.text-md .post-body { font-size: 1.05rem; line-height: 2.0; }
-.post-detail.text-lg .post-body { font-size: 1.25rem; line-height: 2.2; }
-.post-detail.text-xl .post-body { font-size: 1.45rem; line-height: 2.4; }
-
-/* ── 감정 반응 버튼 ── */
-.reaction-row { display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin:2rem 0; }
-.btn-react { display:flex; align-items:center; gap:0.4rem; padding:0.5rem 1.25rem; border-radius:30px; border:2px solid var(--paper3); background:white; color:var(--ink3); cursor:pointer; font-family:var(--font-sans); font-size:0.95rem; transition:all 0.2s; }
-.btn-react:hover { border-color:var(--gold); color:var(--gold); box-shadow:0 4px 12px var(--shadow); transform:translateY(-1px);}
-.btn-react.r-heart.active { border-color:#e11d48; color:#e11d48; background:#fff1f2; }
-.btn-react.r-tear.active { border-color:#2563eb; color:#2563eb; background:#eff6ff; }
-.btn-react.r-shock.active { border-color:#d97706; color:#d97706; background:#fffbeb; }
-.btn-react.r-fear.active { border-color:#7c3aed; color:#7c3aed; background:#f5f3ff; }
-.btn-react span { font-weight:500; font-size:0.9rem; }
-
+.post-body{font-family:var(--font-serif);font-size:1.05rem;line-height:2;color:var(--ink);white-space:pre-wrap;margin:2rem 0;transition:all 0.3s ease;}
+.post-detail.theme-sepia{background:#f4ecd8;border-color:#e6d8b8;}
+.post-detail.theme-sepia .post-title,.post-detail.theme-sepia .post-body,.post-detail.theme-sepia .post-meta{color:#433422;}
+.post-detail.theme-dark{background:#1a1714;border-color:#332f2a;}
+.post-detail.theme-dark .post-title,.post-detail.theme-dark .post-body,.post-detail.theme-dark .post-meta{color:#e8e6e1;}
+.post-detail.theme-dark .post-header{background:rgba(255,255,255,0.05);border-left-color:var(--gold);}
+.post-detail.text-sm .post-body{font-size:0.95rem;line-height:1.8;}
+.post-detail.text-md .post-body{font-size:1.05rem;line-height:2.0;}
+.post-detail.text-lg .post-body{font-size:1.25rem;line-height:2.2;}
+.post-detail.text-xl .post-body{font-size:1.45rem;line-height:2.4;}
+.reaction-row{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin:2rem 0;}
+.btn-react{display:flex;align-items:center;gap:0.4rem;padding:0.5rem 1.25rem;border-radius:30px;border:2px solid var(--paper3);background:white;color:var(--ink3);cursor:pointer;font-family:var(--font-sans);font-size:0.95rem;transition:all 0.2s;}
+.btn-react:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 4px 12px var(--shadow);transform:translateY(-1px);}
+.btn-react.r-heart.active{border-color:#e11d48;color:#e11d48;background:#fff1f2;}
+.btn-react.r-tear.active{border-color:#2563eb;color:#2563eb;background:#eff6ff;}
+.btn-react.r-shock.active{border-color:#d97706;color:#d97706;background:#fffbeb;}
+.btn-react.r-fear.active{border-color:#7c3aed;color:#7c3aed;background:#f5f3ff;}
+.btn-react span{font-weight:500;font-size:0.9rem;}
 .comments-section{margin-top:2.5rem;}
 .comments-section h2{font-family:var(--font-serif);font-size:1.2rem;margin-bottom:1.25rem;color:var(--ink);}
 .comment{padding:1rem 0;border-bottom:1px solid var(--paper2);}
@@ -191,13 +166,10 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .btn-sm{font-size:.78rem;padding:.3rem .75rem;}
 .btn-link{background:none;border:none;color:var(--gold);cursor:pointer;font-family:var(--font-sans);font-size:inherit;text-decoration:underline;}
 .btn-danger-text{color:var(--red)!important;}
-
-/* 댓글창 전용 좋아요(하트) */
 .comment-actions{margin-top:.4rem;}
 .btn-comment-like{background:none;border:1px solid var(--paper3);border-radius:20px;padding:.15rem .7rem;font-size:.8rem;color:var(--ink3);cursor:pointer;transition:all .15s;}
 .btn-comment-like:hover{border-color:var(--red);color:var(--red);}
 .btn-comment-like.liked{border-color:var(--red);color:var(--red);background:#fff2f0;}
-
 .modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:1rem;}
 .modal{background:white;border-radius:16px;padding:2rem;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .modal h2{font-family:var(--font-serif);font-size:1.4rem;margin-bottom:.5rem;}
@@ -215,8 +187,83 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .center-msg p{color:var(--ink3);margin-bottom:1.5rem;}
 footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5rem;font-size:.78rem;}
 
+.sort-tabs{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.5rem;flex:1;}
+.sort-btn{padding:.3rem .75rem;border-radius:20px;cursor:pointer;font-size:.78rem;border:1.5px solid var(--paper3);background:white;color:var(--ink3);transition:all .15s;font-family:var(--font-sans);}
+.sort-btn:hover{border-color:var(--gold);color:var(--gold);}
+.sort-btn.active{border-color:var(--gold);color:var(--gold);background:#fff8ec;font-weight:500;}
+.pagination{display:flex;justify-content:center;align-items:center;gap:.3rem;padding:2rem 0 1rem;grid-column:1/-1;}
+.page-btn{min-width:36px;height:36px;border-radius:8px;border:1.5px solid var(--paper3);background:white;color:var(--ink2);cursor:pointer;font-family:var(--font-sans);font-size:.85rem;transition:all .15s;}
+.page-btn:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.page-btn.active{background:var(--gold);color:white;border-color:var(--gold);font-weight:600;}
+.page-btn:disabled{opacity:.35;cursor:not-allowed;}
+.page-ellipsis{padding:0 .25rem;color:var(--ink3);}
+.gallery-count{grid-column:1/-1;text-align:center;font-size:.78rem;color:var(--ink3);padding-bottom:1rem;}
+
+.view-toggle-btns{display:flex;gap:0.3rem;margin-left:auto;}
+.view-btn{background:white;border:1px solid var(--paper3);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;color:var(--ink3);font-size:0.9rem;transition:all 0.15s;}
+.view-btn:hover{border-color:var(--gold);color:var(--gold);}
+.view-btn.active{border-color:var(--gold);color:var(--gold);background:#fff8ec;}
+.viewer-settings-btn{background:none;border:1px solid var(--paper3);padding:0.2rem 0.6rem;border-radius:4px;font-size:0.8rem;cursor:pointer;color:var(--ink2);transition:all 0.2s;font-family:var(--font-sans);}
+.viewer-settings-btn:hover{border-color:var(--gold);color:var(--gold);background:white;}
+.viewer-panel{display:none;position:absolute;right:0;top:100%;background:white;border:1px solid var(--paper3);border-radius:8px;padding:1.25rem;box-shadow:0 8px 24px var(--shadow);z-index:110;min-width:220px;margin-top:0.5rem;text-align:left;}
+.viewer-panel.show{display:block;}
+.viewer-opt-group{margin-bottom:1rem;}
+.viewer-opt-group:last-child{margin-bottom:0;}
+.viewer-opt-title{font-size:0.8rem;color:var(--ink3);margin-bottom:0.5rem;display:block;font-family:var(--font-sans);}
+.viewer-opt-btns{display:flex;gap:0.4rem;}
+.viewer-opt-btn{flex:1;background:var(--paper);border:1px solid var(--paper3);padding:0.4rem;border-radius:4px;font-size:0.85rem;cursor:pointer;color:var(--ink);font-family:var(--font-sans);transition:all 0.15s;}
+.viewer-opt-btn:hover{border-color:var(--gold);}
+.viewer-opt-btn.active{border-color:var(--gold);color:var(--gold);background:#fff8ec;font-weight:500;}
+
+.admin-header{background:#B3AB8D;color:var(--ink);padding:2rem 2.5rem;border-radius:12px;margin-bottom:2rem;}
+.admin-header h1{font-family:var(--font-serif);font-size:1.6rem;margin-bottom:.25rem;}
+.admin-header p{font-size:.85rem;color:rgba(255,255,255,.6);}
+.admin-section{background:white;border:1px solid var(--paper3);border-radius:12px;padding:1.75rem;margin-bottom:1.5rem;}
+.admin-section h2{font-family:var(--font-serif);font-size:1.1rem;margin-bottom:.5rem;color:var(--ink);}
+.admin-desc{font-size:.88rem;color:var(--ink3);margin-bottom:1.25rem;}
+.admin-desc strong{color:var(--gold);font-size:1rem;}
+.admin-btn-group{display:flex;flex-direction:column;gap:.75rem;}
+.admin-mode-btn,.admin-dl-btn{display:flex;flex-direction:column;gap:.2rem;padding:1rem 1.25rem;border-radius:10px;border:2px solid var(--paper3);background:var(--paper);cursor:pointer;font-family:var(--font-sans);text-align:left;transition:all .15s;}
+.admin-mode-btn{font-size:.95rem;font-weight:500;color:var(--ink);}
+.admin-mode-btn span,.admin-dl-btn span{font-size:.78rem;color:var(--ink3);font-weight:400;}
+.admin-mode-btn:hover{border-color:var(--gold);background:#fff8ec;}
+.admin-mode-btn.active-mode{border-color:var(--gold);background:#fff8ec;color:var(--gold);}
+#btn-test-mode.active-mode{border-color:#2563eb;background:#eff6ff;color:#2563eb;}
+#btn-rest-mode.active-mode{border-color:#e11d48;background:#fff1f2;color:#e11d48;}
+.admin-dl-btn{font-size:.92rem;font-weight:500;color:var(--ink);}
+.admin-dl-btn:hover{border-color:var(--prose);background:#edf5ef;}
+
+.editor-toolbar{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:var(--paper2);border:1.5px solid var(--paper3);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;flex-wrap:wrap;}
+.tb-btn{padding:.25rem .6rem;border:1.5px solid var(--paper3);border-radius:4px;background:white;cursor:pointer;font-size:.85rem;transition:all .15s;}
+.tb-btn:hover{border-color:var(--gold);background:#fff8ec;}
+.tb-select{padding:.25rem .5rem;border:1.5px solid var(--paper3);border-radius:4px;font-family:var(--font-sans);font-size:.82rem;background:white;cursor:pointer;}
+.tb-color{width:32px;height:28px;padding:1px;border:1.5px solid var(--paper3);border-radius:4px;cursor:pointer;}
+.tb-clear{font-size:.75rem;color:var(--ink3);}
+.body-editor{width:100%;min-height:280px;padding:.75rem 1rem;border:1.5px solid var(--paper3);border-radius:0 0 var(--radius) var(--radius);font-family:var(--font-serif);font-size:.95rem;background:white;color:var(--ink);line-height:1.9;outline:none;transition:border-color .15s;}
+.body-editor:focus{border-color:var(--gold);}
+.body-editor:empty::before{content:attr(placeholder);color:var(--ink3);pointer-events:none;}
+.auto-save-msg{font-size:0.75rem;color:var(--prose);margin-left:1rem;opacity:0;transition:opacity 0.3s;font-weight:400;}
+.auto-save-msg.show{opacity:1;}
+.prose-warning{display:none;color:var(--red);font-size:0.85rem;margin-top:0.4rem;font-weight:500;font-family:var(--font-sans);}
+
+.today-card{cursor:pointer;transition:all .2s;}
+.today-card:hover .today-card-inner{transform:translateY(-2px);box-shadow:0 12px 32px var(--shadow);border-color:var(--gold);}
+.today-card-inner{background:white;border:1px solid var(--paper3);border-radius:14px;padding:2rem 2.5rem;transition:all .2s;}
+.today-title{font-family:var(--font-serif);font-size:1.6rem;font-weight:700;margin:.5rem 0 .75rem;color:var(--ink);}
+.today-intro{font-size:.9rem;color:var(--gold);font-style:italic;margin-bottom:.75rem;}
+.today-preview{font-family:var(--font-serif);font-size:.95rem;color:var(--ink2);line-height:1.9;margin-bottom:1.25rem;}
+.today-meta{display:flex;align-items:center;gap:1.5rem;font-size:.83rem;color:var(--ink3);}
+.today-read-btn{margin-left:auto;color:var(--gold);font-weight:500;}
+
+.author-other-posts{margin-top:3rem;padding-top:2rem;border-top:2px dashed var(--paper3);}
+.author-other-posts h3{font-family:var(--font-serif);font-size:1.1rem;margin-bottom:1rem;color:var(--ink);}
+.other-post-list{display:flex;flex-direction:column;gap:0.5rem;}
+.other-post-item{display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:var(--paper2);border-radius:var(--radius);cursor:pointer;transition:all .15s;}
+.other-post-item:hover{background:var(--paper3);}
+.other-post-item-title{font-weight:500;font-size:0.95rem;color:var(--ink);}
+.other-post-item-meta{font-size:0.8rem;color:var(--ink3);}
+
 @media(max-width:768px){
-  /* 헤더 - 햄버거 메뉴 */
   .header-inner{padding:.6rem 1rem;position:relative;}
   .site-logo{font-size:1.1rem;}
   nav{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,15,10,.97);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
@@ -230,7 +277,6 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
   .nav-right{gap:.35rem;}
   #user-penname{display:none;}
-  /* 콘텐츠 */
   .home-cards,.gallery-grid{grid-template-columns:1fr;}
   .gallery-grid{padding:0 1rem 2rem;}
   .post-detail{padding:1.25rem;}
@@ -245,103 +291,14 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   .mypage-header{padding:1.5rem;}
   .admin-btn-group{gap:.5rem;}
   .editor-toolbar{gap:.3rem;}
-  
-  /* 모바일 리스트 뷰 대응 */
-  .gallery-grid.list-view .gallery-card { flex-direction:column; align-items:flex-start; gap:1rem; }
-  .gallery-grid.list-view .gallery-card-bottom { flex-direction:row; width:100%; border-top:1px solid var(--paper2); padding-top:0.75rem; margin-top:0.2rem; justify-content:space-between; align-items:center; }
-  .reaction-row { gap:0.3rem; }
-  .btn-react { padding:0.4rem 0.8rem; font-size:0.85rem; }
+  .gallery-grid.list-view .gallery-card{flex-direction:column;align-items:flex-start;gap:1rem;}
+  .gallery-grid.list-view .gallery-card-bottom{flex-direction:row;width:100%;border-top:1px solid var(--paper2);padding-top:0.75rem;margin-top:0.2rem;justify-content:space-between;align-items:center;}
+  .reaction-row{gap:0.3rem;}
+  .btn-react{padding:0.4rem 0.8rem;font-size:0.85rem;}
 }
 @media(min-width:769px){
   .hamburger{display:none;}
 }
-
-/* ── 본문 에디터 ── */
-.editor-toolbar{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:var(--paper2);border:1.5px solid var(--paper3);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;flex-wrap:wrap;}
-.tb-btn{padding:.25rem .6rem;border:1.5px solid var(--paper3);border-radius:4px;background:white;cursor:pointer;font-size:.85rem;transition:all .15s;}
-.tb-btn:hover{border-color:var(--gold);background:#fff8ec;}
-.tb-select{padding:.25rem .5rem;border:1.5px solid var(--paper3);border-radius:4px;font-family:var(--font-sans);font-size:.82rem;background:white;cursor:pointer;}
-.tb-color{width:32px;height:28px;padding:1px;border:1.5px solid var(--paper3);border-radius:4px;cursor:pointer;}
-.tb-clear{font-size:.75rem;color:var(--ink3);}
-.body-editor{width:100%;min-height:280px;padding:.75rem 1rem;border:1.5px solid var(--paper3);border-radius:0 0 var(--radius) var(--radius);font-family:var(--font-serif);font-size:.95rem;background:white;color:var(--ink);line-height:1.9;outline:none;transition:border-color .15s;}
-.body-editor:focus{border-color:var(--gold);}
-.body-editor:empty::before{content:attr(placeholder);color:var(--ink3);pointer-events:none;}
-
-/* 임시저장 및 산문 분량 경고 */
-.auto-save-msg { font-size:0.75rem; color:var(--prose); margin-left:1rem; opacity:0; transition:opacity 0.3s; font-weight: 400;}
-.auto-save-msg.show { opacity:1; }
-.prose-warning { display:none; color:var(--red); font-size:0.85rem; margin-top:0.4rem; font-weight:500; font-family:var(--font-sans); }
-
-/* ── 오늘의 감상작 ── */
-.today-card{cursor:pointer;transition:all .2s;}
-.today-card:hover .today-card-inner{transform:translateY(-2px);box-shadow:0 12px 32px var(--shadow);border-color:var(--gold);}
-.today-card-inner{background:white;border:1px solid var(--paper3);border-radius:14px;padding:2rem 2.5rem;transition:all .2s;}
-.today-title{font-family:var(--font-serif);font-size:1.6rem;font-weight:700;margin:.5rem 0 .75rem;color:var(--ink);}
-.today-intro{font-size:.9rem;color:var(--gold);font-style:italic;margin-bottom:.75rem;}
-.today-preview{font-family:var(--font-serif);font-size:.95rem;color:var(--ink2);line-height:1.9;margin-bottom:1.25rem;}
-.today-meta{display:flex;align-items:center;gap:1.5rem;font-size:.83rem;color:var(--ink3);}
-.today-read-btn{margin-left:auto;color:var(--gold);font-weight:500;}
-
-/* ── 작가의 다른 작품 ── */
-.author-other-posts { margin-top: 3rem; padding-top: 2rem; border-top: 2px dashed var(--paper3); }
-.author-other-posts h3 { font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 1rem; color: var(--ink); }
-.other-post-list { display: flex; flex-direction: column; gap: 0.5rem; }
-.other-post-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: var(--paper2); border-radius: var(--radius); cursor: pointer; transition: all .15s; }
-.other-post-item:hover { background: var(--paper3); }
-.other-post-item-title { font-weight: 500; font-size: 0.95rem; color: var(--ink); }
-.other-post-item-meta { font-size: 0.8rem; color: var(--ink3); }
-
-/* ── 뷰어 설정 버튼 및 패널 ── */
-.view-toggle-btns { display:flex; gap:0.3rem; margin-left:auto; }
-.view-btn { background:white; border:1px solid var(--paper3); border-radius:4px; padding:0.3rem 0.6rem; cursor:pointer; color:var(--ink3); font-size:0.9rem; transition:all 0.15s;}
-.view-btn:hover { border-color:var(--gold); color:var(--gold); }
-.view-btn.active { border-color:var(--gold); color:var(--gold); background:#fff8ec;}
-
-.viewer-settings-btn { background:none; border:1px solid var(--paper3); padding:0.2rem 0.6rem; border-radius:4px; font-size:0.8rem; cursor:pointer; color:var(--ink2); transition:all 0.2s; font-family:var(--font-sans); }
-.viewer-settings-btn:hover { border-color:var(--gold); color:var(--gold); background:white;}
-.viewer-panel { display:none; position:absolute; right:0; top:100%; background:white; border:1px solid var(--paper3); border-radius:8px; padding:1.25rem; box-shadow:0 8px 24px var(--shadow); z-index:110; min-width:220px; margin-top:0.5rem; }
-.viewer-panel.show { display:block; }
-.viewer-opt-group { margin-bottom:1rem; }
-.viewer-opt-group:last-child { margin-bottom:0; }
-.viewer-opt-title { font-size:0.8rem; color:var(--ink3); margin-bottom:0.5rem; display:block; font-family:var(--font-sans); }
-.viewer-opt-btns { display:flex; gap:0.4rem; }
-.viewer-opt-btn { flex:1; background:var(--paper); border:1px solid var(--paper3); padding:0.4rem; border-radius:4px; font-size:0.85rem; cursor:pointer; color:var(--ink); font-family:var(--font-sans); transition:all 0.15s; }
-.viewer-opt-btn:hover { border-color:var(--gold); }
-.viewer-opt-btn.active { border-color:var(--gold); color:var(--gold); background:#fff8ec; font-weight:500;}
-
-/* ── 관리자 페이지 ── */
-.admin-header{background:#B3AB8D;color:var(--ink);padding:2rem 2.5rem;border-radius:12px;margin-bottom:2rem;}
-.admin-header h1{font-family:var(--font-serif);font-size:1.6rem;margin-bottom:.25rem;}
-.admin-header p{font-size:.85rem;color:rgba(255,255,255,.6);}
-.admin-section{background:white;border:1px solid var(--paper3);border-radius:12px;padding:1.75rem;margin-bottom:1.5rem;}
-.admin-section h2{font-family:var(--font-serif);font-size:1.1rem;margin-bottom:.5rem;color:var(--ink);}
-.admin-desc{font-size:.88rem;color:var(--ink3);margin-bottom:1.25rem;}
-.admin-desc strong{color:var(--gold);font-size:1rem;}
-.admin-btn-group{display:flex;flex-direction:column;gap:.75rem;}
-.admin-mode-btn,.admin-dl-btn{display:flex;flex-direction:column;gap:.2rem;padding:1rem 1.25rem;border-radius:10px;border:2px solid var(--paper3);background:var(--paper);cursor:pointer;font-family:var(--font-sans);text-align:left;transition:all .15s;}
-.admin-mode-btn{font-size:.95rem;font-weight:500;color:var(--ink);}
-.admin-mode-btn span,.admin-dl-btn span{font-size:.78rem;color:var(--ink3);font-weight:400;}
-.admin-mode-btn:hover{border-color:var(--gold);background:#fff8ec;}
-.admin-mode-btn.active-mode{border-color:var(--gold);background:#fff8ec;color:var(--gold);}
-
-/* 테스트/휴식 모드 색상 */
-#btn-test-mode.active-mode { border-color:#2563eb; background:#eff6ff; color:#2563eb; }
-#btn-rest-mode.active-mode { border-color:#e11d48; background:#fff1f2; color:#e11d48; }
-
-.admin-dl-btn{font-size:.92rem;font-weight:500;color:var(--ink);}
-.admin-dl-btn:hover{border-color:var(--prose);background:#edf5ef;}
-
-.sort-tabs{display:flex; gap:.3rem; flex-wrap:wrap; margin-top:.5rem; flex:1;}
-.sort-btn{padding:.3rem .75rem;border-radius:20px;cursor:pointer;font-size:.78rem;border:1.5px solid var(--paper3);background:white;color:var(--ink3);transition:all .15s;font-family:var(--font-sans);}
-.sort-btn:hover{border-color:var(--gold);color:var(--gold);}
-.sort-btn.active{border-color:var(--gold);color:var(--gold);background:#fff8ec;font-weight:500;}
-.pagination{display:flex;justify-content:center;align-items:center;gap:.3rem;padding:2rem 0 1rem;grid-column:1/-1;}
-.page-btn{min-width:36px;height:36px;border-radius:8px;border:1.5px solid var(--paper3);background:white;color:var(--ink2);cursor:pointer;font-family:var(--font-sans);font-size:.85rem;transition:all .15s;}
-.page-btn:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
-.page-btn.active{background:var(--gold);color:white;border-color:var(--gold);font-weight:600;}
-.page-btn:disabled{opacity:.35;cursor:not-allowed;}
-.page-ellipsis{padding:0 .25rem;color:var(--ink3);}
-.gallery-count{grid-column:1/-1;text-align:center;font-size:.78rem;color:var(--ink3);padding-bottom:1rem;}
 </style>
 </head>
 <body>
@@ -365,6 +322,17 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <div class="nav-right">
       <div style="display:flex; align-items:center;">
         <span id="user-penname" style="font-size:.8rem;color:var(--ink);font-weight:500;white-space:nowrap;margin-right:0.5rem;"></span>
+        
+        <div style="position:relative; margin-right:0.8rem; display:flex; align-items:center;">
+          <span id="noti-bell" onclick="toggleNotiPanel()" style="cursor:pointer; font-size:1.2rem; position:relative; display:none; user-select:none;">
+            🔔<span id="noti-badge" style="position:absolute; top:-5px; right:-8px; background:var(--red); color:white; font-size:0.6rem; font-weight:bold; padding:0.1rem 0.35rem; border-radius:10px; display:none;">0</span>
+          </span>
+          <div id="noti-panel" class="viewer-panel" style="width:280px; right:-50px; padding:1rem; max-height:400px; overflow-y:auto;">
+            <div style="font-weight:bold; margin-bottom:0.8rem; border-bottom:1px solid var(--paper3); padding-bottom:0.5rem; font-family:var(--font-sans); color:var(--ink);">알림 내역</div>
+            <div id="noti-list"><p class="empty-msg" style="padding:1rem;">새로운 알림이 없습니다.</p></div>
+          </div>
+        </div>
+
         <button id="btn-penname-change" onclick="openPenNameChangeModal()" style="display:none; font-size:0.7rem; padding:0.15rem 0.4rem; background:transparent; border:1px solid var(--gold); color:var(--gold); border-radius:4px; cursor:pointer; margin-right:0.5rem; font-family:var(--font-sans);">필명변경신청</button>
       </div>
       <button class="btn-login" id="btn-login" onclick="doLogin()">Google 로그인</button>
@@ -437,7 +405,6 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
           <a href="#" target="_blank" style="display:inline-block; padding:0.75rem 1rem; background:white; border:1px solid var(--paper3); border-radius:var(--radius); color:var(--ink); text-decoration:none; transition:all 0.15s; font-weight:500;">📖 2024학년도 온라인전시관 가기 ↗</a>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -457,7 +424,6 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <button class="cat-tab" data-cat="운문" onclick="setGalleryCategory('운문')">운문</button>
       <button class="cat-tab" data-cat="산문" onclick="setGalleryCategory('산문')">산문</button>
     </div>
-    
     <div style="display:flex; flex:1; gap:1rem; align-items:center; flex-wrap:wrap;">
       <div class="sort-tabs">
         <button class="sort-btn active" data-sort="random" onclick="setGallerySort('random')">무작위</button>
@@ -468,13 +434,11 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
         <button class="sort-btn" data-sort="최신" onclick="setGallerySort('최신')">최신순</button>
         <button class="sort-btn" data-sort="등록" onclick="setGallerySort('등록')">등록순</button>
       </div>
-      
       <div class="view-toggle-btns">
         <button id="view-btn-card" class="view-btn active" onclick="setGalleryView('card')" title="카드 뷰">𖽎</button>
         <button id="view-btn-list" class="view-btn" onclick="setGalleryView('list')" title="리스트 뷰">≣</button>
       </div>
     </div>
-    
     <div class="gallery-search-wrap" style="width:100%;">
       <input type="text" id="gallery-search" placeholder="제목, 내용, 필명으로 검색..." oninput="searchGallery()">
     </div>
@@ -530,16 +494,12 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
           <button type="button" class="tb-btn" onclick="execFmt('bold', null, 'critique-body-editor')" title="굵게"><b>B</b></button>
           <button type="button" class="tb-btn" onclick="execFmt('italic', null, 'critique-body-editor')" title="기울임"><i>I</i></button>
           <select class="tb-select" onchange="execFmt('fontSize', this.value, 'critique-body-editor');this.selectedIndex=0" title="글자 크기">
-            <option value="">크기</option>
-            <option value="1">작게</option>
-            <option value="3">보통</option>
-            <option value="5">크게</option>
-            <option value="7">매우 크게</option>
+            <option value="">크기</option><option value="1">작게</option><option value="3">보통</option><option value="5">크게</option><option value="7">매우 크게</option>
           </select>
           <input type="color" class="tb-color" onchange="execFmt('foreColor', this.value, 'critique-body-editor')" title="글자 색상" value="#1a1714">
           <button type="button" class="tb-btn tb-clear" onclick="clearFmt('critique-body-editor')" title="서식 초기화">초기화</button>
         </div>
-        <div id="critique-body-editor" class="body-editor" contenteditable="true" oninput="syncBodyEditor('critique-body-editor', 'critique-body-count')" onpaste="handlePaste(event)" placeholder="비평 내용을 입력하세요"></div>
+        <div id="critique-body-editor" class="body-editor" contenteditable="true" oninput="syncBodyEditor('critique-body-editor', 'critique-body-count')" onpaste="handlePaste(event)" ondrop="e.preventDefault(); toast('이미지나 파일은 첨부할 수 없습니다.', 'error');" placeholder="비평 내용을 입력하세요"></div>
       </div>
       <div class="form-actions">
         <button type="submit" class="btn-primary" id="critique-submit-btn">비평 등록하기 ✨</button>
@@ -583,8 +543,8 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <div class="credits-cards">
       <div class="credit-card">
         <p class="role">기획 · 개발</p>
-        <p class="name">개발자 이름</p>
-        <p class="desc">큰별문학상 온라인전시관의 기획, 디자인, 개발을 담당했습니다.</p>
+        <p class="name">김민준 (31203) · 김윤서 (20107)</p>
+        <p class="desc">큰별문학상 온라인전시관의 기획, 디자인, 시스템 개발을 담당했습니다.</p>
       </div>
       <div class="credit-card">
         <p class="role">지도 교사</p>
@@ -602,75 +562,36 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <h1>⚙️ 관리자 페이지</h1>
       <p>큰별문학상 온라인전시관 관리 콘솔</p>
     </div>
-
     <div class="admin-section">
       <h2>📌 사이트 모드 설정</h2>
       <p class="admin-desc">현재 모드: <strong id="current-mode-label">로딩 중...</strong></p>
       <div class="admin-btn-group">
-        <button class="admin-mode-btn" id="btn-apply-mode" onclick="setSiteMode('apply')">
-          📝 응모기간 모드로 전환
-          <span>감상하기 비활성화 · 응모하기 활성화</span>
-        </button>
-        <button class="admin-mode-btn" id="btn-view-mode" onclick="setSiteMode('view')">
-          👀 감상기간 모드로 전환
-          <span>응모하기 비활성화 · 감상/비평하기 활성화</span>
-        </button>
-        <button class="admin-mode-btn" id="btn-test-mode" onclick="setSiteMode('test')">
-          🛠️ 테스트 모드
-          <span>응모/감상/비평 모두 활성화 (테스트용)</span>
-        </button>
-        <button class="admin-mode-btn" id="btn-rest-mode" onclick="setSiteMode('rest')">
-          🛑 휴식 모드
-          <span>모든 기능 차단 (관리자 외 접근 불가)</span>
-        </button>
+        <button class="admin-mode-btn" id="btn-apply-mode" onclick="setSiteMode('apply')">📝 응모기간 모드로 전환<span>감상하기 비활성화 · 응모하기 활성화</span></button>
+        <button class="admin-mode-btn" id="btn-view-mode" onclick="setSiteMode('view')">👀 감상기간 모드로 전환<span>응모하기 비활성화 · 감상/비평하기 활성화</span></button>
+        <button class="admin-mode-btn" id="btn-test-mode" onclick="setSiteMode('test')">🛠️ 테스트 모드<span>응모/감상/비평 모두 활성화 (테스트용)</span></button>
+        <button class="admin-mode-btn" id="btn-rest-mode" onclick="setSiteMode('rest')">🛑 휴식 모드<span>모든 기능 차단 (관리자 외 접근 불가)</span></button>
       </div>
     </div>
-    
     <div class="admin-section" style="background:#fffcf5; border-color:#f9e4d4;">
       <h2>🗄️ 아카이브 및 DB 관리 (연도 전환)</h2>
       <p class="admin-desc" style="color:var(--ink2);">새 학기 문학상 준비를 위한 데이터 관리 메뉴입니다. <strong>주의해서 사용하세요.</strong></p>
       <div class="admin-btn-group">
-        <button class="admin-mode-btn" id="btn-archive" onclick="archiveData()" style="border-color:var(--gold); color:var(--ink);">
-          🗂️ 전체 글 아카이브로 옮기기
-          <span style="color:var(--ink3);">현재 응모/비평작을 보관소(archive_2026)로 안전하게 복사합니다</span>
-        </button>
-        <button class="admin-mode-btn" id="btn-reset" onclick="resetDB()" style="border-color:#fecaca; color:var(--red);">
-          💣 DB 초기화 (새 학기 리셋)
-          <span style="color:#ef4444;">응모작, 비평, 댓글, 학생 필명 정보를 모두 삭제합니다 (관리자 계정 유지)</span>
-        </button>
-        <button class="admin-mode-btn" onclick="rebuildIndex()" style="border-color:var(--verse); color:var(--verse);">
-          🔄 강제 목차(Index) 동기화
-          <span style="color:var(--ink3);">기존 낱개 글들을 서버 요금 절약을 위해 1개의 목차 문서로 압축합니다 (코드 업데이트 후 1회 권장)</span>
-        </button>
+        <button class="admin-mode-btn" id="btn-archive" onclick="archiveData()" style="border-color:var(--gold); color:var(--ink);">🗂️ 전체 글 아카이브로 옮기기<span style="color:var(--ink3);">현재 응모/비평작을 보관소(archive_2026)로 안전하게 복사합니다</span></button>
+        <button class="admin-mode-btn" id="btn-reset" onclick="resetDB()" style="border-color:#fecaca; color:var(--red);">💣 DB 초기화 (새 학기 리셋)<span style="color:#ef4444;">응모작, 비평, 댓글, 학생 필명 정보를 모두 삭제합니다 (관리자 계정 유지)</span></button>
+        <button class="admin-mode-btn" onclick="rebuildIndex()" style="border-color:var(--verse); color:var(--verse);">🔄 강제 목차(Index) 동기화<span style="color:var(--ink3);">기존 낱개 글들을 서버 요금 절약을 위해 1개의 목차 문서로 압축합니다 (코드 업데이트 후 1회 권장)</span></button>
       </div>
     </div>
-
     <div class="admin-section">
       <h2>🔄 필명 변경 신청 관리</h2>
-      <div id="admin-penname-requests">
-        <p class="empty-msg">불러오는 중...</p>
-      </div>
+      <div id="admin-penname-requests"><p class="empty-msg">불러오는 중...</p></div>
     </div>
-
     <div class="admin-section">
       <h2>📥 DB 다운로드</h2>
       <div class="admin-btn-group">
-        <button class="admin-dl-btn" onclick="downloadUsersDB()">
-          👤 사용자계정 DB 다운로드
-          <span>이메일 · 필명 · 가입일시 (Excel)</span>
-        </button>
-        <button class="admin-dl-btn" onclick="downloadPostsDB()">
-          📄 응모작 DB 다운로드
-          <span>필명 · 카테고리 · 제목 · 소개 · 본문 · 총반응수 · 댓글수 (Excel)</span>
-        </button>
-        <button class="admin-dl-btn" onclick="downloadCritiquesDB()">
-          📝 비평 DB 다운로드
-          <span>비평대상글 · 비평문제목 · 필명 · 본문 · 총반응수 · 댓글수 (Excel)</span>
-        </button>
-        <button class="admin-dl-btn" onclick="downloadCommentsDB()">
-          💬 댓글 DB 다운로드
-          <span>필명 · 글제목 · 글작성자 · 댓글내용 · 총반응수 (Excel)</span>
-        </button>
+        <button class="admin-dl-btn" onclick="downloadUsersDB()">👤 사용자계정 DB 다운로드<span>이메일 · 필명 · 가입일시 (Excel)</span></button>
+        <button class="admin-dl-btn" onclick="downloadPostsDB()">📄 응모작 DB 다운로드<span>필명 · 카테고리 · 제목 · 소개 · 본문 · 총반응수 · 댓글수 (Excel)</span></button>
+        <button class="admin-dl-btn" onclick="downloadCritiquesDB()">📝 비평 DB 다운로드<span>비평대상글 · 비평문제목 · 필명 · 본문 · 총반응수 · 댓글수 (Excel)</span></button>
+        <button class="admin-dl-btn" onclick="downloadCommentsDB()">💬 댓글 DB 다운로드<span>필명 · 글제목 · 글작성자 · 댓글내용 · 총반응수 (Excel)</span></button>
       </div>
     </div>
   </div>
@@ -693,14 +614,8 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <h2>✨ 필명 설정</h2>
     <p>큰별문학상 온라인전시관에 처음 오셨군요! 사용할 필명을 설정해주세요.</p>
     <input type="text" id="penname-input" placeholder="필명 입력 (2~10자)" maxlength="10">
-    <p class="modal-hint">
-      ⚠️ <strong>[주의]</strong> 필명은 블라인드 심사를 위해 사용합니다.<br>
-      절대로 '실명'이나 '실명이 짐작되는 이름'을 사용하지 말아주세요.<br>
-      타인에 대한 비방, 속어, 혐오 표현이 포함되는 경우 학교폭력 사안이 될 수 있습니다.
-    </p>
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="savePenName()">필명으로 시작하기</button>
-    </div>
+    <p class="modal-hint">⚠️ <strong>[주의]</strong> 필명은 블라인드 심사를 위해 사용합니다.<br>절대로 '실명'이나 '실명이 짐작되는 이름'을 사용하지 말아주세요.<br>타인에 대한 비방, 속어, 혐오 표현이 포함되는 경우 학교폭력 사안이 될 수 있습니다.</p>
+    <div class="modal-actions"><button class="btn-primary" onclick="savePenName()">필명으로 시작하기</button></div>
   </div>
 </div>
 
@@ -716,7 +631,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.0 (실시간 목차압축 엔진 적용)</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.3 (오류 수정 및 전체 코드)</footer>
 
 <script>
 // Firebase Initialization
@@ -732,7 +647,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Global Variables
 let currentUser = null;
 let currentUserData = null;
 let allPosts = [];
@@ -752,7 +666,25 @@ let critiqueSort = 'random';
 let critiquePage = 1;
 let critiqueViewMode = localStorage.getItem('cnsa_critique_view_mode') || 'card';
 
-// --- Seeded Random Utility ---
+let currentViewPost = null; 
+let notiUnsubscribe = null; 
+
+function sanitizeHTML(html) {
+  let clean = html.replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '');
+  clean = clean.replace(/<style[^>]*>([\S\s]*?)<\/style>/gmi, '');
+  clean = clean.replace(//gmi, '');
+  clean = clean.replace(/<\/?(?!\b(b|i|font|span|div|p|br)\b)[^>]+>/gi, '');
+  return clean.trim();
+}
+
+function extractPreview(html) {
+  let text = html.replace(/<div>/gi, '\n').replace(/<\/div>/gi, '')
+                 .replace(/<br\s*\/?>/gi, '\n')
+                 .replace(/<p>/gi, '').replace(/<\/p>/gi, '\n');
+  text = text.replace(/<[^>]*>/g, '').replace(/\n\n+/g, '\n').trim();
+  return text.substring(0, 100);
+}
+
 function seededShuffle(array, seed) {
   var currentIndex = array.length, temporaryValue, randomIndex;
   var currentSeed = seed;
@@ -853,7 +785,6 @@ function toast(msg,type='info'){
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3000);
 }
 
-// === 라우터 함수 ===
 function navigateTo(page, param) {
   const isAdmin = currentUserData && currentUserData.role === 'admin';
   if(siteMode === 'rest' && page !== 'home' && !isAdmin) {
@@ -920,7 +851,6 @@ function _doNavigate(page, param) {
   window.scrollTo(0,0);
 }
 
-//
 function doLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
@@ -1007,6 +937,51 @@ function requestPenNameChange() {
   });
 }
 
+function updateNotiUI(notis) {
+  const bell = $('noti-bell');
+  const badge = $('noti-badge');
+  const list = $('noti-list');
+  if(!bell) return;
+
+  let unreadCount = notis.filter(n => !n.read).length;
+  if(unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+
+  if(notis.length === 0) {
+    list.innerHTML = '<p class="empty-msg" style="padding:1rem">새로운 알림이 없습니다.</p>';
+    return;
+  }
+
+  let html = '';
+  notis.forEach(n => {
+    let bg = n.read ? 'transparent' : 'rgba(200, 146, 42, 0.08)';
+    let msg = n.type === 'like'
+        ? `<strong>${escHtml(n.actorName)}</strong>님이 회원님의 <strong>[${escHtml(n.postTitle)}]</strong> 작품에 반응을 남겼습니다.`
+        : `<strong>${escHtml(n.actorName)}</strong>님이 <strong>[${escHtml(n.postTitle)}]</strong> 작품에 댓글을 남겼습니다: "${escHtml(n.body)}..."`;
+
+    html += `<div style="padding:0.75rem 1rem; border-bottom:1px solid var(--paper3); background:${bg}; cursor:pointer; font-size:0.85rem; line-height:1.5;" onclick="readNoti('${n.id}', '${n.postId}')">
+        ${msg}<br><span style="font-size:0.7rem; color:var(--ink3);">${formatDate(n.createdAt)}</span>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function toggleNotiPanel() {
+  $('noti-panel').classList.toggle('show');
+}
+
+function readNoti(notiId, postId) {
+  $('noti-panel').classList.remove('show');
+  db.collection('notifications').doc(notiId).update({read: true}).then(() => {
+     navigateTo('post', postId);
+  }).catch(e => console.error("알림 읽음 처리 실패:", e));
+}
+
+
 auth.onAuthStateChanged(user=>{
   currentUser=user;
   if(user){
@@ -1014,6 +989,16 @@ auth.onAuthStateChanged(user=>{
       if(doc.exists){
         currentUserData=doc.data();
         updateNavUI();
+        
+        $('noti-bell').style.display = 'inline-block';
+        notiUnsubscribe = db.collection('notifications')
+          .where('targetUid', '==', user.uid)
+          .onSnapshot(snap => {
+             let notis = snap.docs.map(d => ({id: d.id, ...d.data()}));
+             notis.sort((a,b) => b.createdAt - a.createdAt);
+             updateNotiUI(notis.slice(0, 30));
+          });
+
       } else {
         if(!(user.email||'').endsWith('@cnsa.hs.kr')){ auth.signOut(); return; }
         showPenNameModal(user);
@@ -1021,6 +1006,8 @@ auth.onAuthStateChanged(user=>{
     });
   } else {
     currentUserData=null;
+    $('noti-bell').style.display = 'none';
+    if(notiUnsubscribe) { notiUnsubscribe(); notiUnsubscribe = null; }
     updateNavUI();
   }
 });
@@ -1064,19 +1051,16 @@ function renderHome(){
     setHTML('hero-btn-container', '<button class="cta-primary" id="hero-btn-gallery" onclick="navigateTo(\'gallery\')">작품 감상하기</button>');
     if(featSec) featSec.style.display = 'block';
 
-    // 💡 목차(Index) 문서를 읽어와 추천작을 결정합니다.
     db.collection('indexes').doc('posts').get().then(doc=>{
-      if(!doc.exists){setHTML('home-featured','<p class="empty-msg">아직 작품이 없습니다.</p>');return;}
+      if(!doc.exists){setHTML('home-featured','<p class="empty-msg">데이터를 불러오지 못했습니다. (보안 규칙/동기화를 확인하세요)</p>');return;}
       let postsData = Object.values(doc.data().posts || {}).filter(d => d.docType !== 'critique');
       if(postsData.length === 0) {setHTML('home-featured','<p class="empty-msg">아직 감상작이 없습니다.</p>');return;}
       
       let readPosts = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
       let unreadPosts = postsData.filter(p => !readPosts.includes(p.id));
       
-      // 모두 다 읽었다면 전체를 대상으로 다시 추천
       if (unreadPosts.length === 0) unreadPosts = postsData;
       
-      // 반응수+댓글수가 적은 하위 30% 추출
       unreadPosts.sort((a, b) => {
         let scoreA = (a.likeCount || 0) + (a.commentCount || 0);
         let scoreB = (b.likeCount || 0) + (b.commentCount || 0);
@@ -1087,10 +1071,8 @@ function renderHome(){
       if(poolSize > unreadPosts.length) poolSize = unreadPosts.length;
       let pool = unreadPosts.slice(0, poolSize);
       
-      // 풀 내에서 랜덤 1개 선택
       const p = pool[Math.floor(Math.random() * pool.length)];
 
-      // 추천작의 썸네일 카드를 그리되, 댓글 미리보기를 위해 원본 DB 1회를 추가로 호출합니다.
       db.collection('posts').doc(p.id).collection('comments').orderBy('createdAt','asc').limit(4).get().then(cSnap => {
         let commentHtml = '';
         if(!cSnap.empty) {
@@ -1242,6 +1224,7 @@ function _renderSubmitFormHTML() {
         <div id="submit-body-editor" class="body-editor" contenteditable="true" 
           oninput="syncBodyEditor('submit-body-editor', 'body-count'); saveDraft();"
           onpaste="handlePaste(event)"
+          ondrop="e.preventDefault(); toast('이미지나 파일은 끌어다 놓을 수 없습니다.', 'error');"
           placeholder="작품 본문을 입력하세요 (최대 3000자, 산문은 6000자~19999자)"></div>
         <div id="prose-warning" class="prose-warning">⚠️ 현재 분량은 기준 분량(6,000자 ~ 19,999자)을 벗어납니다. 감점될 수 있습니다.</div>
       </div>
@@ -1275,6 +1258,7 @@ function _renderSubmitFormHTML() {
         <div id="submit-body-editor2" class="body-editor" contenteditable="true" 
           oninput="syncBodyEditor('submit-body-editor2', 'body-count2'); saveDraft();"
           onpaste="handlePaste(event)"
+          ondrop="e.preventDefault(); toast('이미지나 파일은 끌어다 놓을 수 없습니다.', 'error');"
           placeholder="두 번째 작품 본문을 입력하세요 (최대 3000자)"></div>
       </div>
     </div>
@@ -1313,7 +1297,16 @@ function _renderSubmitFormHTML() {
   }
 }
 
-// 💡 1. 작품 제출 시 원본과 목차(Index)를 Batch로 동시에 저장합니다.
+function handlePaste(e){
+  e.preventDefault();
+  let text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  if(text.length > 20000) {
+    text = text.substring(0, 20000);
+    toast('최대 분량을 초과하여 20,000자까지만 붙여넣기 되었습니다.', 'error');
+  }
+  document.execCommand('insertText', false, text);
+}
+
 function submitPost(e){
   e.preventDefault();
   if(!currentUser||!currentUserData){toast('로그인이 필요합니다.','error');return;}
@@ -1323,7 +1316,7 @@ function submitPost(e){
   const title1=$('submit-title').value.trim();
   const intro1=$('submit-intro').value.trim();
   const bodyEl1=$('submit-body-editor');
-  const body1=bodyEl1?bodyEl1.innerHTML.trim():'';
+  const body1=bodyEl1 ? sanitizeHTML(bodyEl1.innerHTML.trim()) : '';
 
   if(!title1||!intro1||!body1){toast('제1편의 모든 항목을 입력해주세요.','error');return;}
 
@@ -1334,7 +1327,7 @@ function submitPost(e){
     title2=$('submit-title2').value.trim();
     intro2=$('submit-intro2').value.trim();
     const bodyEl2=$('submit-body-editor2');
-    body2=bodyEl2?bodyEl2.innerHTML.trim():'';
+    body2=bodyEl2 ? sanitizeHTML(bodyEl2.innerHTML.trim()) : '';
     if(!title2||!intro2||!body2){toast('제2편의 모든 항목을 입력해주세요.','error');return;}
   }
 
@@ -1345,7 +1338,6 @@ function submitPost(e){
   let indexRef = db.collection('indexes').doc('posts');
   let createTime = Date.now();
   
-  // 제1편 세팅
   let postRef1 = db.collection('posts').doc();
   batch.set(postRef1, {
     category:cat.value, title:title1, intro:intro1, body:body1,
@@ -1357,12 +1349,11 @@ function submitPost(e){
     ['posts.' + postRef1.id]: {
       id: postRef1.id, uid: currentUser.uid, docType: 'post',
       category: cat.value, title: title1, penName: currentUserData.penName,
-      preview: body1.replace(/<[^>]*>/g, '').substring(0, 100),
+      preview: extractPreview(body1), 
       likeCount: 0, commentCount: 0, createdAt: createTime
     }
   }, { merge: true });
 
-  // 제2편 세팅
   if(isPoem) {
     let postRef2 = db.collection('posts').doc();
     batch.set(postRef2, {
@@ -1375,8 +1366,8 @@ function submitPost(e){
       ['posts.' + postRef2.id]: {
         id: postRef2.id, uid: currentUser.uid, docType: 'post',
         category: cat.value, title: title2, penName: currentUserData.penName,
-        preview: body2.replace(/<[^>]*>/g, '').substring(0, 100),
-        likeCount: 0, commentCount: 0, createdAt: createTime + 1 // 순서 정렬용 미세조정
+        preview: extractPreview(body2), 
+        likeCount: 0, commentCount: 0, createdAt: createTime + 1
       }
     }, { merge: true });
   }
@@ -1384,7 +1375,6 @@ function submitPost(e){
   batch.commit().then(()=>{
     localStorage.removeItem('cnsa_draft');
     if(autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
-
     toast('작품이 성공적으로 응모되었습니다! 🌟','success');
     _doNavigate('gallery', null);
   }).catch(err=>{
@@ -1415,7 +1405,6 @@ function renderGallery(){
   if(btnC) btnC.classList.toggle('active', galleryViewMode === 'card');
   if(btnL) btnL.classList.toggle('active', galleryViewMode === 'list');
   
-  // 💡 2. 400개의 개별 문서 대신 1개의 목차 문서만 불러옵니다. (트래픽 폭탄 방어)
   db.collection('indexes').doc('posts').get().then(doc=>{
     if(doc.exists) {
       allPosts = Object.values(doc.data().posts || {});
@@ -1423,7 +1412,7 @@ function renderGallery(){
       allPosts = [];
     }
     filterAndRenderGallery();
-  }).catch(e=>{console.error(e);setHTML('gallery-grid','<p class="empty-msg">목차를 불러오지 못했습니다.</p>');});
+  }).catch(e=>{console.error(e);setHTML('gallery-grid','<p class="empty-msg">데이터를 불러오지 못했습니다. (보안 규칙 및 동기화를 확인하세요)</p>');});
 }
 
 function setGalleryView(mode) {
@@ -1445,7 +1434,6 @@ function filterAndRenderGallery(){
   if(s) posts = posts.filter(function(p){
     return (p.title||'').toLowerCase().indexOf(s) > -1 ||
            (p.penName||'').toLowerCase().indexOf(s) > -1;
-           // ※ 주의: 본문 내용은 압축팩에 100자만 있으므로 전체 검색은 제한됩니다.
   });
   
   if(gallerySort === 'random'){
@@ -1563,7 +1551,6 @@ function renderCritique(){
   if(btnC) btnC.classList.toggle('active', critiqueViewMode === 'card');
   if(btnL) btnL.classList.toggle('active', critiqueViewMode === 'list');
   
-  // 비평 게시판도 압축 목차를 사용
   db.collection('indexes').doc('posts').get().then(doc=>{
     if(doc.exists) {
       allPosts = Object.values(doc.data().posts || {});
@@ -1708,7 +1695,7 @@ function submitCritique(e) {
   const targetTitle = $('critique-target-title').value;
   const title = $('critique-title').value.trim();
   const bodyEl = $('critique-body-editor');
-  const body = bodyEl ? bodyEl.innerHTML.trim() : '';
+  const body = bodyEl ? sanitizeHTML(bodyEl.innerHTML.trim()) : '';
 
   if(!title||!body){toast('모든 항목을 입력해주세요.','error');return;}
   const btn=$('critique-submit-btn');
@@ -1736,7 +1723,7 @@ function submitCritique(e) {
       id: postRef.id, uid: currentUser.uid, docType: 'critique',
       targetPostTitle: targetTitle, category: '비평',
       title: title, penName: currentUserData.penName,
-      preview: body.replace(/<[^>]*>/g, '').substring(0, 100),
+      preview: extractPreview(body), 
       likeCount: 0, commentCount: 0, createdAt: Date.now()
     }
   }, { merge: true });
@@ -1759,6 +1746,11 @@ document.addEventListener('click', function(e) {
   const panel = $('viewer-panel');
   if(panel && panel.classList.contains('show') && !e.target.closest('.viewer-panel') && !e.target.closest('.viewer-settings-btn')) {
     panel.classList.remove('show');
+  }
+  
+  const notiPanel = $('noti-panel');
+  if(notiPanel && notiPanel.classList.contains('show') && !e.target.closest('#noti-panel') && !e.target.closest('#noti-bell')) {
+    notiPanel.classList.remove('show');
   }
 });
 
@@ -1805,7 +1797,10 @@ function renderPost(postId){
   ]).then(([snap, modeDoc])=>{
     if(modeDoc.exists) siteMode = modeDoc.data().mode || 'apply';
     if(!snap.exists){toast('작품을 찾을 수 없습니다.','error');navigateTo('gallery');return;}
-    const p={id:snap.id,...snap.data()};
+    
+    const p = {id:snap.id,...snap.data()};
+    currentViewPost = p; 
+
     const isOwner=currentUser&&p.uid===currentUser.uid;
     const isAdmin=currentUserData&&currentUserData.role==='admin';
     const currentMode = modeDoc.exists ? modeDoc.data().mode : 'apply';
@@ -1830,7 +1825,6 @@ function renderPost(postId){
         ? `<span class="cat-badge badge-critique">비평</span>`
         : `<span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'')}</span>`;
 
-    // 반응 상태 계산
     const likes = p.likes || [];
     const tears = p.tears || [];
     const shocks = p.shocks || [];
@@ -1896,7 +1890,7 @@ function renderPost(postId){
         </div>`:`<p class="login-prompt">댓글을 달려면 <button class="btn-link" onclick="doLogin()">로그인</button>하세요.</p>`}
       </section>
     </div>`);
-    //
+    
     const bodyEl = document.getElementById('post-body-content');
     if(bodyEl){
       const raw = p.body || '';
@@ -1940,9 +1934,10 @@ function renderPost(postId){
   }).catch(e=>console.error(e));
 }
 
-// 💡 3. 좋아요 클릭 시 원본 문서와 목차(Index) 문서를 Batch로 동시 업데이트합니다.
 function toggleReact(postId, type){
   if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
+  if(!currentViewPost) return;
+
   const ref=db.collection('posts').doc(postId);
   ref.get().then(snap=>{
     const d = snap.data();
@@ -1960,28 +1955,25 @@ function toggleReact(postId, type){
 
     let updates = {};
     let indexUpdates = {};
+    let delta = 0;
     
-    // 이미 해당 감정을 누른 상태에서 다시 누르면 -> 취소
     if (activeFields.includes(targetField) && activeFields.length === 1) {
       updates[targetField] = firebase.firestore.FieldValue.arrayRemove(currentUser.uid);
-      updates.likeCount = firebase.firestore.FieldValue.increment(-1);
-      indexUpdates['posts.' + postId + '.likeCount'] = firebase.firestore.FieldValue.increment(-1);
+      delta = -1;
     } 
-    // 그 외 (새로운 감정을 누름) -> 기존 감정 모두 삭제 후 새 감정 등록
     else {
       activeFields.forEach(f => {
         updates[f] = firebase.firestore.FieldValue.arrayRemove(currentUser.uid);
       });
       updates[targetField] = firebase.firestore.FieldValue.arrayUnion(currentUser.uid);
       
-      let delta = 0;
       if (activeFields.length === 0) delta = 1;
       else if (activeFields.length > 1) delta = 1 - activeFields.length;
+    }
 
-      if (delta !== 0) {
-        updates.likeCount = firebase.firestore.FieldValue.increment(delta);
-        indexUpdates['posts.' + postId + '.likeCount'] = firebase.firestore.FieldValue.increment(delta);
-      }
+    if (delta !== 0) {
+      updates.likeCount = firebase.firestore.FieldValue.increment(delta);
+      indexUpdates['posts.' + postId + '.likeCount'] = firebase.firestore.FieldValue.increment(delta);
     }
 
     let batch = db.batch();
@@ -1990,13 +1982,25 @@ function toggleReact(postId, type){
       let indexRef = db.collection('indexes').doc('posts');
       batch.set(indexRef, indexUpdates, { merge: true });
     }
+
+    if(delta > 0 && currentViewPost.uid !== currentUser.uid) {
+      let notiRef = db.collection('notifications').doc();
+      batch.set(notiRef, {
+        targetUid: currentViewPost.uid,
+        actorName: currentUserData.penName,
+        type: 'like',
+        postId: postId,
+        postTitle: currentViewPost.title,
+        read: false,
+        createdAt: Date.now()
+      });
+    }
     
     batch.commit().then(()=>{
       renderPost(postId);
     });
   });
 }
-
 
 function loadComments(postId){
   db.collection('posts').doc(postId).collection('comments').orderBy('createdAt','asc').get().then(snap=>{
@@ -2040,9 +2044,10 @@ function toggleCommentLike(postId, commentId, btn){
   });
 }
 
-// 💡 4. 댓글 작성/삭제 시에도 목차(Index) 문서를 Batch로 동시 업데이트합니다. (나의 서재 기능 위해 commenters 배열 추가)
 function submitComment(postId){
   if(!currentUser||!currentUserData){toast('로그인이 필요합니다.','error');return;}
+  if(!currentViewPost) return;
+
   const input=$('comment-input');
   const body=input.value.trim();
   if(!body){toast('댓글을 입력해주세요.','error');return;}
@@ -2067,6 +2072,20 @@ function submitComment(postId){
   batch.set(indexRef, {
     ['posts.' + postId + '.commentCount']: firebase.firestore.FieldValue.increment(1)
   }, { merge: true });
+
+  if(currentViewPost.uid !== currentUser.uid) {
+    let notiRef = db.collection('notifications').doc();
+    batch.set(notiRef, {
+      targetUid: currentViewPost.uid,
+      actorName: currentUserData.penName,
+      type: 'comment',
+      postId: postId,
+      postTitle: currentViewPost.title,
+      body: body.substring(0, 30), 
+      read: false,
+      createdAt: Date.now()
+    });
+  }
 
   batch.commit().then(()=>{
     return postRef.get();
@@ -2181,7 +2200,9 @@ function saveEdit(e,postId){
     const cat=document.querySelector('input[name="ecat"]:checked');
     const title=$('edit-title').value.trim();
     const intro=$('edit-intro').value.trim();
-    const body=$('edit-body').value.trim();
+    const bodyEl = document.getElementById('edit-body');
+    const body = bodyEl ? sanitizeHTML(bodyEl.value.trim()) : '';
+
     if(!cat||!title||!intro||!body){toast('모든 항목을 입력하세요.','error');return;}
     
     let batch = db.batch();
@@ -2192,7 +2213,7 @@ function saveEdit(e,postId){
     batch.set(db.collection('indexes').doc('posts'), {
       ['posts.' + postId + '.category']: cat.value,
       ['posts.' + postId + '.title']: title,
-      ['posts.' + postId + '.preview']: body.replace(/<[^>]*>/g, '').substring(0, 100)
+      ['posts.' + postId + '.preview']: extractPreview(body) 
     }, { merge: true });
 
     batch.commit().then(()=>{
@@ -2210,15 +2231,13 @@ function renderMyPage(){
   setText('mypage-penname', currentUserData.penName);
   setText('mypage-email', currentUserData.email||'');
 
-  // 나의 서재 렌더링 최적화
   db.collection('indexes').doc('posts').get().then(function(snap){
     var posts = snap.exists ? Object.values(snap.data().posts || {}) : [];
-    posts.sort((a,b) => b.createdAt - a.createdAt); // 최신순
+    posts.sort((a,b) => b.createdAt - a.createdAt);
 
     var myWorks = posts.filter(p => p.uid === currentUser.uid && p.docType !== 'critique');
     var myCritiques = posts.filter(p => p.uid === currentUser.uid && p.docType === 'critique');
 
-    // 내가 쓴 작품
     setText('mypost-count', myWorks.length);
     var htmlWorks = '';
     myWorks.forEach(function(p){
@@ -2232,7 +2251,6 @@ function renderMyPage(){
     });
     setHTML('mypage-posts', htmlWorks || '<p class="empty-msg">작성한 작품이 없습니다.</p>');
 
-    // 나의 비평
     setText('mycritique-count', myCritiques.length);
     var htmlCritiques = '';
     myCritiques.forEach(function(p){
@@ -2260,7 +2278,6 @@ function renderMyPage(){
     if(likedSec) likedSec.style.display = 'block';
     if(commentedSec) commentedSec.style.display = 'block';
 
-    // 💡 5. 내가 반응한 작품 (Read 최소화 구조)
     Promise.all([
       db.collection('posts').where('likes', 'array-contains', currentUser.uid).get(),
       db.collection('posts').where('tears', 'array-contains', currentUser.uid).get(),
@@ -2295,7 +2312,6 @@ function renderMyPage(){
       setHTML('mypage-liked', html || '<p class="empty-msg">반응한 작품이 없습니다.</p>');
     });
 
-    // 💡 6. 댓글 단 작품 (commenters 배열 활용으로 Read 폭탄 100% 제거)
     setText('mycommented-count', '...');
     setHTML('mypage-commented', '<p class="empty-msg">불러오는 중...</p>');
     
@@ -2306,7 +2322,7 @@ function renderMyPage(){
         .then(cSnap => {
           if(!cSnap.empty) {
             let cmts = cSnap.docs.map(d=>d.data());
-            cmts.sort((a,b) => b.createdAt - a.createdAt); // 최신 댓글 1개만 노출
+            cmts.sort((a,b) => b.createdAt - a.createdAt);
             commentedItems.push({
               postId: doc.id,
               postData: doc.data(),
@@ -2394,12 +2410,6 @@ function clearFmt(editorId){
   var ed = document.getElementById(editorId || 'submit-body-editor');
   if(ed) { ed.focus(); document.execCommand('removeFormat', false, null); }
 }
-function handlePaste(e){
-  e.preventDefault();
-  const text = (e.clipboardData||window.clipboardData).getData('text/plain');
-  document.execCommand('insertText', false, text);
-}
-
 
 function renderAdmin(){
   if(!currentUserData||currentUserData.role!=='admin'){
@@ -2407,7 +2417,7 @@ function renderAdmin(){
     navigateTo('home');
     return;
   }
-  //
+  
   db.collection('config').doc('siteMode').get().then(doc=>{
     const mode=doc.exists?doc.data().mode:'apply';
     siteMode=mode;
@@ -2539,7 +2549,6 @@ function setSiteMode(mode){
   });
 }
 
-// 💡 관리자 전용 기능: 기존 낱개 문서를 단일 목차 문서로 강제 압축합니다.
 async function rebuildIndex() {
   if(!confirm('모든 작품을 읽어 목차(Index) 문서를 새로 생성합니다. 시간이 걸릴 수 있습니다. 실행할까요?')) return;
   
@@ -2555,7 +2564,7 @@ async function rebuildIndex() {
         id: doc.id, uid: d.uid, docType: d.docType || 'post',
         targetPostTitle: d.targetPostTitle || '', category: d.category || '',
         title: d.title || '', penName: d.penName || '',
-        preview: (d.body||'').replace(/<[^>]*>/g,'').substring(0, 100),
+        preview: extractPreview(d.body || ''), 
         likeCount: d.likeCount || 0, commentCount: d.commentCount || 0,
         createdAt: d.createdAt ? (d.createdAt.toMillis ? d.createdAt.toMillis() : new Date(d.createdAt).getTime()) : Date.now()
       };
@@ -2629,6 +2638,11 @@ async function resetDB() {
     reqsSnap.docs.forEach(r => rBatch.delete(r.ref));
     await rBatch.commit();
 
+    const notisSnap = await db.collection('notifications').get();
+    const nBatch = db.batch();
+    notisSnap.docs.forEach(n => nBatch.delete(n.ref));
+    await nBatch.commit();
+
     const usersSnap = await db.collection('users').get();
     const uBatch = db.batch();
     usersSnap.docs.forEach(u => {
@@ -2638,7 +2652,6 @@ async function resetDB() {
     });
     await uBatch.commit();
     
-    // 목차 문서도 함께 비웁니다.
     await db.collection('indexes').doc('posts').delete();
 
     toast('DB 초기화가 완료되었습니다. 새 학기를 시작할 수 있습니다.', 'success');
@@ -2743,7 +2756,6 @@ function closeNav(){
   if(btn)btn.classList.remove('open');
 }
 
-// 사이트 초기화
 loadSiteMode().then(() => {
   navigateTo('home');
 });
