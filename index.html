@@ -52,8 +52,8 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .cta-secondary{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.2)!important;}
 .cta-secondary:hover{background:rgba(255,255,255,.2);}
 .home-section{max-width:1100px;margin:0 auto;padding:3rem 1.5rem;}
-.home-section-title{font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin-bottom:1.5rem;color:var(--ink);display:flex;align-items:center;gap:.6rem;}
-.home-section-title::after{content:'';flex:1;height:1px;background:var(--paper3);}
+.home-section-title{font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin-bottom:1.5rem;color:var(--ink);display:flex;align-items:center;gap:.6rem; flex-wrap:wrap;}
+.home-section-title::after{content:'';flex:1;height:1px;background:var(--paper3); min-width: 50px;}
 .home-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
 .home-card{background:white;border:1px solid var(--paper3);border-radius:10px;padding:1.25rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:.5rem;}
 .home-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow);border-color:var(--gold);}
@@ -216,6 +216,7 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5rem;font-size:.78rem;}
 
 @media(max-width:768px){
+  /* 헤더 - 햄버거 메뉴 */
   .header-inner{padding:.6rem 1rem;position:relative;}
   .site-logo{font-size:1.1rem;}
   nav{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,15,10,.97);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
@@ -229,6 +230,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
   .nav-right{gap:.35rem;}
   #user-penname{display:none;}
+  /* 콘텐츠 */
   .home-cards,.gallery-grid{grid-template-columns:1fr;}
   .gallery-grid{padding:0 1rem 2rem;}
   .post-detail{padding:1.25rem;}
@@ -382,7 +384,12 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     </div>
   </section>
   <section class="home-section" id="home-featured-section">
-    <h2 class="home-section-title">📖 오늘의 감상작</h2>
+    <h2 class="home-section-title">
+      <div style="display:flex; align-items:baseline; gap:0.5rem; flex-wrap:wrap;">
+        <span>📖 오늘의 감상작</span>
+        <span style="font-size:0.85rem; font-weight:400; color:var(--ink3); font-family:var(--font-sans);">당신에게 딱 맞는 작품을 추천해드립니다. 지금 읽어보세요!</span>
+      </div>
+    </h2>
     <div id="home-featured"><p class="empty-msg">불러오는 중...</p></div>
   </section>
 </div>
@@ -678,7 +685,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.23</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.24</footer>
 
 <script>
 // Firebase Initialization
@@ -980,7 +987,6 @@ function updateNavUI(){
   const adminNav = $('nav-admin');
   if(adminNav) adminNav.style.display = isAdmin ? '' : 'none';
 
-  // 휴식모드 일 때 네비게이션 강제 업데이트
   updateModeBanner(siteMode);
 }
 
@@ -1018,18 +1024,42 @@ function renderHome(){
         .replace(/\n\n+/g,'\n')
         .trim();
       const prev=bodyText.substring(0,120);
-      setHTML('home-featured',`<div class="today-card" onclick="navigateTo('post','${p.id}')">
-        <div class="today-card-inner">
-          <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
-          <h2 class="today-title">${escHtml(p.title||'')}</h2>
-            <p class="today-preview" style="white-space:pre-line">${escHtml(prev)}${bodyText.length>120?'…':''}</p>
-          <div class="today-meta">
-            <span>✍ ${escHtml(p.penName||'')}</span>
-            <span>🎭 반응 ${p.likeCount||0}</span>
-            <span class="today-read-btn">작품 읽기 →</span>
+
+      db.collection('posts').doc(p.id).collection('comments').orderBy('createdAt','asc').get().then(cSnap => {
+        let commentHtml = '';
+        if(!cSnap.empty) {
+          commentHtml = `<div style="margin-top:1.5rem; padding:1.2rem; background:var(--paper2); border-radius:var(--radius); border:1px solid var(--paper3);">
+            <h4 style="font-size:0.9rem; color:var(--ink); margin-bottom:0.8rem; font-family:var(--font-serif);">💬 이 작품에 달린 댓글</h4>
+            <div style="display:flex; flex-direction:column; gap:0.5rem;">`;
+          let cCount = 0;
+          cSnap.forEach(cDoc => {
+            if(cCount >= 3) return;
+            const c = cDoc.data();
+            let cBody = c.body || '';
+            if(cBody.length > 40) cBody = cBody.substring(0, 40) + '...';
+            commentHtml += `<div style="font-size:0.85rem; color:var(--ink2);"><strong>${escHtml(c.penName||'')}</strong>: ${escHtml(cBody)}</div>`;
+            cCount++;
+          });
+          if(cSnap.size > 3) {
+            commentHtml += `<div style="font-size:0.75rem; color:var(--gold); margin-top:0.3rem;">+ ${cSnap.size - 3}개의 댓글 더보기</div>`;
+          }
+          commentHtml += `</div></div>`;
+        }
+
+        setHTML('home-featured',`<div class="today-card" onclick="navigateTo('post','${p.id}')">
+          <div class="today-card-inner">
+            <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
+            <h2 class="today-title">${escHtml(p.title||'')}</h2>
+              <p class="today-preview" style="white-space:pre-line">${escHtml(prev)}${bodyText.length>120?'…':''}</p>
+            <div class="today-meta">
+              <span>✍ ${escHtml(p.penName||'')}</span>
+              <span>🎭 반응 ${p.likeCount||0}</span>
+              <span class="today-read-btn">작품 읽기 →</span>
+            </div>
+            ${commentHtml}
           </div>
-        </div>
-      </div>`);
+        </div>`);
+      });
     }).catch(e=>console.error(e));
   }
 }
@@ -1094,7 +1124,6 @@ function renderSubmit(){
     return;
   }
 
-  // 1회 응모 체크 로직
   db.collection('posts').where('uid','==',currentUser.uid).get().then(snap => {
     const hasPost = snap.docs.some(d => d.data().docType !== 'critique');
     if(hasPost) {
@@ -2371,7 +2400,7 @@ function downloadUsersDB(){
 function downloadPostsDB(){
   toast('응모작 DB 준비 중...','info');
   db.collection('posts').get().then(snap=>{
-    const rows=[['필명','카테고리','제목','작품소개','작품본문','총반응수','댓글수']];
+    const rows=[['필명','카테고리','제목','작품소개(비평은 원작)','작품본문','총반응수','댓글수']];
     snap.docs.forEach(d=>{
       const p=d.data();
       if(p.docType === 'critique') return; 
