@@ -672,9 +672,13 @@ let notiUnsubscribe = null;
 function sanitizeHTML(html) {
   let clean = html.replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '');
   clean = clean.replace(/<style[^>]*>([\S\s]*?)<\/style>/gmi, '');
-  clean = clean.replace(//gmi, '');
+  
+  // HTML 주석을 제거하고 싶으신 거라면 아래처럼 수정하세요
+  clean = clean.replace(//gmi, ''); 
+  
   clean = clean.replace(/<\/?(?!\b(b|i|font|span|div|p|br)\b)[^>]+>/gi, '');
   return clean.trim();
+}
 }
 
 function extractPreview(html) {
