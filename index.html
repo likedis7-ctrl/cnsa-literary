@@ -445,7 +445,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 <div class="page" id="page-submit">
   <div class="page-inner">
     <h1 class="page-title">작품 응모하기 <span id="auto-save-msg" class="auto-save-msg"></span></h1>
-    <p class="page-subtitle">여러분의 빛나는 작품을 세상에 선보세요.</p>
+    <p class="page-subtitle">여러분의 빛나는 작품을 세상에 선보이세요.</p>
     <div id="submit-form-wrap"></div>
   </div>
 </div>
@@ -710,7 +710,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.25</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.26</footer>
 
 <script>
 // Firebase Initialization
@@ -832,6 +832,7 @@ function navigateTo(page, param) {
   _doNavigate(page, param);
 
   db.collection('config').doc('siteMode').get().then(doc=>{
+    let oldMode = siteMode;
     if(doc.exists) siteMode = doc.data().mode || 'apply';
     updateModeBanner(siteMode);
     
@@ -1867,7 +1868,7 @@ function renderPost(postId){
   }).catch(e=>console.error(e));
 }
 
-// === 감정 반응 토글 (1인 1반응 제한) ===
+// === 감정 반응 토글 (1인 1반응 제한 로직 추가) ===
 function toggleReact(postId, type){
   if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
   const ref=db.collection('posts').doc(postId);
@@ -2340,38 +2341,56 @@ function loadPenNameRequests() {
   }).catch(e => console.log('필명 변경 신청 로드 에러:', e));
 }
 
-function approvePenName(reqId, uid, newPenName) {
+async function approvePenName(reqId, uid, newPenName) {
   if(!confirm(`필명을 '${newPenName}'(으)로 변경 승인하시겠습니까?`)) return;
 
-  db.collection('users').where('penName','==',newPenName).get().then(snap => {
+  try {
+    const snap = await db.collection('users').where('penName','==',newPenName).get();
     if(!snap.empty) {
       toast('이미 다른 사용자가 등록한 필명입니다. 거부 처리해주세요.', 'error');
       return;
     }
 
-    db.collection('users').doc(uid).update({ penName: newPenName }).then(() => {
-      return db.collection('penNameRequests').doc(reqId).update({ status: 'approved', processedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    }).then(() => {
-      if(currentUser && currentUser.uid === uid) {
-         currentUserData.penName = newPenName;
-         updateNavUI();
+    toast('데이터를 업데이트 중입니다. 잠시만 기다려주세요...', 'info');
+
+    await db.collection('users').doc(uid).update({ penName: newPenName });
+    await db.collection('penNameRequests').doc(reqId).update({ status: 'approved', processedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+    if(currentUser && currentUser.uid === uid) {
+       currentUserData.penName = newPenName;
+       updateNavUI();
+    }
+    
+    const allPostsSnap = await db.collection('posts').get();
+    let batch = db.batch();
+    let count = 0;
+    const batchArray = [];
+
+    for (const pDoc of allPostsSnap.docs) {
+      if (pDoc.data().uid === uid) {
+        batch.update(pDoc.ref, { penName: newPenName });
+        count++;
+        if (count === 500) { batchArray.push(batch); batch = db.batch(); count = 0; }
       }
       
-      db.collection('posts').get().then(allPostsSnap => {
-        allPostsSnap.forEach(pDoc => {
-          if(pDoc.data().uid === uid) {
-            pDoc.ref.update({ penName: newPenName });
-          }
-          pDoc.ref.collection('comments').where('uid','==',uid).get().then(cSnap => {
-            cSnap.forEach(cDoc => cDoc.ref.update({ penName: newPenName }));
-          });
-        });
-      });
-      
-      toast('필명 변경이 일괄 소급 적용되어 승인되었습니다.', 'success');
-      loadPenNameRequests();
-    }).catch(e => toast('승인 실패: ' + e.message, 'error'));
-  });
+      const cSnap = await pDoc.ref.collection('comments').where('uid','==',uid).get();
+      for (const cDoc of cSnap.docs) {
+        batch.update(cDoc.ref, { penName: newPenName });
+        count++;
+        if (count === 500) { batchArray.push(batch); batch = db.batch(); count = 0; }
+      }
+    }
+    
+    if (count > 0) batchArray.push(batch);
+    for (const b of batchArray) {
+      await b.commit();
+    }
+    
+    toast('필명 변경이 일괄 소급 적용되어 승인되었습니다.', 'success');
+    loadPenNameRequests();
+  } catch (e) {
+    toast('승인 실패: ' + e.message, 'error');
+  }
 }
 
 function rejectPenName(reqId) {
