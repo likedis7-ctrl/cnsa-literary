@@ -102,7 +102,7 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .gallery-grid.list-view .gallery-card { flex-direction:row; align-items:center; justify-content:space-between; gap:1.5rem; padding:1rem 1.5rem; }
 .gallery-grid.list-view .gallery-card > div:first-child { flex:1; display:flex; flex-direction:column; align-items:flex-start; }
 .gallery-grid.list-view .gallery-card h3 { margin: 0.3rem 0; }
-.gallery-grid.list-view .gallery-card p.body-preview { margin-bottom:0; }
+.gallery-grid.list-view .gallery-card p.body-preview { display:none; } /* 본문 미리보기 숨김 */
 .gallery-grid.list-view .gallery-card-bottom { margin-top:0; padding-top:0; border-top:none; flex-direction:column; align-items:flex-end; justify-content:center; gap:0.3rem; min-width:100px; }
 
 .author{font-weight:500;}
@@ -444,9 +444,12 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   <div class="gallery-controls">
     <div style="display:flex; flex:1; gap:1rem; align-items:center; flex-wrap:wrap;">
       <div class="sort-tabs">
-        <button class="sort-btn active" data-sort="최신" onclick="setCritiqueSort('최신')">최신순</button>
+        <button class="sort-btn active" data-sort="random" onclick="setCritiqueSort('random')">무작위</button>
+        <button class="sort-btn" data-sort="가나다" onclick="setCritiqueSort('가나다')">가나다순</button>
         <button class="sort-btn" data-sort="좋아요" onclick="setCritiqueSort('좋아요')">반응순</button>
         <button class="sort-btn" data-sort="댓글" onclick="setCritiqueSort('댓글')">댓글순</button>
+        <button class="sort-btn" data-sort="최신" onclick="setCritiqueSort('최신')">최신순</button>
+        <button class="sort-btn" data-sort="등록" onclick="setCritiqueSort('등록')">등록순</button>
       </div>
       <div class="view-toggle-btns">
         <button id="critique-view-btn-card" class="view-btn active" onclick="setCritiqueView('card')" title="카드 뷰">𖽎</button>
@@ -510,6 +513,10 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <div class="mypage-section" id="mypage-myposts-section">
       <h2>✍ 내가 쓴 작품 <span class="count" id="mypost-count">0</span></h2>
       <div id="mypage-posts"></div>
+    </div>
+    <div class="mypage-section" id="mypage-mycritiques-section" style="display:none;">
+      <h2>✍ 나의 비평 <span class="count" id="mycritique-count">0</span></h2>
+      <div id="mypage-critiques"></div>
     </div>
     <div class="mypage-section" id="mypage-liked-section">
       <h2>♥ 반응한 작품 <span class="count" id="myliked-count">0</span></h2>
@@ -627,7 +634,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.21</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.22</footer>
 
 <script>
 //
@@ -651,7 +658,6 @@ let galleryCategory = 'all';
 let gallerySearch = '';
 let gallerySort = 'random';
 let galleryPage = 1;
-const GALLERY_PER_PAGE = 12;
 let siteMode = 'apply'; 
 
 // === 뷰어 및 임시저장 환경 변수 ===
@@ -662,7 +668,7 @@ let autoSaveInterval = null;
 
 // === 비평게시판 전역 변수 ===
 let critiqueSearch = '';
-let critiqueSort = '최신';
+let critiqueSort = 'random';
 let critiquePage = 1;
 let critiqueViewMode = localStorage.getItem('cnsa_critique_view_mode') || 'card';
 
@@ -1229,10 +1235,11 @@ function filterAndRenderGallery(){
     });
   }
   var total = posts.length;
-  var totalPages = Math.max(1, Math.ceil(total / GALLERY_PER_PAGE));
+  var perPage = galleryViewMode === 'list' ? 20 : 12;
+  var totalPages = Math.max(1, Math.ceil(total / perPage));
   if(galleryPage > totalPages) galleryPage = 1;
-  var start = (galleryPage - 1) * GALLERY_PER_PAGE;
-  var pagePosts = posts.slice(start, start + GALLERY_PER_PAGE);
+  var start = (galleryPage - 1) * perPage;
+  var pagePosts = posts.slice(start, start + perPage);
   var html = '';
   
   pagePosts.forEach(function(p){
@@ -1257,7 +1264,7 @@ function filterAndRenderGallery(){
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
         <span>${formatDate(p.createdAt)}</span>
-        <span>🎭 반응 ${p.likeCount||0}</span>
+        <span>🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
       </div>
     </article>`;
   });
@@ -1285,7 +1292,8 @@ function filterAndRenderGallery(){
 }
 
 function setGalleryPage(page){
-  var totalPages = Math.ceil(allPosts.filter(p=>p.docType!=='critique').length / GALLERY_PER_PAGE) || 1;
+  var perPage = galleryViewMode === 'list' ? 20 : 12;
+  var totalPages = Math.ceil(allPosts.filter(p=>p.docType!=='critique').length / perPage) || 1;
   if(page < 1 || page > totalPages) return;
   galleryPage = page;
   filterAndRenderGallery();
@@ -1358,23 +1366,34 @@ function filterAndRenderCritique(){
            (p.penName||'').toLowerCase().indexOf(s) > -1;
   });
 
-  if(critiqueSort === '좋아요'){
+  if(critiqueSort === 'random'){
+    for(var i=posts.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=posts[i]; posts[i]=posts[j]; posts[j]=tmp; }
+  } else if(critiqueSort === '가나다'){
+    posts.sort(function(a,b){ return (a.title||'').localeCompare(b.title||'','ko'); });
+  } else if(critiqueSort === '좋아요'){
     posts.sort(function(a,b){ return (b.likeCount||0)-(a.likeCount||0); });
   } else if(critiqueSort === '댓글'){
     posts.sort(function(a,b){ return (b.commentCount||0)-(a.commentCount||0); });
-  } else { 
+  } else if(critiqueSort === '최신'){
     posts.sort(function(a,b){
       var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
       var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
       return tb - ta;
     });
+  } else if(critiqueSort === '등록'){
+    posts.sort(function(a,b){
+      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+      return ta - tb;
+    });
   }
 
   var total = posts.length;
-  var totalPages = Math.max(1, Math.ceil(total / GALLERY_PER_PAGE));
+  var perPage = critiqueViewMode === 'list' ? 20 : 12;
+  var totalPages = Math.max(1, Math.ceil(total / perPage));
   if(critiquePage > totalPages) critiquePage = 1;
-  var start = (critiquePage - 1) * GALLERY_PER_PAGE;
-  var pagePosts = posts.slice(start, start + GALLERY_PER_PAGE);
+  var start = (critiquePage - 1) * perPage;
+  var pagePosts = posts.slice(start, start + perPage);
   var html = '';
   
   pagePosts.forEach(function(p){
@@ -1400,7 +1419,7 @@ function filterAndRenderCritique(){
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
         <span>${formatDate(p.createdAt)}</span>
-        <span>🎭 반응 ${p.likeCount||0}</span>
+        <span>🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
       </div>
     </article>`;
   });
@@ -1429,7 +1448,8 @@ function filterAndRenderCritique(){
 }
 
 function setCritiquePage(page){
-  var totalPages = Math.ceil(allPosts.filter(p=>p.docType==='critique').length / GALLERY_PER_PAGE) || 1;
+  var perPage = critiqueViewMode === 'list' ? 20 : 12;
+  var totalPages = Math.ceil(allPosts.filter(p=>p.docType==='critique').length / perPage) || 1;
   if(page < 1 || page > totalPages) return;
   critiquePage = page;
   filterAndRenderCritique();
@@ -1570,7 +1590,6 @@ function renderPost(postId){
         ? `<span class="cat-badge badge-critique">비평</span>`
         : `<span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'')}</span>`;
 
-    // 반응 상태 계산
     const likes = p.likes || [];
     const tears = p.tears || [];
     const shocks = p.shocks || [];
@@ -1667,7 +1686,7 @@ function renderPost(postId){
           otherPosts.forEach(op => {
             listHtml += `<div class="other-post-item" onclick="navigateTo('post', '${op.id}')">
               <span class="other-post-item-title">${escHtml(op.title)}</span>
-              <span class="other-post-item-meta">🎭 반응 ${op.likeCount||0} · 💬 ${op.commentCount||0}</span>
+              <span class="other-post-item-meta">🎭 반응 ${op.likeCount||0} · 💬 댓글 ${op.commentCount||0}</span>
             </div>`;
           });
           listHtml += '</div></div>';
@@ -1680,25 +1699,48 @@ function renderPost(postId){
   }).catch(e=>console.error(e));
 }
 
-// === 감정 반응 토글 ===
+// === 감정 반응 토글 (1인 1반응 제한 로직 추가) ===
 function toggleReact(postId, type){
   if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
   const ref=db.collection('posts').doc(postId);
   ref.get().then(snap=>{
     const d = snap.data();
-    let field = '';
-    if(type==='heart') field = 'likes';
-    else if(type==='tear') field = 'tears';
-    else if(type==='shock') field = 'shocks';
-    else if(type==='fear') field = 'fears';
+    let targetField = '';
+    if(type==='heart') targetField = 'likes';
+    else if(type==='tear') targetField = 'tears';
+    else if(type==='shock') targetField = 'shocks';
+    else if(type==='fear') targetField = 'fears';
 
-    const arr = d[field] || [];
-    const has = arr.includes(currentUser.uid);
+    const fields = ['likes', 'tears', 'shocks', 'fears'];
+    let activeFields = [];
+    fields.forEach(f => {
+      if((d[f]||[]).includes(currentUser.uid)) activeFields.push(f);
+    });
 
-    ref.update({
-      [field]: has ? firebase.firestore.FieldValue.arrayRemove(currentUser.uid) : firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
-      likeCount: firebase.firestore.FieldValue.increment(has ? -1 : 1) // 전체 반응수 합계로 활용
-    }).then(()=>{
+    let updates = {};
+    
+    // 이미 해당 감정을 누른 상태에서 다시 누르면 -> 취소
+    if (activeFields.includes(targetField) && activeFields.length === 1) {
+      updates[targetField] = firebase.firestore.FieldValue.arrayRemove(currentUser.uid);
+      updates.likeCount = firebase.firestore.FieldValue.increment(-1);
+    } 
+    // 그 외 (새로운 감정을 누름) -> 기존 감정 모두 삭제 후 새 감정 등록
+    else {
+      activeFields.forEach(f => {
+        updates[f] = firebase.firestore.FieldValue.arrayRemove(currentUser.uid);
+      });
+      updates[targetField] = firebase.firestore.FieldValue.arrayUnion(currentUser.uid);
+      
+      // 반응이 0개에서 새로 추가될 때만 전체 likeCount를 1 증가
+      if (activeFields.length === 0) {
+        updates.likeCount = firebase.firestore.FieldValue.increment(1);
+      } else if (activeFields.length > 1) {
+        // 오류로 여러개가 선택되어 있던 경우 1개로 교정
+        updates.likeCount = firebase.firestore.FieldValue.increment(1 - activeFields.length);
+      }
+    }
+
+    ref.update(updates).then(()=>{
       renderPost(postId);
     });
   });
@@ -1875,32 +1917,50 @@ function renderMyPage(){
 
   db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc').get().then(function(snap){
     var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
-    setText('mypost-count', posts.length);
-    var html = '';
-    posts.forEach(function(p){
-      let catLabel = p.docType === 'critique' ? '비평' : p.category;
-      let catClass = p.docType === 'critique' ? 'badge-critique' : (p.category==='운문'?'badge-verse':'badge-prose');
-      html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
+    
+    var myWorks = posts.filter(p => p.docType !== 'critique');
+    var myCritiques = posts.filter(p => p.docType === 'critique');
+
+    // 내가 쓴 작품
+    setText('mypost-count', myWorks.length);
+    var htmlWorks = '';
+    myWorks.forEach(function(p){
+      let catLabel = p.category;
+      let catClass = p.category==='운문'?'badge-verse':'badge-prose';
+      htmlWorks += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
         <span class="cat-badge ${catClass}">${escHtml(catLabel)}</span>
         <strong>${escHtml(p.title||'')}</strong>
-        <span class="mypage-item-meta">${formatDate(p.createdAt)} · 🎭 반응 ${p.likeCount||0}</span>
+        <span class="mypage-item-meta">${formatDate(p.createdAt)} · 🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
       </div>`;
     });
-    setHTML('mypage-posts', html || '<p class="empty-msg">작성한 작품이 없습니다.</p>');
+    setHTML('mypage-posts', htmlWorks || '<p class="empty-msg">작성한 작품이 없습니다.</p>');
+
+    // 나의 비평
+    setText('mycritique-count', myCritiques.length);
+    var htmlCritiques = '';
+    myCritiques.forEach(function(p){
+      htmlCritiques += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
+        <span class="cat-badge badge-critique">비평</span>
+        <strong>${escHtml(p.title||'')}</strong>
+        <span class="mypage-item-meta">${formatDate(p.createdAt)} · 🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
+      </div>`;
+    });
+    setHTML('mypage-critiques', htmlCritiques || '<p class="empty-msg">작성한 비평이 없습니다.</p>');
   });
 
+  const critiqueSec = document.getElementById('mypage-mycritiques-section');
   const likedSec = document.getElementById('mypage-liked-section');
   const commentedSec = document.getElementById('mypage-commented-section');
 
   if(siteMode === 'apply'){
+    if(critiqueSec) critiqueSec.style.display = 'none';
     if(likedSec) likedSec.style.display = 'none';
     if(commentedSec) commentedSec.style.display = 'none';
   } else {
+    if(critiqueSec) critiqueSec.style.display = 'block';
     if(likedSec) likedSec.style.display = 'block';
     if(commentedSec) commentedSec.style.display = 'block';
 
-    // 좋아요한 작품 -> 어떤 감정이든 상관없이 반응한 모든 작품을 가져오기엔 쿼리가 무거우므로,
-    // Firebase 특성상 likes 필드에 uid가 있는 경우(하트 반응)만 나의 서재에 대표로 노출하는 방식으로 유지합니다.
     db.collection('posts').where('likes','array-contains',currentUser.uid).get().then(function(snap){
       var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
       posts.sort(function(a,b){
@@ -1918,7 +1978,7 @@ function renderMyPage(){
         html += `<div class="mypage-item${extraClass}" onclick="navigateTo('post','${p.id}')" ${hiddenStyle}>
           <span class="cat-badge ${catClass}">${escHtml(catLabel)}</span>
           <strong>${escHtml(p.title||'')}</strong>
-          <span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · 🎭 반응 ${p.likeCount||0}</span>
+          <span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · 🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
         </div>`;
       });
       if(posts.length > 5){
@@ -1996,7 +2056,47 @@ function renderMyPage(){
   }
 }
 
-// === 관리자 페이지 및 필명 변경 신청 일괄 소급 로직 ===
+function syncBodyEditor(editorId, countId){
+  const editor = document.getElementById(editorId);
+  if(!editor) return;
+  const text = editor.innerText || '';
+  const len = text.length;
+  const countEl = document.getElementById(countId);
+  if(countEl) countEl.textContent = len;
+
+  if(editorId === 'submit-body-editor') {
+    const cat = document.querySelector('input[name="category"]:checked');
+    const warningMsg = document.getElementById('prose-warning');
+    if(cat && cat.value === '산문') {
+      if(len < 6000 || len >= 20000) {
+        countEl.style.color = 'var(--red)';
+        if(warningMsg) warningMsg.style.display = 'block';
+      } else {
+        countEl.style.color = 'inherit';
+        if(warningMsg) warningMsg.style.display = 'none';
+      }
+    } else {
+      countEl.style.color = 'inherit';
+      if(warningMsg) warningMsg.style.display = 'none';
+    }
+  }
+}
+
+function execFmt(cmd, val, editorId){
+  var ed = document.getElementById(editorId || 'submit-body-editor');
+  if(ed) { ed.focus(); document.execCommand(cmd, false, val||null); }
+}
+function clearFmt(editorId){
+  var ed = document.getElementById(editorId || 'submit-body-editor');
+  if(ed) { ed.focus(); document.execCommand('removeFormat', false, null); }
+}
+function handlePaste(e){
+  e.preventDefault();
+  const text = (e.clipboardData||window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
+}
+
+
 function renderAdmin(){
   if(!currentUserData||currentUserData.role!=='admin'){
     toast('관리자만 접근할 수 있습니다.','error');
@@ -2033,7 +2133,7 @@ function loadPenNameRequests() {
     reqs.sort((a,b) => {
       const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
       const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return ta - tb; 
+      return ta - tb; // 오래된 순
     });
 
     let html = '<div style="display:flex; flex-direction:column; gap:0.5rem;">';
@@ -2108,7 +2208,6 @@ function setSiteMode(mode){
     updateModeBanner(mode);
     toast(mode==='apply'?'응모기간 모드로 변경되었습니다.':'감상기간 모드로 변경되었습니다.','success');
     renderAdmin();
-    // 모드 변경 즉시 메뉴 갱신 반영을 위한 새로고침 처리
     setTimeout(() => location.reload(), 500); 
   });
 }
@@ -2193,7 +2292,6 @@ function closeNav(){
 
 // 사이트 초기화
 loadSiteMode().then(() => {
-  // 모드에 따라 초기 홈 진입 시 네비게이션 제어
   navigateTo('home');
 });
 </script>
