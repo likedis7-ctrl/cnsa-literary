@@ -82,7 +82,7 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .gallery-card{background:white;border:1px solid var(--paper3);border-radius:10px;padding:1.25rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;justify-content:space-between;}
 .gallery-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow);border-color:var(--gold);}
 .gallery-card h3{font-family:var(--font-serif);font-size:1.05rem;font-weight:700;margin:.5rem 0 .4rem;}
-.body-preview{font-size:.85rem;color:var(--ink3);line-height:1.6;}
+.body-preview{font-size:.85rem;color:var(--ink3);line-height:1.6;white-space:pre-line;}
 .gallery-card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--paper2);font-size:.78rem;color:var(--ink3);}
 .gallery-grid.list-view{display:flex;flex-direction:column;gap:1rem;}
 .gallery-grid.list-view .gallery-card{flex-direction:row;align-items:center;justify-content:space-between;gap:1.5rem;padding:1rem 1.5rem;}
@@ -247,11 +247,11 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 .prose-warning{display:none;color:var(--red);font-size:0.85rem;margin-top:0.4rem;font-weight:500;font-family:var(--font-sans);}
 
 .today-card{cursor:pointer;transition:all .2s;}
-.today-card:hover 2.4today-card-inner{transform:translateY(-2px);box-shadow:0 12px 32px var(--shadow);border-color:var(--gold);}
+.today-card:hover 2.5today-card-inner{transform:translateY(-2px);box-shadow:0 12px 32px var(--shadow);border-color:var(--gold);}
 .today-card-inner{background:white;border:1px solid var(--paper3);border-radius:14px;padding:2rem 2.5rem;transition:all .2s;}
 .today-title{font-family:var(--font-serif);font-size:1.6rem;font-weight:700;margin:.5rem 0 .75rem;color:var(--ink);}
 .today-intro{font-size:.9rem;color:var(--gold);font-style:italic;margin-bottom:.75rem;}
-.today-preview{font-family:var(--font-serif);font-size:.95rem;color:var(--ink2);line-height:1.9;margin-bottom:1.25rem;}
+.today-preview{font-family:var(--font-serif);font-size:.95rem;color:var(--ink2);line-height:1.9;margin-bottom:1.25rem;white-space:pre-line;}
 .today-meta{display:flex;align-items:center;gap:1.5rem;font-size:.83rem;color:var(--ink3);}
 .today-read-btn{margin-left:auto;color:var(--gold);font-weight:500;}
 
@@ -543,7 +543,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <div class="credits-cards">
       <div class="credit-card">
         <p class="role">기획 · 개발</p>
-        <p class="name">김민준 (31203) · 김윤서 (20107)</p>
+        <p class="name">김민준 (31203) · 김윤서 (20107) · 차유근 (20529)</p>
         <p class="desc">큰별문학상 온라인전시관의 기획, 디자인, 시스템 개발을 담당했습니다.</p>
       </div>
       <div class="credit-card">
@@ -631,7 +631,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.4 (오류 수정 및 전체 코드)</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.5 (오류 수정 및 전체 코드)</footer>
 
 <script>
 // Firebase Initialization
@@ -1099,7 +1099,7 @@ function renderHome(){
           <div class="today-card-inner">
             <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
             <h2 class="today-title">${escHtml(p.title||'')}</h2>
-              <p class="today-preview" style="white-space:pre-line">${escHtml(p.preview||'')}…</p>
+              <p class="today-preview" >${escHtml(p.preview||'')}…</p>
             <div class="today-meta">
               <span>✍ ${escHtml(p.penName||'')}</span>
               <span>🎭 반응 ${p.likeCount||0}</span>
@@ -1473,7 +1473,7 @@ function filterAndRenderGallery(){
       <div>
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
         <h3>${escHtml(p.title||'제목 없음')}</h3>
-        <p class="body-preview" style="white-space:pre-line">${escHtml(p.preview||'')}…</p>
+        <p class="body-preview" >${escHtml(p.preview||'')}…</p>
       </div>
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
@@ -1621,7 +1621,7 @@ function filterAndRenderCritique(){
         <span class="cat-badge badge-critique">비평</span>
         <span style="font-size:0.8rem; color:var(--ink3); margin-left:0.5rem; font-family:var(--font-sans);">원작품: ${escHtml(p.targetPostTitle)}</span>
         <h3>${escHtml(p.title||'제목 없음')}</h3>
-        <p class="body-preview" style="white-space:pre-line">${escHtml(p.preview||'')}…</p>
+        <p class="body-preview" >${escHtml(p.preview||'')}…</p>
       </div>
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
