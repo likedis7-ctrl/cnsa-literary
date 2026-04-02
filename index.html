@@ -204,7 +204,7 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .modal p{font-size:.85rem;color:var(--ink3);margin-bottom:1.5rem;}
 .modal input{width:100%;padding:.75rem 1rem;border:1.5px solid var(--paper3);border-radius:var(--radius);font-family:var(--font-sans);font-size:1rem;margin-bottom:1rem;}
 .modal input:focus{outline:none;border-color:var(--gold);}
-.modal-hint{font-size:.78rem;color:var(--ink3);margin-bottom:1.25rem;}
+.modal-hint{font-size:.78rem;color:var(--ink3);margin-bottom:1.25rem;line-height:1.6;}
 .modal-actions{display:flex;justify-content:flex-end;}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:var(--ink);color:var(--paper);padding:.75rem 1.25rem;border-radius:8px;font-size:.88rem;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;max-width:320px;}
 .toast.show{opacity:1;transform:translateY(0);}
@@ -428,6 +428,16 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
           <li>표절작의 경우 수상 자격이 박탈되며, 사안에 따라 선도위원회에 회부될 수 있습니다.</li>
         </ul>
       </div>
+
+      <div style="margin-top:3rem; padding-top:2rem; border-top:2px dashed var(--paper3);">
+        <h3 style="font-family:var(--font-serif); font-size:1.3rem; margin-bottom:1rem; color:var(--ink);">📚 역대 큰별문학상 돌아보기</h3>
+        <p style="font-size:0.9rem; color:var(--ink2); margin-bottom:1rem;">과거 선배들과 친구들이 남긴 빛나는 작품들을 감상해보세요.</p>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <a href="#" target="_blank" style="display:inline-block; padding:0.75rem 1rem; background:white; border:1px solid var(--paper3); border-radius:var(--radius); color:var(--ink); text-decoration:none; transition:all 0.15s; font-weight:500;">📖 2025학년도 온라인전시관 가기 ↗</a>
+          <a href="#" target="_blank" style="display:inline-block; padding:0.75rem 1rem; background:white; border:1px solid var(--paper3); border-radius:var(--radius); color:var(--ink); text-decoration:none; transition:all 0.15s; font-weight:500;">📖 2024학년도 온라인전시관 가기 ↗</a>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -435,7 +445,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 <div class="page" id="page-submit">
   <div class="page-inner">
     <h1 class="page-title">작품 응모하기 <span id="auto-save-msg" class="auto-save-msg"></span></h1>
-    <p class="page-subtitle">여러분의 빛나는 작품을 세상에 선보이세요.</p>
+    <p class="page-subtitle">여러분의 빛나는 작품을 세상에 선보세요.</p>
     <div id="submit-form-wrap"></div>
   </div>
 </div>
@@ -613,6 +623,21 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
         </button>
       </div>
     </div>
+    
+    <div class="admin-section" style="background:#fffcf5; border-color:#f9e4d4;">
+      <h2>🗄️ 아카이브 및 DB 관리 (연도 전환)</h2>
+      <p class="admin-desc" style="color:var(--ink2);">새 학기 문학상 준비를 위한 데이터 관리 메뉴입니다. <strong>주의해서 사용하세요.</strong></p>
+      <div class="admin-btn-group">
+        <button class="admin-mode-btn" id="btn-archive" onclick="archiveData()" style="border-color:var(--gold); color:var(--ink);">
+          🗂️ 전체 글 아카이브로 옮기기
+          <span style="color:var(--ink3);">현재 응모/비평작을 보관소(archive_2026)로 안전하게 복사합니다</span>
+        </button>
+        <button class="admin-mode-btn" id="btn-reset" onclick="resetDB()" style="border-color:#fecaca; color:var(--red);">
+          💣 DB 초기화 (새 학기 리셋)
+          <span style="color:#ef4444;">응모작, 비평, 댓글, 학생 필명 정보를 모두 삭제합니다 (관리자 계정 유지)</span>
+        </button>
+      </div>
+    </div>
 
     <div class="admin-section">
       <h2>🔄 필명 변경 신청 관리</h2>
@@ -685,7 +710,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.24</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.25</footer>
 
 <script>
 // Firebase Initialization
@@ -1124,6 +1149,7 @@ function renderSubmit(){
     return;
   }
 
+  // 1회 응모 체크 로직
   db.collection('posts').where('uid','==',currentUser.uid).get().then(snap => {
     const hasPost = snap.docs.some(d => d.data().docType !== 'critique');
     if(hasPost) {
@@ -1841,7 +1867,7 @@ function renderPost(postId){
   }).catch(e=>console.error(e));
 }
 
-// === 감정 반응 토글 (1인 1반응 제한 로직 추가) ===
+// === 감정 반응 토글 (1인 1반응 제한) ===
 function toggleReact(postId, type){
   if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
   const ref=db.collection('posts').doc(postId);
@@ -2368,6 +2394,81 @@ function setSiteMode(mode){
     renderAdmin();
     setTimeout(() => location.reload(), 500); 
   });
+}
+
+async function archiveData() {
+  if(!confirm('해당 작업을 실행하면 DB에 복구불가능한 변화가 생깁니다. 실행합니까?')) return;
+  const btn = document.getElementById('btn-archive');
+  btn.disabled = true; btn.textContent = '아카이브 복사 중...';
+
+  try {
+    const postsSnap = await db.collection('posts').get();
+    const batchArray = [];
+    let batch = db.batch();
+    let count = 0;
+
+    for (const doc of postsSnap.docs) {
+      const archiveRef = db.collection('archive_2026').doc(doc.id);
+      batch.set(archiveRef, doc.data());
+      count++;
+      if(count === 500) { batchArray.push(batch); batch = db.batch(); count = 0; }
+
+      const commentsSnap = await doc.ref.collection('comments').get();
+      for (const cDoc of commentsSnap.docs) {
+        const archiveCommentRef = archiveRef.collection('comments').doc(cDoc.id);
+        batch.set(archiveCommentRef, cDoc.data());
+        count++;
+        if(count === 500) { batchArray.push(batch); batch = db.batch(); count = 0; }
+      }
+    }
+    if(count > 0) batchArray.push(batch);
+
+    for(const b of batchArray) await b.commit();
+
+    toast('아카이브 복사가 완료되었습니다.', 'success');
+  } catch(e) {
+    toast('오류 발생: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.innerHTML = '🗂️ 전체 글 아카이브로 옮기기<span>현재 응모/비평작을 보관소(archive_2026)로 안전하게 복사합니다</span>';
+}
+
+async function resetDB() {
+  if(!confirm('해당 작업을 실행하면 DB에 복구불가능한 변화가 생깁니다. 실행합니까?')) return;
+  const promptText = prompt('초기화를 진행하려면 "초기화확인" 이라고 입력해주세요.');
+  if(promptText !== '초기화확인') { toast('입력값이 일치하지 않아 취소되었습니다.', 'info'); return; }
+
+  const btn = document.getElementById('btn-reset');
+  btn.disabled = true; btn.textContent = 'DB 초기화 중...';
+
+  try {
+    const postsSnap = await db.collection('posts').get();
+    for (const doc of postsSnap.docs) {
+      const commentsSnap = await doc.ref.collection('comments').get();
+      const cBatch = db.batch();
+      commentsSnap.docs.forEach(c => cBatch.delete(c.ref));
+      await cBatch.commit();
+      await doc.ref.delete();
+    }
+
+    const reqsSnap = await db.collection('penNameRequests').get();
+    const rBatch = db.batch();
+    reqsSnap.docs.forEach(r => rBatch.delete(r.ref));
+    await rBatch.commit();
+
+    const usersSnap = await db.collection('users').get();
+    const uBatch = db.batch();
+    usersSnap.docs.forEach(u => {
+      if (u.data().role !== 'admin') {
+        uBatch.delete(u.ref);
+      }
+    });
+    await uBatch.commit();
+
+    toast('DB 초기화가 완료되었습니다. 새 학기를 시작할 수 있습니다.', 'success');
+  } catch(e) {
+    toast('오류 발생: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.innerHTML = '💣 DB 초기화 (새 학기 리셋)<span>응모작, 비평, 댓글, 학생 필명 정보를 모두 삭제합니다 (관리자 계정 유지)</span>';
 }
 
 function downloadCSV(rows, filename){
