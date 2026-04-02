@@ -247,7 +247,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 .prose-warning{display:none;color:var(--red);font-size:0.85rem;margin-top:0.4rem;font-weight:500;font-family:var(--font-sans);}
 
 .today-card{cursor:pointer;transition:all .2s;}
-.today-card:hover .today-card-inner{transform:translateY(-2px);box-shadow:0 12px 32px var(--shadow);border-color:var(--gold);}
+.today-card:hover 2.4today-card-inner{transform:translateY(-2px);box-shadow:0 12px 32px var(--shadow);border-color:var(--gold);}
 .today-card-inner{background:white;border:1px solid var(--paper3);border-radius:14px;padding:2rem 2.5rem;transition:all .2s;}
 .today-title{font-family:var(--font-serif);font-size:1.6rem;font-weight:700;margin:.5rem 0 .75rem;color:var(--ink);}
 .today-intro{font-size:.9rem;color:var(--gold);font-style:italic;margin-bottom:.75rem;}
@@ -631,7 +631,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.3 (오류 수정 및 전체 코드)</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.4 (오류 수정 및 전체 코드)</footer>
 
 <script>
 // Firebase Initialization
@@ -670,15 +670,12 @@ let currentViewPost = null;
 let notiUnsubscribe = null; 
 
 function sanitizeHTML(html) {
-  let clean = html.replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, '');
-  clean = clean.replace(/<style[^>]*>([\S\s]*?)<\/style>/gmi, '');
-  
-  // HTML 주석을 제거하고 싶으신 거라면 아래처럼 수정하세요
-  clean = clean.replace(//gmi, ''); 
-  
-  clean = clean.replace(/<\/?(?!\b(b|i|font|span|div|p|br)\b)[^>]+>/gi, '');
+  if(!html) return '';
+  var clean = html;
+  clean = clean.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+  clean = clean.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+  clean = clean.replace(/<!--[\s\S]*?-->/g, '');
   return clean.trim();
-}
 }
 
 function extractPreview(html) {
