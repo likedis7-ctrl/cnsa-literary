@@ -386,7 +386,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   <section class="home-section" id="home-featured-section">
     <h2 class="home-section-title">
       <div style="display:flex; align-items:baseline; gap:0.5rem; flex-wrap:wrap;">
-        <span>📖 오늘의 감상작</span>
+        <span>📖 오늘의 추천작</span>
         <span style="font-size:0.85rem; font-weight:400; color:var(--ink3); font-family:var(--font-sans);">당신에게 딱 맞는 작품을 추천해드립니다. 지금 읽어보세요!</span>
       </div>
     </h2>
@@ -461,6 +461,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <div style="display:flex; flex:1; gap:1rem; align-items:center; flex-wrap:wrap;">
       <div class="sort-tabs">
         <button class="sort-btn active" data-sort="random" onclick="setGallerySort('random')">무작위</button>
+        <button class="sort-btn" style="border-color:var(--gold2); color:var(--gold2);" onclick="shuffleGalleryRandom()" title="새로운 무작위 순서로 섞기">🔄 섞기</button>
         <button class="sort-btn" data-sort="가나다" onclick="setGallerySort('가나다')">가나다순</button>
         <button class="sort-btn" data-sort="좋아요" onclick="setGallerySort('좋아요')">반응순</button>
         <button class="sort-btn" data-sort="댓글" onclick="setGallerySort('댓글')">댓글순</button>
@@ -490,6 +491,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <div style="display:flex; flex:1; gap:1rem; align-items:center; flex-wrap:wrap;">
       <div class="sort-tabs">
         <button class="sort-btn active" data-sort="random" onclick="setCritiqueSort('random')">무작위</button>
+        <button class="sort-btn" style="border-color:var(--gold2); color:var(--gold2);" onclick="shuffleCritiqueRandom()" title="새로운 무작위 순서로 섞기">🔄 섞기</button>
         <button class="sort-btn" data-sort="가나다" onclick="setCritiqueSort('가나다')">가나다순</button>
         <button class="sort-btn" data-sort="좋아요" onclick="setCritiqueSort('좋아요')">반응순</button>
         <button class="sort-btn" data-sort="댓글" onclick="setCritiqueSort('댓글')">댓글순</button>
@@ -710,7 +712,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.26</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.28</footer>
 
 <script>
 // Firebase Initialization
@@ -745,6 +747,34 @@ let critiqueSearch = '';
 let critiqueSort = 'random';
 let critiquePage = 1;
 let critiqueViewMode = localStorage.getItem('cnsa_critique_view_mode') || 'card';
+
+// --- Seeded Random Utility ---
+function seededShuffle(array, seed) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+  var currentSeed = seed;
+  while (0 !== currentIndex) {
+    var randomVal = Math.sin(currentSeed++) * 10000;
+    randomVal = randomVal - Math.floor(randomVal);
+    randomIndex = Math.floor(randomVal * currentIndex);
+    currentIndex -= 1;
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+  return array;
+}
+
+function shuffleGalleryRandom() {
+  var offset = parseInt(sessionStorage.getItem('cnsa_random_offset') || '0');
+  sessionStorage.setItem('cnsa_random_offset', offset + 1);
+  setGallerySort('random');
+}
+
+function shuffleCritiqueRandom() {
+  var offset = parseInt(sessionStorage.getItem('cnsa_critique_random_offset') || '0');
+  sessionStorage.setItem('cnsa_critique_random_offset', offset + 1);
+  setCritiqueSort('random');
+}
 
 
 function loadSiteMode(){
@@ -1034,11 +1064,31 @@ function renderHome(){
     if(featSec) featSec.style.display = 'block';
 
     db.collection('posts').get().then(snap=>{
-      if(snap.empty){setHTML('home-featured','<p class="empty-msg">아직 작품이 없습니다.</p>');return;}
-      const docs = snap.docs.filter(d => d.data().docType !== 'critique');
-      if(docs.length === 0) {setHTML('home-featured','<p class="empty-msg">아직 감상작이 없습니다.</p>');return;}
-      const random=docs[Math.floor(Math.random()*docs.length)];
-      const p={id:random.id,...random.data()};
+      let postsData = snap.docs.filter(d => d.data().docType !== 'critique').map(d => ({id:d.id, ...d.data()}));
+      if(postsData.length === 0) {setHTML('home-featured','<p class="empty-msg">아직 감상작이 없습니다.</p>');return;}
+      
+      // 안 읽은 작품 필터링 알고리즘 적용
+      let readPosts = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
+      let unreadPosts = postsData.filter(p => !readPosts.includes(p.id));
+      
+      // 모든 작품을 다 읽었을 경우 다시 전체 작품을 대상으로 함
+      if (unreadPosts.length === 0) unreadPosts = postsData;
+      
+      // 반응수+댓글수가 가장 적은 하위 그룹을 구하기 위해 정렬
+      unreadPosts.sort((a, b) => {
+        let scoreA = (a.likeCount || 0) + (a.commentCount || 0);
+        let scoreB = (b.likeCount || 0) + (b.commentCount || 0);
+        return scoreA - scoreB;
+      });
+
+      // 하위 30% (최소 3개, 최대 10개) 풀 구성
+      let poolSize = Math.max(3, Math.min(10, Math.ceil(unreadPosts.length * 0.3)));
+      if(poolSize > unreadPosts.length) poolSize = unreadPosts.length;
+      let pool = unreadPosts.slice(0, poolSize);
+      
+      // 풀 내에서 랜덤으로 1개 선택
+      const p = pool[Math.floor(Math.random() * pool.length)];
+
       const bodyText=(p.body||'')
         .replace(/<div><br><\/div>/gi,'\n')
         .replace(/<div>/gi,'\n')
@@ -1380,8 +1430,19 @@ function filterAndRenderGallery(){
            (p.body||'').replace(/<[^>]*>/g,'').toLowerCase().indexOf(s) > -1 ||
            (p.penName||'').toLowerCase().indexOf(s) > -1;
   });
+  
   if(gallerySort === 'random'){
-    for(var i=posts.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=posts[i]; posts[i]=posts[j]; posts[j]=tmp; }
+    var readPosts = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
+    var unread = posts.filter(function(p){ return !readPosts.includes(p.id); });
+    var read = posts.filter(function(p){ return readPosts.includes(p.id); });
+    
+    var baseSeed = Math.floor(Date.now() / (30 * 60 * 1000));
+    var offset = parseInt(sessionStorage.getItem('cnsa_random_offset') || '0');
+    var seed = baseSeed + offset;
+    
+    seededShuffle(unread, seed);
+    seededShuffle(read, seed + 999);
+    posts = unread.concat(read);
   } else if(gallerySort === '가나다'){
     posts.sort(function(a,b){ return (a.title||'').localeCompare(b.title||'','ko'); });
   } else if(gallerySort === '좋아요'){
@@ -1469,7 +1530,7 @@ function setGalleryPage(page){
 function setGallerySort(sort){
   gallerySort = sort;
   galleryPage = 1;
-  document.querySelectorAll('#page-gallery .sort-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.sort===sort); });
+  document.querySelectorAll('#page-gallery .sort-btn[data-sort]').forEach(function(b){ b.classList.toggle('active', b.dataset.sort===sort); });
   filterAndRenderGallery();
 }
 function setGalleryCategory(cat){
@@ -1535,7 +1596,17 @@ function filterAndRenderCritique(){
   });
 
   if(critiqueSort === 'random'){
-    for(var i=posts.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=posts[i]; posts[i]=posts[j]; posts[j]=tmp; }
+    var readPosts = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
+    var unread = posts.filter(function(p){ return !readPosts.includes(p.id); });
+    var read = posts.filter(function(p){ return readPosts.includes(p.id); });
+    
+    var baseSeed = Math.floor(Date.now() / (30 * 60 * 1000));
+    var offset = parseInt(sessionStorage.getItem('cnsa_critique_random_offset') || '0');
+    var seed = baseSeed + offset;
+    
+    seededShuffle(unread, seed);
+    seededShuffle(read, seed + 999);
+    posts = unread.concat(read);
   } else if(critiqueSort === '가나다'){
     posts.sort(function(a,b){ return (a.title||'').localeCompare(b.title||'','ko'); });
   } else if(critiqueSort === '좋아요'){
@@ -1627,7 +1698,7 @@ function setCritiquePage(page){
 function setCritiqueSort(sort){
   critiqueSort = sort;
   critiquePage = 1;
-  document.querySelectorAll('#page-critique .sort-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.sort===sort); });
+  document.querySelectorAll('#page-critique .sort-btn[data-sort]').forEach(function(b){ b.classList.toggle('active', b.dataset.sort===sort); });
   filterAndRenderCritique();
 }
 
@@ -1725,6 +1796,12 @@ function setViewerFontSize(size) {
 function renderPost(postId){
   if(!postId){navigateTo('gallery');return;}
   
+  let readList = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
+  if (!readList.includes(postId)) {
+    readList.push(postId);
+    localStorage.setItem('cnsa_read_posts', JSON.stringify(readList));
+  }
+
   let otherPostsHtml = '<div id="author-other-posts-container"></div>';
 
   Promise.all([
