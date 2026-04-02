@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>큰별문학상 온라인전시관</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✍️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -108,7 +109,14 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .cat-badge{display:inline-block;padding:.15rem .6rem;border-radius:10px;font-size:.72rem;font-weight:500;letter-spacing:.03em;}
 .badge-verse{background:#ede9f8;color:var(--verse);}
 .badge-prose{background:#e8f2ec;color:var(--prose);}
-.badge-critique{background:#fdf2e9;color:#b45309;} /* 비평 뱃지 색상 */
+
+/* ── 비평 게시판 전용 디자인 ── */
+.badge-critique{background:#fdf2e9;color:#b45309;border:1px solid #fde68a;}
+.page-critique-header { max-width:1100px; margin: 1.5rem auto 1rem; padding: 2rem; background: linear-gradient(135deg, #fffaf0 0%, #fdf2e9 100%); border-radius: 12px; border: 1px solid #f9e4d4; text-align: center; }
+.page-critique-header h1 { font-family: var(--font-serif); font-size: 1.8rem; color: #b45309; margin-bottom: 0.5rem; }
+.page-critique-header p { font-size: 0.95rem; color: var(--ink2); margin-bottom:0; }
+#critique-grid .gallery-card { background: #fffdfa; border-left: 4px solid #eab308; }
+#critique-grid .gallery-card:hover { border-color: #b45309; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(180, 83, 9, 0.12); }
 
 .btn-back{display:inline-block;margin-bottom:1.5rem;font-size:.85rem;color:var(--ink3);background:none;border:none;cursor:pointer;padding:.3rem 0;transition:color .15s;}
 .btn-back:hover{color:var(--gold);}
@@ -195,6 +203,7 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5rem;font-size:.78rem;}
 
 @media(max-width:768px){
+  /* 헤더 - 햄버거 메뉴 */
   .header-inner{padding:.6rem 1rem;position:relative;}
   .site-logo{font-size:1.1rem;}
   nav{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,15,10,.97);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
@@ -208,6 +217,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
   .nav-right{gap:.35rem;}
   #user-penname{display:none;}
+  /* 콘텐츠 */
   .home-cards,.gallery-grid{grid-template-columns:1fr;}
   .gallery-grid{padding:0 1rem 2rem;}
   .post-detail{padding:1.25rem;}
@@ -327,8 +337,8 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <span class="site-logo" onclick="navigateTo('home')">큰별문학상 <span>온라인전시관</span></span>
     <nav id="main-nav">
       <span class="nav-link" data-page="intro" onclick="navigateTo('intro')">문학상 소개</span>
-      <span class="nav-link" data-page="submit" onclick="navigateTo('submit')">응모하기</span>
-      <span class="nav-link" data-page="gallery" onclick="navigateTo('gallery')">감상하기</span>
+      <span class="nav-link" data-page="submit" id="nav-submit" onclick="navigateTo('submit')">응모하기</span>
+      <span class="nav-link" data-page="gallery" id="nav-gallery" onclick="navigateTo('gallery')">감상하기</span>
       <span class="nav-link" data-page="critique" id="nav-critique" onclick="navigateTo('critique')" style="display:none">비평게시판</span>
       <span class="nav-link" data-page="mypage" id="nav-mypage" onclick="navigateTo('mypage')" style="display:none">나의 서재</span>
       <span class="nav-link" data-page="credits" onclick="navigateTo('credits')">개발자 소개</span>
@@ -417,6 +427,10 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 </div>
 
 <div class="page" id="page-critique">
+  <div class="page-critique-header">
+    <h1>✍️ 비평 게시판</h1>
+    <p>친구들의 작품을 깊이 있게 읽고 다채로운 시각을 나누는 공간입니다.</p>
+  </div>
   <div class="gallery-controls">
     <div style="display:flex; flex:1; gap:1rem; align-items:center; flex-wrap:wrap;">
       <div class="sort-tabs">
@@ -603,7 +617,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.19</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.20</footer>
 
 <script>
 //
@@ -652,6 +666,8 @@ function loadSiteMode(){
 
 function updateModeBanner(mode) {
   const banner = document.getElementById('mode-banner');
+  const navSubmit = document.getElementById('nav-submit');
+  const navGallery = document.getElementById('nav-gallery');
   const navCritique = document.getElementById('nav-critique');
   if(banner) {
     banner.style.display = 'block';
@@ -659,10 +675,14 @@ function updateModeBanner(mode) {
       banner.textContent = '지금은 응모기간(5월 7일 ~ 11일)입니다';
       banner.style.background = 'var(--gold)';
       if(navCritique) navCritique.style.display = 'none';
+      if(navGallery) navGallery.style.display = 'none';
+      if(navSubmit) navSubmit.style.display = 'inline-block';
     } else {
       banner.textContent = '지금은 감상기간(5월 14일 ~ 21일)입니다';
       banner.style.background = 'var(--prose)';
       if(navCritique) navCritique.style.display = 'inline-block';
+      if(navGallery) navGallery.style.display = 'inline-block';
+      if(navSubmit) navSubmit.style.display = 'none';
     }
   }
 }
@@ -718,7 +738,6 @@ function _doNavigate(page, param) {
   document.querySelectorAll('.page').forEach(p=>p.style.display='none');
   document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
   
-  // nav link mapping (critique-write also highlights critique nav)
   const targetNav = (page === 'critique-write') ? 'critique' : page;
   const navEl = document.querySelector('.nav-link[data-page="'+targetNav+'"]');
   if(navEl) navEl.classList.add('active');
@@ -864,7 +883,6 @@ function updateNavUI(){
   if(adminNav) adminNav.style.display=(on&&currentUserData.role==='admin')?'':'none';
 }
 
-// === 홈 화면 수정 (모드에 따른 출력 제어) ===
 function renderHome(){
   const heroGal = $('hero-btn-gallery');
   const heroSub = $('hero-btn-submit');
@@ -881,7 +899,6 @@ function renderHome(){
 
     db.collection('posts').get().then(snap=>{
       if(snap.empty){setHTML('home-featured','<p class="empty-msg">아직 작품이 없습니다.</p>');return;}
-      // 원작품들 중에서 랜덤 추출
       const docs = snap.docs.filter(d => d.data().docType !== 'critique');
       if(docs.length === 0) {setHTML('home-featured','<p class="empty-msg">아직 감상작이 없습니다.</p>');return;}
       const random=docs[Math.floor(Math.random()*docs.length)];
@@ -931,9 +948,9 @@ function togglePoemForm() {
     if(title2) title2.required = false;
     if(intro2) intro2.required = false;
   }
+  syncBodyEditor('submit-body-editor', 'body-count');
 }
 
-// === 자동 임시저장 로직 ===
 function saveDraft() {
   if (siteMode === 'view' || !$('submit-form-wrap').innerHTML.includes('submission-form')) return;
   
@@ -959,7 +976,6 @@ function saveDraft() {
   }
 }
 
-// === 응모하기 렌더링 ===
 function renderSubmit(){
   if(siteMode==='view'){
     setHTML('submit-form-wrap',`<div class="center-msg" style="padding:4rem 1rem">
@@ -992,7 +1008,7 @@ function renderSubmit(){
         <textarea id="submit-intro" rows="3" maxlength="200" placeholder="작품을 간단히 소개해주세요" required oninput="document.getElementById('intro-count').textContent=this.value.length; saveDraft();"></textarea>
       </div>
       <div class="form-group">
-        <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count">0</span>/3000자</span></label>
+        <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count">0</span>자</span></label>
         <div class="editor-toolbar">
           <button type="button" class="tb-btn" onclick="execFmt('bold', null, 'submit-body-editor')" title="굵게"><b>B</b></button>
           <button type="button" class="tb-btn" onclick="execFmt('italic', null, 'submit-body-editor')" title="기울임"><i>I</i></button>
@@ -1025,7 +1041,7 @@ function renderSubmit(){
         <textarea id="submit-intro2" rows="3" maxlength="200" placeholder="두 번째 작품을 간단히 소개해주세요" oninput="document.getElementById('intro-count2').textContent=this.value.length; saveDraft();"></textarea>
       </div>
       <div class="form-group">
-        <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count2">0</span>/3000자</span></label>
+        <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count2">0</span>자</span></label>
         <div class="editor-toolbar">
           <button type="button" class="tb-btn" onclick="execFmt('bold', null, 'submit-body-editor2')" title="굵게"><b>B</b></button>
           <button type="button" class="tb-btn" onclick="execFmt('italic', null, 'submit-body-editor2')" title="기울임"><i>I</i></button>
@@ -1051,7 +1067,6 @@ function renderSubmit(){
     </div>
   </form>`;
 
-  // 임시저장 데이터 로드
   const draftRaw = localStorage.getItem('cnsa_draft');
   if(draftRaw) {
     try {
@@ -1134,7 +1149,6 @@ function submitPost(e){
   });
 }
 
-// === 감상게시판 로직 ===
 function renderGallery(){
   if(siteMode==='apply'){
     setHTML('gallery-grid',`<div class="center-msg" style="padding:4rem 1rem; grid-column:1/-1;">
@@ -1174,7 +1188,7 @@ function setGalleryView(mode) {
 
 function filterAndRenderGallery(){
   var posts = allPosts.slice();
-  posts = posts.filter(function(p){ return p.docType !== 'critique'; }); // 갤러리에는 원작품만 표시
+  posts = posts.filter(function(p){ return p.docType !== 'critique'; }); 
   
   if(galleryCategory !== 'all') posts = posts.filter(function(p){ return p.category === galleryCategory; });
   var s = gallerySearch.toLowerCase();
@@ -1261,7 +1275,7 @@ function filterAndRenderGallery(){
 }
 
 function setGalleryPage(page){
-  var totalPages = Math.ceil(allPosts.length / GALLERY_PER_PAGE) || 1;
+  var totalPages = Math.ceil(allPosts.filter(p=>p.docType!=='critique').length / GALLERY_PER_PAGE) || 1;
   if(page < 1 || page > totalPages) return;
   galleryPage = page;
   filterAndRenderGallery();
@@ -1285,7 +1299,6 @@ function searchGallery(){
   filterAndRenderGallery();
 }
 
-// === 비평게시판 로직 ===
 function renderCritique(){
   if(siteMode==='apply'){
     setHTML('critique-grid',`<div class="center-msg" style="padding:4rem 1rem; grid-column:1/-1;">
@@ -1339,7 +1352,7 @@ function filterAndRenderCritique(){
     posts.sort(function(a,b){ return (b.likeCount||0)-(a.likeCount||0); });
   } else if(critiqueSort === '댓글'){
     posts.sort(function(a,b){ return (b.commentCount||0)-(a.commentCount||0); });
-  } else { // 최신
+  } else { 
     posts.sort(function(a,b){
       var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
       var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
@@ -1426,7 +1439,6 @@ function searchCritique(){
   filterAndRenderCritique();
 }
 
-// === 비평 쓰기 로직 ===
 function renderCritiqueWrite(targetPostId) {
   if(!targetPostId) { navigateTo('gallery'); return; }
   db.collection('posts').doc(targetPostId).get().then(doc => {
@@ -1475,8 +1487,6 @@ function submitCritique(e) {
   });
 }
 
-
-// === 뷰어 설정 패널 토글 및 닫기 ===
 function toggleViewerPanel() {
   const p = $('viewer-panel');
   if(p) p.classList.toggle('show');
@@ -1514,7 +1524,6 @@ function setViewerFontSize(size) {
   });
 }
 
-//
 function renderPost(postId){
   if(!postId){navigateTo('gallery');return;}
   
@@ -1536,7 +1545,6 @@ function renderPost(postId){
     
     const actionBtns = canEdit ? `<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button></span>` : `<span id="post-action-btns"></span>`;
     
-    // 비평글일 경우 원작품 링크 표시
     let critiqueTargetHtml = '';
     if(p.docType === 'critique') {
       critiqueTargetHtml = `<div style="background:var(--paper2); padding:0.8rem 1.2rem; border-radius:var(--radius); margin-bottom:1.5rem; font-size:0.95rem; color:var(--ink2);">
@@ -1544,7 +1552,6 @@ function renderPost(postId){
       </div>`;
     }
 
-    // 원작품일 경우 비평하기 버튼 표시 (감상기간)
     let btnCritique = '';
     if(siteMode === 'view' && p.docType !== 'critique') {
       btnCritique = `<button class="btn-outline" style="margin-left:0.5rem; border-color:var(--gold); color:var(--gold);" onclick="navigateTo('critique-write', '${postId}')">✍️ 비평하기</button>`;
@@ -1555,7 +1562,7 @@ function renderPost(postId){
         : `<span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'')}</span>`;
 
     setHTML('page-post',`<div class="page-inner">
-      <button class="btn-back" onclick="navigateTo(p.docType==='critique' ? 'critique' : 'gallery')">← 목록으로</button>
+      <button class="btn-back" onclick="navigateTo('${p.docType==='critique' ? 'critique' : 'gallery'}')">← 목록으로</button>
       <article class="post-detail theme-${viewerTheme} text-${viewerFontSize}" id="post-detail-article">
         ${critiqueTargetHtml}
         <header class="post-header">
@@ -1827,7 +1834,6 @@ function saveEdit(e,postId){
   });
 }
 
-// === 마이페이지 수정 ===
 function renderMyPage(){
   if(!currentUser||!currentUserData){
     setHTML('mypage-content','<div class="center-msg"><p>로그인 후 이용할 수 있습니다.</p><button class="btn-primary" onclick="doLogin()">Google 로그인</button></div>');
@@ -1957,33 +1963,20 @@ function renderMyPage(){
   }
 }
 
-function syncBodyEditor(editorId, countId){
-  const editor = document.getElementById(editorId);
-  if(!editor) return;
-  const text = editor.innerText || '';
-  const len = text.length;
-  const countEl = document.getElementById(countId);
-  if(countEl) countEl.textContent = len;
-
-  if(editorId === 'submit-body-editor') {
-    const cat = document.querySelector('input[name="category"]:checked');
-    const warningMsg = document.getElementById('prose-warning');
-    if(cat && cat.value === '산문') {
-      if(len < 6000 || len >= 20000) {
-        countEl.style.color = 'var(--red)';
-        if(warningMsg) warningMsg.style.display = 'block';
-      } else {
-        countEl.style.color = 'inherit';
-        if(warningMsg) warningMsg.style.display = 'none';
-      }
-    } else {
-      countEl.style.color = 'inherit';
-      if(warningMsg) warningMsg.style.display = 'none';
-    }
-  }
+function execFmt(cmd, val, editorId){
+  var ed = document.getElementById(editorId || 'submit-body-editor');
+  if(ed) { ed.focus(); document.execCommand(cmd, false, val||null); }
+}
+function clearFmt(editorId){
+  var ed = document.getElementById(editorId || 'submit-body-editor');
+  if(ed) { ed.focus(); document.execCommand('removeFormat', false, null); }
+}
+function handlePaste(e){
+  e.preventDefault();
+  const text = (e.clipboardData||window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
 }
 
-// === 관리자 페이지 및 필명 변경 신청 일괄 소급 로직 ===
 function renderAdmin(){
   if(!currentUserData||currentUserData.role!=='admin'){
     toast('관리자만 접근할 수 있습니다.','error');
@@ -2098,7 +2091,6 @@ function setSiteMode(mode){
   });
 }
 
-//
 function downloadCSV(rows, filename){
   const BOM='\uFEFF';
   const csv=BOM+rows.map(r=>r.map(c=>{
