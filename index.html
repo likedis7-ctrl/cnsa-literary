@@ -128,7 +128,6 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .post-meta{display:flex;align-items:center;gap:1.25rem;font-size:.85rem;color:var(--ink2);flex-wrap:wrap;margin-top:.75rem;padding-top:.75rem;border-top:1px solid rgba(179,171,141,.35);}
 .post-intro{border-left:3px solid var(--gold);padding:.75rem 1.25rem;color:var(--ink2);font-style:italic;font-family:var(--font-serif);background:var(--paper2);border-radius:0 6px 6px 0;margin-top:.5rem;}
 .post-body{font-family:var(--font-serif);font-size:1.05rem;line-height:2;color:var(--ink);white-space:pre-wrap;margin:2rem 0; transition:all 0.3s ease;}
-.post-actions{display:flex;justify-content:center;margin:2rem 0;}
 
 /* 테마 클래스 */
 .post-detail.theme-sepia { background:#f4ecd8; border-color:#e6d8b8; }
@@ -141,9 +140,16 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .post-detail.text-lg .post-body { font-size: 1.25rem; line-height: 2.2; }
 .post-detail.text-xl .post-body { font-size: 1.45rem; line-height: 2.4; }
 
-.btn-like{display:flex;align-items:center;gap:.5rem;padding:.6rem 2rem;border-radius:30px;border:2px solid var(--paper3);background:white;color:var(--ink3);cursor:pointer;font-family:var(--font-sans);font-size:1rem;transition:all .2s;}
-.btn-like:hover{border-color:var(--red);color:var(--red);}
-.btn-like.liked{border-color:var(--red);color:var(--red);background:#fff2f0;}
+/* ── 감정 반응 버튼 (좋아요 대체) ── */
+.reaction-row { display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin:2rem 0; }
+.btn-react { display:flex; align-items:center; gap:0.4rem; padding:0.5rem 1.25rem; border-radius:30px; border:2px solid var(--paper3); background:white; color:var(--ink3); cursor:pointer; font-family:var(--font-sans); font-size:0.95rem; transition:all 0.2s; }
+.btn-react:hover { border-color:var(--gold); color:var(--gold); box-shadow:0 4px 12px var(--shadow); transform:translateY(-1px);}
+.btn-react.r-heart.active { border-color:#e11d48; color:#e11d48; background:#fff1f2; }
+.btn-react.r-tear.active { border-color:#2563eb; color:#2563eb; background:#eff6ff; }
+.btn-react.r-shock.active { border-color:#d97706; color:#d97706; background:#fffbeb; }
+.btn-react.r-fear.active { border-color:#7c3aed; color:#7c3aed; background:#f5f3ff; }
+.btn-react span { font-weight:500; font-size:0.9rem; }
+
 .comments-section{margin-top:2.5rem;}
 .comments-section h2{font-family:var(--font-serif);font-size:1.2rem;margin-bottom:1.25rem;color:var(--ink);}
 .comment{padding:1rem 0;border-bottom:1px solid var(--paper2);}
@@ -185,6 +191,13 @@ nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
 .btn-sm{font-size:.78rem;padding:.3rem .75rem;}
 .btn-link{background:none;border:none;color:var(--gold);cursor:pointer;font-family:var(--font-sans);font-size:inherit;text-decoration:underline;}
 .btn-danger-text{color:var(--red)!important;}
+
+/* 댓글창 전용 좋아요(하트) */
+.comment-actions{margin-top:.4rem;}
+.btn-comment-like{background:none;border:1px solid var(--paper3);border-radius:20px;padding:.15rem .7rem;font-size:.8rem;color:var(--ink3);cursor:pointer;transition:all .15s;}
+.btn-comment-like:hover{border-color:var(--red);color:var(--red);}
+.btn-comment-like.liked{border-color:var(--red);color:var(--red);background:#fff2f0;}
+
 .modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:1rem;}
 .modal{background:white;border-radius:16px;padding:2rem;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .modal h2{font-family:var(--font-serif);font-size:1.4rem;margin-bottom:.5rem;}
@@ -236,6 +249,8 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   /* 모바일 리스트 뷰 대응 */
   .gallery-grid.list-view .gallery-card { flex-direction:column; align-items:flex-start; gap:1rem; }
   .gallery-grid.list-view .gallery-card-bottom { flex-direction:row; width:100%; border-top:1px solid var(--paper2); padding-top:0.75rem; margin-top:0.2rem; justify-content:space-between; align-items:center; }
+  .reaction-row { gap:0.3rem; }
+  .btn-react { padding:0.4rem 0.8rem; font-size:0.85rem; }
 }
 @media(min-width:769px){
   .hamburger{display:none;}
@@ -257,11 +272,6 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 .auto-save-msg.show { opacity:1; }
 .prose-warning { display:none; color:var(--red); font-size:0.85rem; margin-top:0.4rem; font-weight:500; font-family:var(--font-sans); }
 
-/* ── 댓글 좋아요 ── */
-.comment-actions{margin-top:.4rem;}
-.btn-comment-like{background:none;border:1px solid var(--paper3);border-radius:20px;padding:.15rem .7rem;font-size:.8rem;color:var(--ink3);cursor:pointer;transition:all .15s;}
-.btn-comment-like:hover{border-color:var(--red);color:var(--red);}
-.btn-comment-like.liked{border-color:var(--red);color:var(--red);background:#fff2f0;}
 /* ── 오늘의 감상작 ── */
 .today-card{cursor:pointer;transition:all .2s;}
 .today-card:hover .today-card-inner{transform:translateY(-2px);box-shadow:0 12px 32px var(--shadow);border-color:var(--gold);}
@@ -407,7 +417,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <div class="sort-tabs">
         <button class="sort-btn active" data-sort="random" onclick="setGallerySort('random')">무작위</button>
         <button class="sort-btn" data-sort="가나다" onclick="setGallerySort('가나다')">가나다순</button>
-        <button class="sort-btn" data-sort="좋아요" onclick="setGallerySort('좋아요')">좋아요순</button>
+        <button class="sort-btn" data-sort="좋아요" onclick="setGallerySort('좋아요')">반응순</button>
         <button class="sort-btn" data-sort="댓글" onclick="setGallerySort('댓글')">댓글순</button>
         <button class="sort-btn" data-sort="최신" onclick="setGallerySort('최신')">최신순</button>
         <button class="sort-btn" data-sort="등록" onclick="setGallerySort('등록')">등록순</button>
@@ -435,7 +445,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
     <div style="display:flex; flex:1; gap:1rem; align-items:center; flex-wrap:wrap;">
       <div class="sort-tabs">
         <button class="sort-btn active" data-sort="최신" onclick="setCritiqueSort('최신')">최신순</button>
-        <button class="sort-btn" data-sort="좋아요" onclick="setCritiqueSort('좋아요')">좋아요순</button>
+        <button class="sort-btn" data-sort="좋아요" onclick="setCritiqueSort('좋아요')">반응순</button>
         <button class="sort-btn" data-sort="댓글" onclick="setCritiqueSort('댓글')">댓글순</button>
       </div>
       <div class="view-toggle-btns">
@@ -502,7 +512,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <div id="mypage-posts"></div>
     </div>
     <div class="mypage-section" id="mypage-liked-section">
-      <h2>♥ 좋아요한 작품 <span class="count" id="myliked-count">0</span></h2>
+      <h2>♥ 반응한 작품 <span class="count" id="myliked-count">0</span></h2>
       <div id="mypage-liked"></div>
     </div>
     <div class="mypage-section" id="mypage-commented-section">
@@ -570,7 +580,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
         </button>
         <button class="admin-dl-btn" onclick="downloadPostsDB()">
           📄 응모작 DB 다운로드
-          <span>필명 · 카테고리 · 제목 · 소개 · 본문 · 좋아요 · 댓글수 (Excel)</span>
+          <span>필명 · 카테고리 · 제목 · 소개 · 본문 · 총반응수 · 댓글수 (Excel)</span>
         </button>
         <button class="admin-dl-btn" onclick="downloadCommentsDB()">
           💬 댓글 DB 다운로드
@@ -617,7 +627,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.20</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.21</footer>
 
 <script>
 //
@@ -921,7 +931,7 @@ function renderHome(){
             <p class="today-preview" style="white-space:pre-line">${escHtml(prev)}${bodyText.length>120?'…':''}</p>
           <div class="today-meta">
             <span>✍ ${escHtml(p.penName||'')}</span>
-            <span>♥ ${p.likeCount||0}</span>
+            <span>🎭 반응 ${p.likeCount||0}</span>
             <span class="today-read-btn">작품 읽기 →</span>
           </div>
         </div>
@@ -1124,7 +1134,7 @@ function submitPost(e){
   promises.push(db.collection('posts').add({
     category:cat.value, title:title1, intro:intro1, body:body1,
     uid:currentUser.uid, penName:currentUserData.penName,
-    likeCount:0, likes:[], commentCount:0,
+    likeCount:0, likes:[], tears:[], shocks:[], fears:[], commentCount:0,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   }));
 
@@ -1132,7 +1142,7 @@ function submitPost(e){
     promises.push(db.collection('posts').add({
       category:cat.value, title:title2, intro:intro2, body:body2,
       uid:currentUser.uid, penName:currentUserData.penName,
-      likeCount:0, likes:[], commentCount:0,
+      likeCount:0, likes:[], tears:[], shocks:[], fears:[], commentCount:0,
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     }));
   }
@@ -1247,7 +1257,7 @@ function filterAndRenderGallery(){
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
         <span>${formatDate(p.createdAt)}</span>
-        <span>♥ ${p.likeCount||0}</span>
+        <span>🎭 반응 ${p.likeCount||0}</span>
       </div>
     </article>`;
   });
@@ -1390,7 +1400,7 @@ function filterAndRenderCritique(){
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
         <span>${formatDate(p.createdAt)}</span>
-        <span>♥ ${p.likeCount||0}</span>
+        <span>🎭 반응 ${p.likeCount||0}</span>
       </div>
     </article>`;
   });
@@ -1475,7 +1485,7 @@ function submitCritique(e) {
     body: body,
     uid: currentUser.uid,
     penName: currentUserData.penName,
-    likeCount: 0, likes: [], commentCount: 0,
+    likeCount: 0, likes: [], tears:[], shocks:[], fears:[], commentCount: 0,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     toast('비평이 성공적으로 등록되었습니다!', 'success');
@@ -1538,7 +1548,6 @@ function renderPost(postId){
     const p={id:snap.id,...snap.data()};
     const isOwner=currentUser&&p.uid===currentUser.uid;
     const isAdmin=currentUserData&&currentUserData.role==='admin';
-    const liked=currentUser&&(p.likes||[]).includes(currentUser.uid);
     const currentMode = modeDoc.exists ? modeDoc.data().mode : 'apply';
     siteMode = currentMode;
     const canEdit = isAdmin || (isOwner && currentMode !== 'view');
@@ -1560,6 +1569,17 @@ function renderPost(postId){
     let badgeHtml = p.docType === 'critique' 
         ? `<span class="cat-badge badge-critique">비평</span>`
         : `<span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'')}</span>`;
+
+    // 반응 상태 계산
+    const likes = p.likes || [];
+    const tears = p.tears || [];
+    const shocks = p.shocks || [];
+    const fears = p.fears || [];
+
+    const hasHeart = currentUser && likes.includes(currentUser.uid);
+    const hasTear = currentUser && tears.includes(currentUser.uid);
+    const hasShock = currentUser && shocks.includes(currentUser.uid);
+    const hasFear = currentUser && fears.includes(currentUser.uid);
 
     setHTML('page-post',`<div class="page-inner">
       <button class="btn-back" onclick="navigateTo('${p.docType==='critique' ? 'critique' : 'gallery'}')">← 목록으로</button>
@@ -1596,10 +1616,12 @@ function renderPost(postId){
           </div>
         </header>
         <div class="post-body" id="post-body-content"></div>
-        <div class="post-actions">
-          <button class="btn-like ${liked?'liked':''}" id="like-btn" onclick="toggleLike('${postId}')">
-            ${liked?'♥':'♡'} 좋아요 <span id="like-count">${p.likeCount||0}</span>
-          </button>
+        
+        <div class="reaction-row">
+          <button class="btn-react r-heart ${hasHeart?'active':''}" onclick="toggleReact('${postId}','heart')">❤️ 감동 <span>${likes.length}</span></button>
+          <button class="btn-react r-tear ${hasTear?'active':''}" onclick="toggleReact('${postId}','tear')">😢 눈물 <span>${tears.length}</span></button>
+          <button class="btn-react r-shock ${hasShock?'active':''}" onclick="toggleReact('${postId}','shock')">😮 놀람 <span>${shocks.length}</span></button>
+          <button class="btn-react r-fear ${hasFear?'active':''}" onclick="toggleReact('${postId}','fear')">😱 공포 <span>${fears.length}</span></button>
           ${btnCritique}
         </div>
       </article>
@@ -1645,7 +1667,7 @@ function renderPost(postId){
           otherPosts.forEach(op => {
             listHtml += `<div class="other-post-item" onclick="navigateTo('post', '${op.id}')">
               <span class="other-post-item-title">${escHtml(op.title)}</span>
-              <span class="other-post-item-meta">♥ ${op.likeCount||0} · 💬 ${op.commentCount||0}</span>
+              <span class="other-post-item-meta">🎭 반응 ${op.likeCount||0} · 💬 ${op.commentCount||0}</span>
             </div>`;
           });
           listHtml += '</div></div>';
@@ -1658,21 +1680,30 @@ function renderPost(postId){
   }).catch(e=>console.error(e));
 }
 
-function toggleLike(postId){
+// === 감정 반응 토글 ===
+function toggleReact(postId, type){
   if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
   const ref=db.collection('posts').doc(postId);
   ref.get().then(snap=>{
-    const liked=(snap.data().likes||[]).includes(currentUser.uid);
+    const d = snap.data();
+    let field = '';
+    if(type==='heart') field = 'likes';
+    else if(type==='tear') field = 'tears';
+    else if(type==='shock') field = 'shocks';
+    else if(type==='fear') field = 'fears';
+
+    const arr = d[field] || [];
+    const has = arr.includes(currentUser.uid);
+
     ref.update({
-      likes: liked?firebase.firestore.FieldValue.arrayRemove(currentUser.uid):firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
-      likeCount: firebase.firestore.FieldValue.increment(liked?-1:1)
+      [field]: has ? firebase.firestore.FieldValue.arrayRemove(currentUser.uid) : firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+      likeCount: firebase.firestore.FieldValue.increment(has ? -1 : 1) // 전체 반응수 합계로 활용
     }).then(()=>{
-      const newCount=(snap.data().likeCount||0)+(liked?-1:1);
-      const btn=$('like-btn');
-      if(btn){btn.innerHTML=(liked?'♡':'♥')+' 좋아요 <span id="like-count">'+newCount+'</span>';btn.classList.toggle('liked',!liked);}
+      renderPost(postId);
     });
   });
 }
+
 
 function loadComments(postId){
   db.collection('posts').doc(postId).collection('comments').orderBy('createdAt','asc').get().then(snap=>{
@@ -1852,7 +1883,7 @@ function renderMyPage(){
       html += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
         <span class="cat-badge ${catClass}">${escHtml(catLabel)}</span>
         <strong>${escHtml(p.title||'')}</strong>
-        <span class="mypage-item-meta">${formatDate(p.createdAt)} · ♥${p.likeCount||0}</span>
+        <span class="mypage-item-meta">${formatDate(p.createdAt)} · 🎭 반응 ${p.likeCount||0}</span>
       </div>`;
     });
     setHTML('mypage-posts', html || '<p class="empty-msg">작성한 작품이 없습니다.</p>');
@@ -1868,6 +1899,8 @@ function renderMyPage(){
     if(likedSec) likedSec.style.display = 'block';
     if(commentedSec) commentedSec.style.display = 'block';
 
+    // 좋아요한 작품 -> 어떤 감정이든 상관없이 반응한 모든 작품을 가져오기엔 쿼리가 무거우므로,
+    // Firebase 특성상 likes 필드에 uid가 있는 경우(하트 반응)만 나의 서재에 대표로 노출하는 방식으로 유지합니다.
     db.collection('posts').where('likes','array-contains',currentUser.uid).get().then(function(snap){
       var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
       posts.sort(function(a,b){
@@ -1885,13 +1918,13 @@ function renderMyPage(){
         html += `<div class="mypage-item${extraClass}" onclick="navigateTo('post','${p.id}')" ${hiddenStyle}>
           <span class="cat-badge ${catClass}">${escHtml(catLabel)}</span>
           <strong>${escHtml(p.title||'')}</strong>
-          <span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · ♥${p.likeCount||0}</span>
+          <span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · 🎭 반응 ${p.likeCount||0}</span>
         </div>`;
       });
       if(posts.length > 5){
         html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-liked').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
       }
-      setHTML('mypage-liked', html || '<p class="empty-msg">좋아요한 작품이 없습니다.</p>');
+      setHTML('mypage-liked', html || '<p class="empty-msg">반응한 작품이 없습니다.</p>');
     });
 
     setText('mycommented-count', '...');
@@ -1963,20 +1996,7 @@ function renderMyPage(){
   }
 }
 
-function execFmt(cmd, val, editorId){
-  var ed = document.getElementById(editorId || 'submit-body-editor');
-  if(ed) { ed.focus(); document.execCommand(cmd, false, val||null); }
-}
-function clearFmt(editorId){
-  var ed = document.getElementById(editorId || 'submit-body-editor');
-  if(ed) { ed.focus(); document.execCommand('removeFormat', false, null); }
-}
-function handlePaste(e){
-  e.preventDefault();
-  const text = (e.clipboardData||window.clipboardData).getData('text/plain');
-  document.execCommand('insertText', false, text);
-}
-
+// === 관리자 페이지 및 필명 변경 신청 일괄 소급 로직 ===
 function renderAdmin(){
   if(!currentUserData||currentUserData.role!=='admin'){
     toast('관리자만 접근할 수 있습니다.','error');
@@ -2013,7 +2033,7 @@ function loadPenNameRequests() {
     reqs.sort((a,b) => {
       const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
       const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return ta - tb; // 오래된 순
+      return ta - tb; 
     });
 
     let html = '<div style="display:flex; flex-direction:column; gap:0.5rem;">';
@@ -2088,6 +2108,8 @@ function setSiteMode(mode){
     updateModeBanner(mode);
     toast(mode==='apply'?'응모기간 모드로 변경되었습니다.':'감상기간 모드로 변경되었습니다.','success');
     renderAdmin();
+    // 모드 변경 즉시 메뉴 갱신 반영을 위한 새로고침 처리
+    setTimeout(() => location.reload(), 500); 
   });
 }
 
@@ -2121,7 +2143,7 @@ function downloadUsersDB(){
 function downloadPostsDB(){
   toast('응모작 DB 준비 중...','info');
   db.collection('posts').get().then(snap=>{
-    const rows=[['필명','카테고리','제목','작품소개(비평은 원작)','작품본문','좋아요수','댓글수']];
+    const rows=[['필명','카테고리','제목','작품소개(비평은 원작)','작품본문','총반응수','댓글수']];
     snap.docs.forEach(d=>{
       const p=d.data();
       const bodyText=(p.body||'').replace(/<[^>]*>/g,'');
@@ -2168,9 +2190,12 @@ function closeNav(){
   if(nav)nav.classList.remove('open');
   if(btn)btn.classList.remove('open');
 }
-//
-loadSiteMode();
-navigateTo('home');
+
+// 사이트 초기화
+loadSiteMode().then(() => {
+  // 모드에 따라 초기 홈 진입 시 네비게이션 제어
+  navigateTo('home');
+});
 </script>
 </body>
 </html>
