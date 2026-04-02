@@ -638,6 +638,10 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
           💣 DB 초기화 (새 학기 리셋)
           <span style="color:#ef4444;">응모작, 비평, 댓글, 학생 필명 정보를 모두 삭제합니다 (관리자 계정 유지)</span>
         </button>
+        <button class="admin-mode-btn" onclick="rebuildIndex()" style="border-color:var(--verse); color:var(--verse);">
+          🔄 강제 목차(Index) 동기화
+          <span style="color:var(--ink3);">기존 낱개 글들을 서버 요금 절약을 위해 1개의 목차 문서로 압축합니다 (코드 업데이트 후 1회 권장)</span>
+        </button>
       </div>
     </div>
 
@@ -712,7 +716,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 1.28</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.0 (실시간 목차압축 엔진 적용)</footer>
 
 <script>
 // Firebase Initialization
@@ -776,7 +780,6 @@ function shuffleCritiqueRandom() {
   setCritiqueSort('random');
 }
 
-
 function loadSiteMode(){
   return db.collection('config').doc('siteMode').get().then(doc=>{
     if(doc.exists) siteMode = doc.data().mode || 'apply';
@@ -836,7 +839,6 @@ function updateModeBanner(mode) {
   }
 }
 
-//
 const $ = id => document.getElementById(id);
 const setText = (id,v) => { const e=$(id); if(e) e.textContent=v; };
 const setHTML = (id,v) => { const e=$(id); if(e) e.innerHTML=v; };
@@ -862,7 +864,6 @@ function navigateTo(page, param) {
   _doNavigate(page, param);
 
   db.collection('config').doc('siteMode').get().then(doc=>{
-    let oldMode = siteMode;
     if(doc.exists) siteMode = doc.data().mode || 'apply';
     updateModeBanner(siteMode);
     
@@ -1063,45 +1064,34 @@ function renderHome(){
     setHTML('hero-btn-container', '<button class="cta-primary" id="hero-btn-gallery" onclick="navigateTo(\'gallery\')">작품 감상하기</button>');
     if(featSec) featSec.style.display = 'block';
 
-    db.collection('posts').get().then(snap=>{
-      let postsData = snap.docs.filter(d => d.data().docType !== 'critique').map(d => ({id:d.id, ...d.data()}));
+    // 💡 목차(Index) 문서를 읽어와 추천작을 결정합니다.
+    db.collection('indexes').doc('posts').get().then(doc=>{
+      if(!doc.exists){setHTML('home-featured','<p class="empty-msg">아직 작품이 없습니다.</p>');return;}
+      let postsData = Object.values(doc.data().posts || {}).filter(d => d.docType !== 'critique');
       if(postsData.length === 0) {setHTML('home-featured','<p class="empty-msg">아직 감상작이 없습니다.</p>');return;}
       
-      // 안 읽은 작품 필터링 알고리즘 적용
       let readPosts = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
       let unreadPosts = postsData.filter(p => !readPosts.includes(p.id));
       
-      // 모든 작품을 다 읽었을 경우 다시 전체 작품을 대상으로 함
+      // 모두 다 읽었다면 전체를 대상으로 다시 추천
       if (unreadPosts.length === 0) unreadPosts = postsData;
       
-      // 반응수+댓글수가 가장 적은 하위 그룹을 구하기 위해 정렬
+      // 반응수+댓글수가 적은 하위 30% 추출
       unreadPosts.sort((a, b) => {
         let scoreA = (a.likeCount || 0) + (a.commentCount || 0);
         let scoreB = (b.likeCount || 0) + (b.commentCount || 0);
         return scoreA - scoreB;
       });
 
-      // 하위 30% (최소 3개, 최대 10개) 풀 구성
       let poolSize = Math.max(3, Math.min(10, Math.ceil(unreadPosts.length * 0.3)));
       if(poolSize > unreadPosts.length) poolSize = unreadPosts.length;
       let pool = unreadPosts.slice(0, poolSize);
       
-      // 풀 내에서 랜덤으로 1개 선택
+      // 풀 내에서 랜덤 1개 선택
       const p = pool[Math.floor(Math.random() * pool.length)];
 
-      const bodyText=(p.body||'')
-        .replace(/<div><br><\/div>/gi,'\n')
-        .replace(/<div>/gi,'\n')
-        .replace(/<\/div>/gi,'')
-        .replace(/<br\s*\/?>/gi,'\n')
-        .replace(/<p>/gi,'')
-        .replace(/<\/p>/gi,'\n')
-        .replace(/<[^>]*>/g,'')
-        .replace(/\n\n+/g,'\n')
-        .trim();
-      const prev=bodyText.substring(0,120);
-
-      db.collection('posts').doc(p.id).collection('comments').orderBy('createdAt','asc').get().then(cSnap => {
+      // 추천작의 썸네일 카드를 그리되, 댓글 미리보기를 위해 원본 DB 1회를 추가로 호출합니다.
+      db.collection('posts').doc(p.id).collection('comments').orderBy('createdAt','asc').limit(4).get().then(cSnap => {
         let commentHtml = '';
         if(!cSnap.empty) {
           commentHtml = `<div style="margin-top:1.5rem; padding:1.2rem; background:var(--paper2); border-radius:var(--radius); border:1px solid var(--paper3);">
@@ -1126,7 +1116,7 @@ function renderHome(){
           <div class="today-card-inner">
             <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
             <h2 class="today-title">${escHtml(p.title||'')}</h2>
-              <p class="today-preview" style="white-space:pre-line">${escHtml(prev)}${bodyText.length>120?'…':''}</p>
+              <p class="today-preview" style="white-space:pre-line">${escHtml(p.preview||'')}…</p>
             <div class="today-meta">
               <span>✍ ${escHtml(p.penName||'')}</span>
               <span>🎭 반응 ${p.likeCount||0}</span>
@@ -1200,7 +1190,6 @@ function renderSubmit(){
     return;
   }
 
-  // 1회 응모 체크 로직
   db.collection('posts').where('uid','==',currentUser.uid).get().then(snap => {
     const hasPost = snap.docs.some(d => d.data().docType !== 'critique');
     if(hasPost) {
@@ -1324,6 +1313,7 @@ function _renderSubmitFormHTML() {
   }
 }
 
+// 💡 1. 작품 제출 시 원본과 목차(Index)를 Batch로 동시에 저장합니다.
 function submitPost(e){
   e.preventDefault();
   if(!currentUser||!currentUserData){toast('로그인이 필요합니다.','error');return;}
@@ -1351,25 +1341,47 @@ function submitPost(e){
   const btn=$('submit-btn');
   btn.disabled=true; btn.textContent='제출 중...';
 
-  let promises = [];
-
-  promises.push(db.collection('posts').add({
+  let batch = db.batch();
+  let indexRef = db.collection('indexes').doc('posts');
+  let createTime = Date.now();
+  
+  // 제1편 세팅
+  let postRef1 = db.collection('posts').doc();
+  batch.set(postRef1, {
     category:cat.value, title:title1, intro:intro1, body:body1,
     uid:currentUser.uid, penName:currentUserData.penName,
     likeCount:0, likes:[], tears:[], shocks:[], fears:[], commentCount:0,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  }));
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  batch.set(indexRef, {
+    ['posts.' + postRef1.id]: {
+      id: postRef1.id, uid: currentUser.uid, docType: 'post',
+      category: cat.value, title: title1, penName: currentUserData.penName,
+      preview: body1.replace(/<[^>]*>/g, '').substring(0, 100),
+      likeCount: 0, commentCount: 0, createdAt: createTime
+    }
+  }, { merge: true });
 
+  // 제2편 세팅
   if(isPoem) {
-    promises.push(db.collection('posts').add({
+    let postRef2 = db.collection('posts').doc();
+    batch.set(postRef2, {
       category:cat.value, title:title2, intro:intro2, body:body2,
       uid:currentUser.uid, penName:currentUserData.penName,
       likeCount:0, likes:[], tears:[], shocks:[], fears:[], commentCount:0,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    }));
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    batch.set(indexRef, {
+      ['posts.' + postRef2.id]: {
+        id: postRef2.id, uid: currentUser.uid, docType: 'post',
+        category: cat.value, title: title2, penName: currentUserData.penName,
+        preview: body2.replace(/<[^>]*>/g, '').substring(0, 100),
+        likeCount: 0, commentCount: 0, createdAt: createTime + 1 // 순서 정렬용 미세조정
+      }
+    }, { merge: true });
   }
 
-  Promise.all(promises).then(()=>{
+  batch.commit().then(()=>{
     localStorage.removeItem('cnsa_draft');
     if(autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
 
@@ -1403,10 +1415,15 @@ function renderGallery(){
   if(btnC) btnC.classList.toggle('active', galleryViewMode === 'card');
   if(btnL) btnL.classList.toggle('active', galleryViewMode === 'list');
   
-  db.collection('posts').orderBy('createdAt','desc').get().then(snap=>{
-    allPosts=snap.docs.map(d=>({id:d.id,...d.data()}));
+  // 💡 2. 400개의 개별 문서 대신 1개의 목차 문서만 불러옵니다. (트래픽 폭탄 방어)
+  db.collection('indexes').doc('posts').get().then(doc=>{
+    if(doc.exists) {
+      allPosts = Object.values(doc.data().posts || {});
+    } else {
+      allPosts = [];
+    }
     filterAndRenderGallery();
-  }).catch(e=>{console.error(e);setHTML('gallery-grid','<p class="empty-msg">불러오지 못했습니다.</p>');});
+  }).catch(e=>{console.error(e);setHTML('gallery-grid','<p class="empty-msg">목차를 불러오지 못했습니다.</p>');});
 }
 
 function setGalleryView(mode) {
@@ -1427,8 +1444,8 @@ function filterAndRenderGallery(){
   var s = gallerySearch.toLowerCase();
   if(s) posts = posts.filter(function(p){
     return (p.title||'').toLowerCase().indexOf(s) > -1 ||
-           (p.body||'').replace(/<[^>]*>/g,'').toLowerCase().indexOf(s) > -1 ||
            (p.penName||'').toLowerCase().indexOf(s) > -1;
+           // ※ 주의: 본문 내용은 압축팩에 100자만 있으므로 전체 검색은 제한됩니다.
   });
   
   if(gallerySort === 'random'){
@@ -1450,17 +1467,9 @@ function filterAndRenderGallery(){
   } else if(gallerySort === '댓글'){
     posts.sort(function(a,b){ return (b.commentCount||0)-(a.commentCount||0); });
   } else if(gallerySort === '최신'){
-    posts.sort(function(a,b){
-      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return tb - ta;
-    });
+    posts.sort(function(a,b){ return b.createdAt - a.createdAt; });
   } else if(gallerySort === '등록'){
-    posts.sort(function(a,b){
-      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return ta - tb;
-    });
+    posts.sort(function(a,b){ return a.createdAt - b.createdAt; });
   }
   var total = posts.length;
   var perPage = galleryViewMode === 'list' ? 20 : 12;
@@ -1471,27 +1480,14 @@ function filterAndRenderGallery(){
   var html = '';
   
   pagePosts.forEach(function(p){
-    var bodyText=(p.body||'')
-      .replace(/<div><br><\/div>/gi,'\n')
-      .replace(/<div>/gi,'\n')
-      .replace(/<\/div>/gi,'')
-      .replace(/<br\s*\/?>/gi,'\n')
-      .replace(/<p>/gi,'')
-      .replace(/<\/p>/gi,'\n')
-      .replace(/<[^>]*>/g,'')
-      .replace(/\n\n+/g,'\n')
-      .trim();
-    var prev=bodyText.substring(0,100);
-
     html += `<article class="gallery-card" onclick="navigateTo('post','${p.id}')">
       <div>
         <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
         <h3>${escHtml(p.title||'제목 없음')}</h3>
-        <p class="body-preview" style="white-space:pre-line">${escHtml(prev)}${bodyText.length>100?'…':''}</p>
+        <p class="body-preview" style="white-space:pre-line">${escHtml(p.preview||'')}…</p>
       </div>
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
-        <span>${formatDate(p.createdAt)}</span>
         <span>🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
       </div>
     </article>`;
@@ -1567,10 +1563,15 @@ function renderCritique(){
   if(btnC) btnC.classList.toggle('active', critiqueViewMode === 'card');
   if(btnL) btnL.classList.toggle('active', critiqueViewMode === 'list');
   
-  db.collection('posts').orderBy('createdAt','desc').get().then(snap=>{
-    allPosts=snap.docs.map(d=>({id:d.id,...d.data()}));
+  // 비평 게시판도 압축 목차를 사용
+  db.collection('indexes').doc('posts').get().then(doc=>{
+    if(doc.exists) {
+      allPosts = Object.values(doc.data().posts || {});
+    } else {
+      allPosts = [];
+    }
     filterAndRenderCritique();
-  }).catch(e=>{console.error(e);setHTML('critique-grid','<p class="empty-msg">불러오지 못했습니다.</p>');});
+  }).catch(e=>{console.error(e);setHTML('critique-grid','<p class="empty-msg">목차를 불러오지 못했습니다.</p>');});
 }
 
 function setCritiqueView(mode) {
@@ -1591,7 +1592,6 @@ function filterAndRenderCritique(){
   if(s) posts = posts.filter(function(p){
     return (p.title||'').toLowerCase().indexOf(s) > -1 ||
            (p.targetPostTitle||'').toLowerCase().indexOf(s) > -1 ||
-           (p.body||'').replace(/<[^>]*>/g,'').toLowerCase().indexOf(s) > -1 ||
            (p.penName||'').toLowerCase().indexOf(s) > -1;
   });
 
@@ -1614,17 +1614,9 @@ function filterAndRenderCritique(){
   } else if(critiqueSort === '댓글'){
     posts.sort(function(a,b){ return (b.commentCount||0)-(a.commentCount||0); });
   } else if(critiqueSort === '최신'){
-    posts.sort(function(a,b){
-      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return tb - ta;
-    });
+    posts.sort(function(a,b){ return b.createdAt - a.createdAt; });
   } else if(critiqueSort === '등록'){
-    posts.sort(function(a,b){
-      var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-      var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return ta - tb;
-    });
+    posts.sort(function(a,b){ return a.createdAt - b.createdAt; });
   }
 
   var total = posts.length;
@@ -1636,28 +1628,15 @@ function filterAndRenderCritique(){
   var html = '';
   
   pagePosts.forEach(function(p){
-    var bodyText=(p.body||'')
-      .replace(/<div><br><\/div>/gi,'\n')
-      .replace(/<div>/gi,'\n')
-      .replace(/<\/div>/gi,'')
-      .replace(/<br\s*\/?>/gi,'\n')
-      .replace(/<p>/gi,'')
-      .replace(/<\/p>/gi,'\n')
-      .replace(/<[^>]*>/g,'')
-      .replace(/\n\n+/g,'\n')
-      .trim();
-    var prev=bodyText.substring(0,100);
-
     html += `<article class="gallery-card" onclick="navigateTo('post','${p.id}')">
       <div>
         <span class="cat-badge badge-critique">비평</span>
         <span style="font-size:0.8rem; color:var(--ink3); margin-left:0.5rem; font-family:var(--font-sans);">원작품: ${escHtml(p.targetPostTitle)}</span>
         <h3>${escHtml(p.title||'제목 없음')}</h3>
-        <p class="body-preview" style="white-space:pre-line">${escHtml(prev)}${bodyText.length>100?'…':''}</p>
+        <p class="body-preview" style="white-space:pre-line">${escHtml(p.preview||'')}…</p>
       </div>
       <div class="gallery-card-bottom">
         <span class="author">✍ ${escHtml(p.penName||'')}</span>
-        <span>${formatDate(p.createdAt)}</span>
         <span>🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
       </div>
     </article>`;
@@ -1735,7 +1714,11 @@ function submitCritique(e) {
   const btn=$('critique-submit-btn');
   btn.disabled=true; btn.textContent='등록 중...';
 
-  db.collection('posts').add({
+  let batch = db.batch();
+  let postRef = db.collection('posts').doc();
+  let indexRef = db.collection('indexes').doc('posts');
+
+  batch.set(postRef, {
     docType: 'critique',
     targetPostId: targetId,
     targetPostTitle: targetTitle,
@@ -1746,7 +1729,19 @@ function submitCritique(e) {
     penName: currentUserData.penName,
     likeCount: 0, likes: [], tears:[], shocks:[], fears:[], commentCount: 0,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
+  });
+
+  batch.set(indexRef, {
+    ['posts.' + postRef.id]: {
+      id: postRef.id, uid: currentUser.uid, docType: 'critique',
+      targetPostTitle: targetTitle, category: '비평',
+      title: title, penName: currentUserData.penName,
+      preview: body.replace(/<[^>]*>/g, '').substring(0, 100),
+      likeCount: 0, commentCount: 0, createdAt: Date.now()
+    }
+  }, { merge: true });
+
+  batch.commit().then(() => {
     toast('비평이 성공적으로 등록되었습니다!', 'success');
     navigateTo('critique');
     btn.disabled=false; btn.textContent='비평 등록하기 ✨';
@@ -1945,7 +1940,7 @@ function renderPost(postId){
   }).catch(e=>console.error(e));
 }
 
-// === 감정 반응 토글 (1인 1반응 제한 로직 추가) ===
+// 💡 3. 좋아요 클릭 시 원본 문서와 목차(Index) 문서를 Batch로 동시 업데이트합니다.
 function toggleReact(postId, type){
   if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
   const ref=db.collection('posts').doc(postId);
@@ -1964,11 +1959,13 @@ function toggleReact(postId, type){
     });
 
     let updates = {};
+    let indexUpdates = {};
     
     // 이미 해당 감정을 누른 상태에서 다시 누르면 -> 취소
     if (activeFields.includes(targetField) && activeFields.length === 1) {
       updates[targetField] = firebase.firestore.FieldValue.arrayRemove(currentUser.uid);
       updates.likeCount = firebase.firestore.FieldValue.increment(-1);
+      indexUpdates['posts.' + postId + '.likeCount'] = firebase.firestore.FieldValue.increment(-1);
     } 
     // 그 외 (새로운 감정을 누름) -> 기존 감정 모두 삭제 후 새 감정 등록
     else {
@@ -1977,16 +1974,24 @@ function toggleReact(postId, type){
       });
       updates[targetField] = firebase.firestore.FieldValue.arrayUnion(currentUser.uid);
       
-      // 반응이 0개에서 새로 추가될 때만 전체 likeCount를 1 증가
-      if (activeFields.length === 0) {
-        updates.likeCount = firebase.firestore.FieldValue.increment(1);
-      } else if (activeFields.length > 1) {
-        // 오류로 여러개가 선택되어 있던 경우 1개로 교정
-        updates.likeCount = firebase.firestore.FieldValue.increment(1 - activeFields.length);
+      let delta = 0;
+      if (activeFields.length === 0) delta = 1;
+      else if (activeFields.length > 1) delta = 1 - activeFields.length;
+
+      if (delta !== 0) {
+        updates.likeCount = firebase.firestore.FieldValue.increment(delta);
+        indexUpdates['posts.' + postId + '.likeCount'] = firebase.firestore.FieldValue.increment(delta);
       }
     }
 
-    ref.update(updates).then(()=>{
+    let batch = db.batch();
+    batch.update(ref, updates);
+    if(Object.keys(indexUpdates).length > 0) {
+      let indexRef = db.collection('indexes').doc('posts');
+      batch.set(indexRef, indexUpdates, { merge: true });
+    }
+    
+    batch.commit().then(()=>{
       renderPost(postId);
     });
   });
@@ -2035,6 +2040,7 @@ function toggleCommentLike(postId, commentId, btn){
   });
 }
 
+// 💡 4. 댓글 작성/삭제 시에도 목차(Index) 문서를 Batch로 동시 업데이트합니다. (나의 서재 기능 위해 commenters 배열 추가)
 function submitComment(postId){
   if(!currentUser||!currentUserData){toast('로그인이 필요합니다.','error');return;}
   const input=$('comment-input');
@@ -2042,15 +2048,28 @@ function submitComment(postId){
   if(!body){toast('댓글을 입력해주세요.','error');return;}
   const btn = document.querySelector('.comment-form .btn-primary');
   if(btn){btn.disabled=true; btn.textContent='저장 중...';}
-  db.collection('posts').doc(postId).collection('comments').add({
+
+  let batch = db.batch();
+  let commentRef = db.collection('posts').doc(postId).collection('comments').doc();
+  let postRef = db.collection('posts').doc(postId);
+  let indexRef = db.collection('indexes').doc('posts');
+
+  batch.set(commentRef, {
     uid:currentUser.uid, penName:currentUserData.penName,
     body, createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>{
-    return db.collection('posts').doc(postId).update({
-      commentCount:firebase.firestore.FieldValue.increment(1)
-    });
-  }).then(()=>{
-    return db.collection('posts').doc(postId).get();
+  });
+
+  batch.update(postRef, {
+    commentCount: firebase.firestore.FieldValue.increment(1),
+    commenters: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+  });
+
+  batch.set(indexRef, {
+    ['posts.' + postId + '.commentCount']: firebase.firestore.FieldValue.increment(1)
+  }, { merge: true });
+
+  batch.commit().then(()=>{
+    return postRef.get();
   }).then(s=>{
     const newCount = s.data().commentCount||0;
     setText('comment-count', newCount);
@@ -2067,12 +2086,22 @@ function submitComment(postId){
 
 function deleteComment(postId,commentId){
   if(!confirm('댓글을 삭제할까요?')) return;
-  db.collection('posts').doc(postId).collection('comments').doc(commentId).delete().then(()=>{
-    db.collection('posts').doc(postId).update({commentCount:firebase.firestore.FieldValue.increment(-1)}).then(()=>{
-      db.collection('posts').doc(postId).get().then(s=>{
-        setText('comment-count',s.data().commentCount||0);
-        loadComments(postId);
-      });
+  
+  let batch = db.batch();
+  let commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
+  let postRef = db.collection('posts').doc(postId);
+  let indexRef = db.collection('indexes').doc('posts');
+
+  batch.delete(commentRef);
+  batch.update(postRef, { commentCount: firebase.firestore.FieldValue.increment(-1) });
+  batch.set(indexRef, {
+    ['posts.' + postId + '.commentCount']: firebase.firestore.FieldValue.increment(-1)
+  }, { merge: true });
+
+  batch.commit().then(()=>{
+    postRef.get().then(s=>{
+      setText('comment-count',s.data().commentCount||0);
+      loadComments(postId);
     });
   });
 }
@@ -2086,9 +2115,17 @@ function deletePost(postId){
       return;
     }
     if(!confirm('작품을 삭제할까요?')) return;
+    
     db.collection('posts').doc(postId).get().then(snap => {
       const isCritique = snap.data().docType === 'critique';
-      db.collection('posts').doc(postId).delete().then(()=>{
+      
+      let batch = db.batch();
+      batch.delete(db.collection('posts').doc(postId));
+      batch.set(db.collection('indexes').doc('posts'), {
+        ['posts.' + postId]: firebase.firestore.FieldValue.delete()
+      }, { merge: true });
+
+      batch.commit().then(()=>{
         toast('삭제되었습니다.','success');
         navigateTo(isCritique ? 'critique' : 'gallery');
       });
@@ -2146,7 +2183,19 @@ function saveEdit(e,postId){
     const intro=$('edit-intro').value.trim();
     const body=$('edit-body').value.trim();
     if(!cat||!title||!intro||!body){toast('모든 항목을 입력하세요.','error');return;}
-    db.collection('posts').doc(postId).update({category:cat.value,title,intro,body,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{
+    
+    let batch = db.batch();
+    batch.update(db.collection('posts').doc(postId), {
+      category:cat.value, title, intro, body,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    batch.set(db.collection('indexes').doc('posts'), {
+      ['posts.' + postId + '.category']: cat.value,
+      ['posts.' + postId + '.title']: title,
+      ['posts.' + postId + '.preview']: body.replace(/<[^>]*>/g, '').substring(0, 100)
+    }, { merge: true });
+
+    batch.commit().then(()=>{
       toast('수정되었습니다.','success');
       navigateTo('post',postId);
     });
@@ -2161,11 +2210,13 @@ function renderMyPage(){
   setText('mypage-penname', currentUserData.penName);
   setText('mypage-email', currentUserData.email||'');
 
-  db.collection('posts').where('uid','==',currentUser.uid).orderBy('createdAt','desc').get().then(function(snap){
-    var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
-    
-    var myWorks = posts.filter(p => p.docType !== 'critique');
-    var myCritiques = posts.filter(p => p.docType === 'critique');
+  // 나의 서재 렌더링 최적화
+  db.collection('indexes').doc('posts').get().then(function(snap){
+    var posts = snap.exists ? Object.values(snap.data().posts || {}) : [];
+    posts.sort((a,b) => b.createdAt - a.createdAt); // 최신순
+
+    var myWorks = posts.filter(p => p.uid === currentUser.uid && p.docType !== 'critique');
+    var myCritiques = posts.filter(p => p.uid === currentUser.uid && p.docType === 'critique');
 
     // 내가 쓴 작품
     setText('mypost-count', myWorks.length);
@@ -2176,7 +2227,7 @@ function renderMyPage(){
       htmlWorks += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
         <span class="cat-badge ${catClass}">${escHtml(catLabel)}</span>
         <strong>${escHtml(p.title||'')}</strong>
-        <span class="mypage-item-meta">${formatDate(p.createdAt)} · 🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
+        <span class="mypage-item-meta">🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
       </div>`;
     });
     setHTML('mypage-posts', htmlWorks || '<p class="empty-msg">작성한 작품이 없습니다.</p>');
@@ -2188,7 +2239,7 @@ function renderMyPage(){
       htmlCritiques += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
         <span class="cat-badge badge-critique">비평</span>
         <strong>${escHtml(p.title||'')}</strong>
-        <span class="mypage-item-meta">${formatDate(p.createdAt)} · 🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
+        <span class="mypage-item-meta">🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
       </div>`;
     });
     setHTML('mypage-critiques', htmlCritiques || '<p class="empty-msg">작성한 비평이 없습니다.</p>');
@@ -2200,11 +2251,7 @@ function renderMyPage(){
 
   const isAdmin = currentUserData && currentUserData.role === 'admin';
 
-  if(siteMode === 'apply'){
-    if(critiqueSec) critiqueSec.style.display = 'none';
-    if(likedSec) likedSec.style.display = 'none';
-    if(commentedSec) commentedSec.style.display = 'none';
-  } else if (siteMode === 'rest' && !isAdmin) {
+  if(siteMode === 'apply' || (siteMode === 'rest' && !isAdmin)){
     if(critiqueSec) critiqueSec.style.display = 'none';
     if(likedSec) likedSec.style.display = 'none';
     if(commentedSec) commentedSec.style.display = 'none';
@@ -2213,15 +2260,17 @@ function renderMyPage(){
     if(likedSec) likedSec.style.display = 'block';
     if(commentedSec) commentedSec.style.display = 'block';
 
-    // 좋아요한 작품 (reactions 모두 포함)
-    db.collection('posts').get().then(function(snap){
-      var posts = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
-      var likedPosts = posts.filter(function(p){
-         return (p.likes && p.likes.includes(currentUser.uid)) ||
-                (p.tears && p.tears.includes(currentUser.uid)) ||
-                (p.shocks && p.shocks.includes(currentUser.uid)) ||
-                (p.fears && p.fears.includes(currentUser.uid));
-      });
+    // 💡 5. 내가 반응한 작품 (Read 최소화 구조)
+    Promise.all([
+      db.collection('posts').where('likes', 'array-contains', currentUser.uid).get(),
+      db.collection('posts').where('tears', 'array-contains', currentUser.uid).get(),
+      db.collection('posts').where('shocks', 'array-contains', currentUser.uid).get(),
+      db.collection('posts').where('fears', 'array-contains', currentUser.uid).get()
+    ]).then(snaps => {
+      let map = {};
+      snaps.forEach(snap => snap.docs.forEach(d => map[d.id] = {id: d.id, ...d.data()}));
+      let likedPosts = Object.values(map);
+      
       likedPosts.sort(function(a,b){
         var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
         var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
@@ -2246,32 +2295,29 @@ function renderMyPage(){
       setHTML('mypage-liked', html || '<p class="empty-msg">반응한 작품이 없습니다.</p>');
     });
 
+    // 💡 6. 댓글 단 작품 (commenters 배열 활용으로 Read 폭탄 100% 제거)
     setText('mycommented-count', '...');
     setHTML('mypage-commented', '<p class="empty-msg">불러오는 중...</p>');
-    db.collection('posts').get().then(function(postsSnap){
-      var commentedItems = [];
-      var checks = postsSnap.docs.map(function(pd){
-        return db.collection('posts').doc(pd.id).collection('comments')
-          .where('uid','==',currentUser.uid).get()
-          .then(function(cs){ 
-            if(!cs.empty) {
-              var cmts = cs.docs.map(function(d){ return d.data(); });
-              cmts.sort(function(a,b){
-                var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-                var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-                return tb - ta; 
-              });
-              var cData = cmts[0]; 
-              commentedItems.push({
-                postId: pd.id,
-                postData: pd.data(),
-                commentBody: cData.body,
-                commentDate: cData.createdAt
-              });
-            } 
-          });
+    
+    db.collection('posts').where('commenters', 'array-contains', currentUser.uid).get().then(snap => {
+      let commentedItems = [];
+      let promises = snap.docs.map(doc => {
+        return db.collection('posts').doc(doc.id).collection('comments').where('uid', '==', currentUser.uid).get()
+        .then(cSnap => {
+          if(!cSnap.empty) {
+            let cmts = cSnap.docs.map(d=>d.data());
+            cmts.sort((a,b) => b.createdAt - a.createdAt); // 최신 댓글 1개만 노출
+            commentedItems.push({
+              postId: doc.id,
+              postData: doc.data(),
+              commentBody: cmts[0].body,
+              commentDate: cmts[0].createdAt
+            });
+          }
+        });
       });
-      Promise.all(checks).then(function(){
+      
+      Promise.all(promises).then(() => {
         commentedItems.sort(function(a, b) {
            var ta = a.commentDate ? (a.commentDate.toMillis ? a.commentDate.toMillis() : new Date(a.commentDate).getTime()) : 0;
            var tb = b.commentDate ? (b.commentDate.toMillis ? b.commentDate.toMillis() : new Date(b.commentDate).getTime()) : 0;
@@ -2306,11 +2352,10 @@ function renderMyPage(){
           html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-commented').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
         }
         setHTML('mypage-commented', html);
-        
-      }).catch(function(e){
+      });
+    }).catch(e => {
         console.error('댓글단 작품 오류:',e);
         setHTML('mypage-commented','<p class="empty-msg">불러오지 못했습니다.</p>');
-      });
     });
   }
 }
@@ -2442,19 +2487,21 @@ async function approvePenName(reqId, uid, newPenName) {
     let batch = db.batch();
     let count = 0;
     const batchArray = [];
+    const indexRef = db.collection('indexes').doc('posts');
 
     for (const pDoc of allPostsSnap.docs) {
       if (pDoc.data().uid === uid) {
         batch.update(pDoc.ref, { penName: newPenName });
-        count++;
-        if (count === 500) { batchArray.push(batch); batch = db.batch(); count = 0; }
+        batch.set(indexRef, { ['posts.' + pDoc.id + '.penName']: newPenName }, {merge: true});
+        count+=2;
+        if (count >= 490) { batchArray.push(batch); batch = db.batch(); count = 0; }
       }
       
       const cSnap = await pDoc.ref.collection('comments').where('uid','==',uid).get();
       for (const cDoc of cSnap.docs) {
         batch.update(cDoc.ref, { penName: newPenName });
         count++;
-        if (count === 500) { batchArray.push(batch); batch = db.batch(); count = 0; }
+        if (count >= 490) { batchArray.push(batch); batch = db.batch(); count = 0; }
       }
     }
     
@@ -2490,6 +2537,37 @@ function setSiteMode(mode){
     renderAdmin();
     setTimeout(() => location.reload(), 500); 
   });
+}
+
+// 💡 관리자 전용 기능: 기존 낱개 문서를 단일 목차 문서로 강제 압축합니다.
+async function rebuildIndex() {
+  if(!confirm('모든 작품을 읽어 목차(Index) 문서를 새로 생성합니다. 시간이 걸릴 수 있습니다. 실행할까요?')) return;
+  
+  const btn = document.querySelector('button[onclick="rebuildIndex()"]');
+  if(btn) { btn.disabled = true; btn.textContent = '압축 팩 동기화 중...'; }
+
+  try {
+    const snap = await db.collection('posts').get();
+    let postsIndex = {};
+    snap.docs.forEach(doc => {
+      let d = doc.data();
+      postsIndex[doc.id] = {
+        id: doc.id, uid: d.uid, docType: d.docType || 'post',
+        targetPostTitle: d.targetPostTitle || '', category: d.category || '',
+        title: d.title || '', penName: d.penName || '',
+        preview: (d.body||'').replace(/<[^>]*>/g,'').substring(0, 100),
+        likeCount: d.likeCount || 0, commentCount: d.commentCount || 0,
+        createdAt: d.createdAt ? (d.createdAt.toMillis ? d.createdAt.toMillis() : new Date(d.createdAt).getTime()) : Date.now()
+      };
+    });
+    
+    await db.collection('indexes').doc('posts').set({ posts: postsIndex });
+    toast('목차 동기화가 성공적으로 완료되었습니다!', 'success');
+  } catch(e) {
+    toast('오류 발생: ' + e.message, 'error');
+  }
+  
+  if(btn) { btn.disabled = false; btn.innerHTML = '🔄 강제 목차(Index) 동기화<span style="color:var(--ink3);">기존 낱개 글들을 서버 요금 절약을 위해 1개의 목차 문서로 압축합니다 (코드 업데이트 후 1회 권장)</span>'; }
 }
 
 async function archiveData() {
@@ -2559,6 +2637,9 @@ async function resetDB() {
       }
     });
     await uBatch.commit();
+    
+    // 목차 문서도 함께 비웁니다.
+    await db.collection('indexes').doc('posts').delete();
 
     toast('DB 초기화가 완료되었습니다. 새 학기를 시작할 수 있습니다.', 'success');
   } catch(e) {
