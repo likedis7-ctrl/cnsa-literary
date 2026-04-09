@@ -263,12 +263,38 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 .other-post-item-title{font-weight:500;font-size:0.95rem;color:var(--ink);}
 .other-post-item-meta{font-size:0.8rem;color:var(--ink3);}
 
-/* 미션 카드 스타일 추가 */
-.mission-card { background: white; border: 1px solid var(--paper3); border-radius: var(--radius); padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s; }
-.mission-card:hover { border-color: var(--gold); box-shadow: 0 4px 12px var(--shadow); }
-.mission-info strong { color: var(--ink); display: block; margin-bottom: 0.2rem; font-size: 0.95rem; }
-.mission-info span { font-size: 0.8rem; color: var(--ink3); }
-.mission-progress { font-weight: bold; color: var(--gold); background: #fff8ec; padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.85rem; border: 1px solid #f9e4d4; }
+/* 미션 보드 */
+.mission-board{background:linear-gradient(135deg,#1a1714 0%,#2d1f0e 100%);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;color:var(--paper);}
+.mission-board-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.5rem;}
+.mission-board-title{font-family:var(--font-serif);font-size:1.15rem;font-weight:700;}
+.mission-timer{font-size:0.75rem;background:rgba(255,255,255,.1);padding:0.3rem 0.8rem;border-radius:20px;color:rgba(255,255,255,.7);letter-spacing:0.02em;}
+.mission-overall-bar{height:6px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden;margin-bottom:0.4rem;}
+.mission-overall-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width .5s ease;}
+.mission-card-v2{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1rem 1.1rem;margin-bottom:0.75rem;transition:all .2s;}
+.mission-card-v2:hover{background:rgba(255,255,255,.11);border-color:rgba(200,146,42,.4);}
+.mission-card-top{display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem;}
+.mission-icon-wrap{font-size:1.4rem;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);border-radius:10px;flex-shrink:0;}
+.mission-label-col{flex:1;min-width:0;}
+.mission-label{font-size:0.9rem;font-weight:600;color:white;line-height:1.4;}
+.mission-subdesc{font-size:0.73rem;color:rgba(255,255,255,.5);margin-top:0.2rem;line-height:1.4;}
+.mission-right-col{display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem;flex-shrink:0;}
+.mission-diff{font-size:0.65rem;padding:0.12rem 0.5rem;border-radius:10px;font-weight:700;letter-spacing:.04em;}
+.diff-easy{background:#064e3b;color:#6ee7b7;}
+.diff-medium{background:#78350f;color:#fcd34d;}
+.diff-hard{background:#4c1d95;color:#c4b5fd;}
+.mission-pts{font-size:0.85rem;font-weight:700;color:var(--gold2);}
+.mission-bar{height:7px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;margin-bottom:0.4rem;}
+.mission-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.bar-easy{background:linear-gradient(90deg,#10b981,#34d399);}
+.bar-medium{background:linear-gradient(90deg,var(--gold),var(--gold2));}
+.bar-hard{background:linear-gradient(90deg,#7c3aed,#a78bfa);}
+.mission-bar-meta{display:flex;justify-content:space-between;font-size:0.72rem;color:rgba(255,255,255,.45);}
+/* 알림 벨 */
+.noti-btn{background:none;border:none;padding:0.3rem;border-radius:6px;color:var(--ink);line-height:1;cursor:pointer;position:relative;transition:background .15s;display:none;}
+.noti-btn:hover{background:rgba(26,23,20,.1);}
+/* 관리자 버튼 */
+.admin-nav-btn{background:none;border:1.5px solid rgba(26,23,20,.25);border-radius:6px;padding:0.28rem 0.65rem;cursor:pointer;color:var(--ink);font-size:0.78rem;font-family:var(--font-sans);font-weight:500;transition:all .15s;display:none;white-space:nowrap;}
+.admin-nav-btn:hover{border-color:var(--ink);background:rgba(26,23,20,.07);}
   
 @media(max-width:768px){
   .header-inner{padding:.6rem 1rem;position:relative;}
@@ -278,7 +304,8 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   .nav-link{font-size:1.1rem;padding:.75rem 2rem;color:rgba(255,255,255,.85);width:100%;text-align:center;border-radius:8px;}
   .nav-link:hover,.nav-link.active{background:rgba(255,255,255,.1);color:var(--gold2);}
   .hamburger{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:.5rem;z-index:300;}
-  .hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,.85);border-radius:2px;transition:all .2s;}
+  .hamburger span{display:block;width:22px;height:2px;background:var(--ink2);border-radius:2px;transition:all .2s;}
+  .hamburger.open span{background:rgba(255,255,255,.85);}
   .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
   .hamburger.open span:nth-child(2){opacity:0;}
   .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
@@ -321,7 +348,6 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <span class="nav-link" data-page="critique" id="nav-critique" onclick="navigateTo('critique')" style="display:none">비평게시판</span>
       <span class="nav-link" data-page="mypage" id="nav-mypage" onclick="navigateTo('mypage')" style="display:none">나의 서재</span>
       <span class="nav-link" data-page="credits" onclick="navigateTo('credits')">개발자 소개</span>
-      <span class="nav-link" data-page="admin" id="nav-admin" onclick="navigateTo('admin')" style="display:none">⚙️ 관리</span>
     </nav>
     <button class="hamburger" id="hamburger-btn" onclick="toggleNav()" aria-label="메뉴">
       <span></span><span></span><span></span>
@@ -331,9 +357,10 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
         <span id="user-penname" style="font-size:.8rem;color:var(--ink);font-weight:500;white-space:nowrap;margin-right:0.5rem;"></span>
         
         <div style="position:relative; margin-right:0.8rem; display:flex; align-items:center;">
-          <span id="noti-bell" onclick="toggleNotiPanel()" style="cursor:pointer; font-size:1.2rem; position:relative; display:none; user-select:none;">
-            🔔<span id="noti-badge" style="position:absolute; top:-5px; right:-8px; background:var(--red); color:white; font-size:0.6rem; font-weight:bold; padding:0.1rem 0.35rem; border-radius:10px; display:none;">0</span>
-          </span>
+          <button id="noti-bell" class="noti-btn" onclick="toggleNotiPanel()" aria-label="알림">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span id="noti-badge" style="position:absolute;top:-3px;right:-5px;background:var(--red);color:white;font-size:0.58rem;font-weight:bold;padding:0.1rem 0.3rem;border-radius:10px;display:none;font-family:var(--font-sans);">0</span>
+          </button>
           <div id="noti-panel" class="viewer-panel" style="width:280px; right:-50px; padding:1rem; max-height:400px; overflow-y:auto;">
             <div style="font-weight:bold; margin-bottom:0.8rem; border-bottom:1px solid var(--paper3); padding-bottom:0.5rem; font-family:var(--font-sans); color:var(--ink);">알림 내역</div>
             <div id="noti-list"><p class="empty-msg" style="padding:1rem;">새로운 알림이 없습니다.</p></div>
@@ -342,6 +369,9 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 
         <button id="btn-penname-change" onclick="openPenNameChangeModal()" style="display:none; font-size:0.7rem; padding:0.15rem 0.4rem; background:transparent; border:1px solid var(--gold); color:var(--gold); border-radius:4px; cursor:pointer; margin-right:0.5rem; font-family:var(--font-sans);">필명변경신청</button>
       </div>
+      <button id="nav-admin" class="admin-nav-btn" onclick="navigateTo('admin')" title="관리자 패널">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 1.41 1.41M4.93 4.93a10 10 0 0 0-1.41 1.41M19.07 19.07a10 10 0 0 1-1.41 1.41M4.93 19.07a10 10 0 0 0 1.41 1.41M12 2v2M12 20v2M2 12H4M20 12h2"/></svg>관리
+      </button>
       <button class="btn-login" id="btn-login" onclick="doLogin()">Google 로그인</button>
       <button class="btn-logout" id="btn-logout" onclick="doLogout()" style="display:none">로그아웃</button>
     </div>
@@ -662,11 +692,14 @@ const db = firebase.firestore();
 // 🏆 일일 미션 및 칭호 시스템
 // ==========================================
 const MISSIONS = {
-  1: { id: 1, text: "마음에 드는 글 3개를 찾아 '반응하기'", goal: 3, points: 10 },
-  2: { id: 2, text: "내가 작성한 글에 달린 댓글에 답글 달기", goal: 1, points: 10 },
-  3: { id: 3, text: "감명깊게 읽은 글 2개에 '댓글달기'", goal: 2, points: 15 },
-  4: { id: 4, text: "구체적인 감상, 분석을 나누고 싶은 글을 찾아 '비평하기'", goal: 1, points: 30 },
-  5: { id: 5, text: "비평게시판 비평글 중 하나에 '댓글달기'", goal: 1, points: 15 }
+  1: { id:1, icon:'❤️', label:'반응하기', text:"마음에 드는 글 3개에 반응 남기기", desc:"공감 한 번이 작가에겐 큰 힘이 됩니다!", goal:3, points:10, diff:'easy' },
+  2: { id:2, icon:'💬', label:'소통하기', text:"내 글에 달린 댓글에 답글 달기", desc:"독자와 나누는 대화가 작품을 완성해요.", goal:1, points:10, diff:'easy' },
+  3: { id:3, icon:'✍️', label:'댓글달기', text:"감명 깊은 글 2편에 댓글 남기기", desc:"짧은 한 마디가 작가를 춤추게 합니다.", goal:2, points:15, diff:'medium' },
+  4: { id:4, icon:'🔍', label:'비평하기', text:"글 1편을 깊이 읽고 비평 작성하기", desc:"심층 분석이 나만의 문학 시각을 키워요!", goal:1, points:30, diff:'hard' },
+  5: { id:5, icon:'📖', label:'비평읽기', text:"비평게시판 글에 댓글 달기", desc:"비평가의 시선으로 새 관점을 만나봐요!", goal:1, points:15, diff:'medium' },
+  6: { id:6, icon:'🌟', label:'탐험가', text:"갤러리에서 글 5편 읽기", desc:"폭넓은 독서가 진짜 문학인을 만들어요.", goal:5, points:20, diff:'medium' },
+  7: { id:7, icon:'🔥', label:'몰입하기', text:"한 작품에 반응 + 댓글 모두 남기기", desc:"완전한 감상은 반응과 댓글이 함께!", goal:1, points:25, diff:'medium' },
+  8: { id:8, icon:'💎', label:'탐구하기', text:"비평게시판 글 3편 탐독하기", desc:"문학 비평의 깊은 바다로 뛰어들어요!", goal:3, points:20, diff:'medium' }
 };
 
 function getUserTitle(points) {
@@ -683,7 +716,7 @@ function checkAndAssignDailyMissions(userData) {
   if (userData.lastMissionDate !== today) {
     const allIds = [1, 2, 3, 4, 5];
     const shuffled = allIds.sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 2);
+    const selected = shuffled.slice(0, 3);
     const newMissions = {};
     selected.forEach(id => newMissions[id] = 0);
 
@@ -728,21 +761,76 @@ function addMissionProgress(missionId) {
   });
 }
 
+function getMidnightCountdown() {
+  const now = new Date();
+  const midnight = new Date(now); midnight.setHours(24,0,0,0);
+  const diff = midnight - now;
+  const h = Math.floor(diff/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  const s = Math.floor((diff%60000)/1000);
+  return `${h}시간 ${String(m).padStart(2,'0')}분 ${String(s).padStart(2,'0')}초 후 초기화`;
+}
+
 function renderMissionsUI() {
   if (!currentUserData || !currentUserData.dailyMissions) return;
-  let html = '';
-  for (const [mId, progress] of Object.entries(currentUserData.dailyMissions)) {
+  const missions = currentUserData.dailyMissions;
+  const ids = Object.keys(missions);
+  const pts = currentUserData.points || 0;
+  const title = getUserTitle(pts);
+
+  let completedToday = 0;
+  let cardsHtml = '';
+  for (const [mId, progress] of Object.entries(missions)) {
     const def = MISSIONS[mId];
-    if(!def) continue;
-    html += `<div class="mission-card">
-      <div class="mission-info">
-        <strong>${def.text}</strong>
-        <span>수행 완료 시 ${def.points}P 지급</span>
+    if (!def) continue;
+    const pct = Math.min(100, Math.round((progress / def.goal) * 100));
+    const diffLabel = def.diff === 'easy' ? '쉬움' : def.diff === 'medium' ? '보통' : '어려움';
+    cardsHtml += `<div class="mission-card-v2">
+      <div class="mission-card-top">
+        <div class="mission-icon-wrap">${def.icon}</div>
+        <div class="mission-label-col">
+          <div class="mission-label">${def.text}</div>
+          <div class="mission-subdesc">${def.desc}</div>
+        </div>
+        <div class="mission-right-col">
+          <span class="mission-diff diff-${def.diff}">${diffLabel}</span>
+          <span class="mission-pts">+${def.points}P</span>
+        </div>
       </div>
-      <div class="mission-progress">${progress} / ${def.goal}</div>
+      <div class="mission-bar"><div class="mission-bar-fill bar-${def.diff}" style="width:${pct}%"></div></div>
+      <div class="mission-bar-meta">
+        <span>${def.label} ${progress} / ${def.goal}</span>
+        <span>${pct}%</span>
+      </div>
     </div>`;
   }
+
+  const overallPct = ids.length > 0 ? Math.round((completedToday / ids.length) * 100) : 0;
+  const html = `<div class="mission-board">
+    <div class="mission-board-header">
+      <div>
+        <div class="mission-board-title">오늘의 미션</div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,.45);margin-top:0.2rem;">${title} · ${pts}P 보유</div>
+      </div>
+      <div class="mission-timer" id="mission-countdown">${getMidnightCountdown()}</div>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:rgba(255,255,255,.5);margin-bottom:0.4rem;">
+        <span>전체 달성률</span><span style="color:var(--gold2);">${overallPct}%</span>
+      </div>
+      <div class="mission-overall-bar"><div class="mission-overall-fill" style="width:${overallPct}%"></div></div>
+    </div>
+    ${cardsHtml}
+    <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,.3);margin-top:0.25rem;">반복 수행 가능 · 자정마다 새 미션으로 교체됩니다</div>
+  </div>`;
+
   setHTML('mypage-missions', html);
+  if (window._missionTimer) clearInterval(window._missionTimer);
+  window._missionTimer = setInterval(() => {
+    const el = document.getElementById('mission-countdown');
+    if (el) el.textContent = getMidnightCountdown();
+    else clearInterval(window._missionTimer);
+  }, 1000);
 }
 // ==========================================
 
@@ -1091,7 +1179,7 @@ auth.onAuthStateChanged(user=>{
         checkAndAssignDailyMissions(currentUserData);
         updateNavUI();
         
-        $('noti-bell').style.display = 'inline-block';
+        $('noti-bell').style.display = 'flex';
         notiUnsubscribe = db.collection('notifications')
           .where('targetUid', '==', user.uid)
           .onSnapshot(snap => {
