@@ -1,0 +1,2877 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>큰별문학상 온라인전시관</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✍️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+:root{--ink:#1a1714;--ink2:#4a4641;--ink3:#8a8580;--paper:#fdf8f2;--paper2:#f5ede0;--paper3:#ece0cc;--gold:#c8922a;--gold2:#e8b84a;--verse:#5a3e8c;--prose:#2a6b4a;--red:#c0392b;--shadow:rgba(50,30,10,.1);--radius:8px;--font-serif:'Noto Serif KR',serif;--font-sans:'Noto Sans KR',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.7;overflow-x:hidden;}
+header{background:#B3AB8D;color:var(--ink);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px var(--shadow);width:100%;max-width:100vw;}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;}
+.site-logo{font-family:var(--font-serif);font-size:1.25rem;font-weight:700;color:var(--ink);letter-spacing:-.02em;white-space:nowrap;cursor:pointer;}
+.site-logo span{color:var(--ink2);font-weight:300;font-size:.9rem;margin-left:.4rem;opacity:.7;}
+nav{display:flex;align-items:center;gap:.1rem;flex:1;flex-wrap:wrap;}
+.nav-link{font-size:.82rem;padding:.4rem .7rem;border-radius:6px;color:rgba(26,23,20,.75);cursor:pointer;transition:all .15s;white-space:nowrap;user-select:none;}
+.nav-link:hover,.nav-link.active{color:var(--ink);background:rgba(26,23,20,.12);font-weight:500;}
+.nav-right{display:flex;align-items:center;gap:.5rem;}
+#user-penname{font-size:.8rem;color:var(--ink);font-weight:500;white-space:nowrap;}
+.btn-login,.btn-logout{font-size:.78rem;padding:.35rem .8rem;border-radius:20px;border:none;cursor:pointer;font-family:var(--font-sans);transition:all .15s;}
+.btn-login{background:var(--ink);color:white;}
+.btn-login:hover{background:var(--ink2);}
+.btn-logout{background:rgba(26,23,20,.15);color:var(--ink);}
+.btn-logout:hover{background:rgba(26,23,20,.25);}
+.page{display:none;min-height:80vh;}
+.page-inner{max-width:800px;margin:0 auto;padding:2.5rem 1.5rem;}
+.hero{background:linear-gradient(160deg,var(--ink) 0%,#2d1f0e 100%);color:var(--paper);text-align:center;padding:5rem 1.5rem 4rem;position:relative;overflow:hidden;width:100%;max-width:100%;}
+.hero::before{content:'大';position:absolute;font-family:var(--font-serif);font-size:40vw;color:rgba(255,255,255,.03);top:-10%;left:50%;transform:translateX(-50%);pointer-events:none;}
+.hero-eyebrow{font-size:.78rem;letter-spacing:.25em;color:var(--gold2);margin-bottom:1rem;opacity:.9;}
+.hero-title{font-family:var(--font-serif);font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.2;margin-bottom:1rem;color:var(--paper);}
+.hero-title em{color:var(--gold2);font-style:normal;}
+.hero-sub{font-size:.95rem;color:rgba(255,255,255,.6);max-width:500px;margin:0 auto 2rem;}
+.hero-cta{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;}
+.hero-cta button{padding:.7rem 1.6rem;border:none;border-radius:30px;cursor:pointer;font-family:var(--font-sans);font-size:.9rem;font-weight:500;transition:all .2s;}
+.cta-primary{background:var(--gold);color:white;}
+.cta-primary:hover{background:var(--gold2);transform:translateY(-1px);}
+.cta-secondary{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.2)!important;}
+.cta-secondary:hover{background:rgba(255,255,255,.2);}
+.home-section{max-width:1100px;margin:0 auto;padding:3rem 1.5rem;}
+.home-section-title{font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin-bottom:1.5rem;color:var(--ink);display:flex;align-items:center;gap:.6rem; flex-wrap:wrap;}
+.home-section-title::after{content:'';flex:1;height:1px;background:var(--paper3); min-width: 50px;}
+.home-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
+.home-card{background:white;border:1px solid var(--paper3);border-radius:10px;padding:1.25rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:.5rem;}
+.home-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow);border-color:var(--gold);}
+.home-card h3{font-family:var(--font-serif);font-size:1rem;font-weight:700;color:var(--ink);}
+.home-card p{font-size:.85rem;color:var(--ink3);flex:1;line-height:1.6;}
+.card-meta{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ink3);margin-top:.25rem;}
+.intro-content{font-family:var(--font-serif);}
+.intro-content h1{font-size:2rem;margin-bottom:.5rem;}
+.intro-divider{width:40px;height:3px;background:var(--gold);margin:1rem 0 2rem;border-radius:2px;}
+.intro-content p{margin-bottom:1.25rem;color:var(--ink2);line-height:1.9;}
+.highlight-box{background:var(--paper2);border-left:4px solid var(--gold);padding:1.25rem 1.5rem;border-radius:0 8px 8px 0;margin:1.5rem 0;}
+.page-title{font-family:var(--font-serif);font-size:1.8rem;margin-bottom:.5rem;display:flex;align-items:center;}
+.page-subtitle{color:var(--ink3);font-size:.88rem;margin-bottom:2rem;}
+.form-group{margin-bottom:1.5rem;}
+.form-group label{display:block;font-size:.88rem;font-weight:500;color:var(--ink2);margin-bottom:.5rem;}
+.form-group input[type="text"],.form-group textarea{width:100%;padding:.75rem 1rem;border:1.5px solid var(--paper3);border-radius:var(--radius);font-family:var(--font-sans);font-size:.92rem;background:white;color:var(--ink);transition:border-color .15s;resize:vertical;}
+.form-group input:focus,.form-group textarea:focus{outline:none;border-color:var(--gold);}
+.radio-group{display:flex;gap:1.5rem;}
+.radio-label{display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.9rem;}
+.radio-label input{accent-color:var(--gold);width:16px;height:16px;}
+.required{color:var(--red);}
+.char-info{font-size:.78rem;color:var(--ink3);font-weight:400;float:right;}
+.form-actions{display:flex;justify-content:flex-end;margin-top:2rem;}
+.gallery-controls{max-width:1100px;margin:0 auto;padding:1.5rem 1.5rem 0;display:flex;align-items:center;flex-wrap:wrap;gap:1rem;}
+.cat-tabs{display:flex;gap:.4rem;}
+.cat-tab{padding:.4rem 1rem;border-radius:20px;cursor:pointer;font-size:.85rem;border:1.5px solid var(--paper3);background:white;color:var(--ink3);transition:all .15s;font-family:var(--font-sans);}
+.cat-tab.active,.cat-tab:hover{border-color:var(--gold);color:var(--gold);background:#fff8ec;}
+.cat-tab[data-cat="운문"].active{border-color:var(--verse);color:var(--verse);background:#f0edf8;}
+.cat-tab[data-cat="산문"].active{border-color:var(--prose);color:var(--prose);background:#edf5ef;}
+.gallery-search-wrap{flex:1;min-width:200px;position:relative;}
+.gallery-search-wrap input{width:100%;padding:.5rem 1rem .5rem 2.2rem;border:1.5px solid var(--paper3);border-radius:20px;font-family:var(--font-sans);font-size:.88rem;background:white;color:var(--ink);}
+.gallery-search-wrap input:focus{outline:none;border-color:var(--gold);}
+.gallery-search-wrap::before{content:'🔍';position:absolute;left:.7rem;top:.45rem;font-size:.85rem;}
+.gallery-grid{max-width:1100px;margin:1.5rem auto;padding:0 1.5rem 3rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;}
+.gallery-card{background:white;border:1px solid var(--paper3);border-radius:10px;padding:1.25rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;justify-content:space-between;}
+.gallery-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow);border-color:var(--gold);}
+.gallery-card h3{font-family:var(--font-serif);font-size:1.05rem;font-weight:700;margin:.5rem 0 .4rem;}
+.body-preview{font-size:.85rem;color:var(--ink3);line-height:1.6;white-space:pre-line;}
+.gallery-card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--paper2);font-size:.78rem;color:var(--ink3);}
+.gallery-grid.list-view{display:flex;flex-direction:column;gap:1rem;}
+.gallery-grid.list-view .gallery-card{flex-direction:row;align-items:center;justify-content:space-between;gap:1.5rem;padding:1rem 1.5rem;}
+.gallery-grid.list-view .gallery-card > div:first-child{flex:1;display:flex;flex-direction:column;align-items:flex-start;}
+.gallery-grid.list-view .gallery-card h3{margin:.3rem 0;}
+.gallery-grid.list-view .gallery-card p.body-preview{display:none;}
+.gallery-grid.list-view .gallery-card-bottom{margin-top:0;padding-top:0;border-top:none;flex-direction:column;align-items:flex-end;justify-content:center;gap:.3rem;min-width:100px;}
+.author{font-weight:500;}
+.cat-badge{display:inline-block;padding:.15rem .6rem;border-radius:10px;font-size:.72rem;font-weight:500;letter-spacing:.03em;}
+.badge-verse{background:#ede9f8;color:var(--verse);}
+.badge-prose{background:#e8f2ec;color:var(--prose);}
+.badge-critique{background:#fdf2e9;color:#b45309;border:1px solid #fde68a;}
+.page-critique-header{max-width:1100px;margin:1.5rem auto 1rem;padding:2rem;background:linear-gradient(135deg,#fffaf0 0%,#fdf2e9 100%);border-radius:12px;border:1px solid #f9e4d4;text-align:center;}
+.page-critique-header h1{font-family:var(--font-serif);font-size:1.8rem;color:#b45309;margin-bottom:.5rem;}
+.page-critique-header p{font-size:.95rem;color:var(--ink2);margin-bottom:0;}
+#critique-grid .gallery-card{background:#fffdfa;border-left:4px solid #eab308;}
+#critique-grid .gallery-card:hover{border-color:#b45309;transform:translateY(-2px);box-shadow:0 8px 24px rgba(180,83,9,.12);}
+.btn-back{display:inline-block;margin-bottom:1.5rem;font-size:.85rem;color:var(--ink3);background:none;border:none;cursor:pointer;padding:.3rem 0;transition:color .15s;}
+.btn-back:hover{color:var(--gold);}
+.post-detail{background:white;border:1px solid var(--paper3);border-radius:12px;padding:2.5rem;transition:all 0.3s ease;}
+.post-header{margin-bottom:2rem;padding:1.75rem 2rem;background:rgba(179,171,141,.12);border-radius:10px;border-left:4px solid #B3AB8D;}
+.post-title{font-family:var(--font-serif);font-size:1.8rem;font-weight:700;margin:.5rem 0 .75rem;line-height:1.3;}
+.post-meta{display:flex;align-items:center;gap:1.25rem;font-size:.85rem;color:var(--ink2);flex-wrap:wrap;margin-top:.75rem;padding-top:.75rem;border-top:1px solid rgba(179,171,141,.35);}
+.post-intro{border-left:3px solid var(--gold);padding:.75rem 1.25rem;color:var(--ink2);font-style:italic;font-family:var(--font-serif);background:var(--paper2);border-radius:0 6px 6px 0;margin-top:.5rem;}
+.post-body{font-family:var(--font-serif);font-size:1.05rem;line-height:2;color:var(--ink);white-space:pre-wrap;margin:2rem 0;transition:all 0.3s ease;}
+.post-detail.theme-sepia{background:#f4ecd8;border-color:#e6d8b8;}
+.post-detail.theme-sepia .post-title,.post-detail.theme-sepia .post-body,.post-detail.theme-sepia .post-meta{color:#433422;}
+.post-detail.theme-dark{background:#1a1714;border-color:#332f2a;}
+.post-detail.theme-dark .post-title,.post-detail.theme-dark .post-body,.post-detail.theme-dark .post-meta{color:#e8e6e1;}
+.post-detail.theme-dark .post-header{background:rgba(255,255,255,0.05);border-left-color:var(--gold);}
+.post-detail.text-sm .post-body{font-size:0.95rem;line-height:1.8;}
+.post-detail.text-md .post-body{font-size:1.05rem;line-height:2.0;}
+.post-detail.text-lg .post-body{font-size:1.25rem;line-height:2.2;}
+.post-detail.text-xl .post-body{font-size:1.45rem;line-height:2.4;}
+.reaction-row{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin:2rem 0;}
+.btn-react{display:flex;align-items:center;gap:0.4rem;padding:0.5rem 1.25rem;border-radius:30px;border:2px solid var(--paper3);background:white;color:var(--ink3);cursor:pointer;font-family:var(--font-sans);font-size:0.95rem;transition:all 0.2s;}
+.btn-react:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 4px 12px var(--shadow);transform:translateY(-1px);}
+.btn-react.r-heart.active{border-color:#e11d48;color:#e11d48;background:#fff1f2;}
+.btn-react.r-tear.active{border-color:#2563eb;color:#2563eb;background:#eff6ff;}
+.btn-react.r-shock.active{border-color:#d97706;color:#d97706;background:#fffbeb;}
+.btn-react.r-fear.active{border-color:#7c3aed;color:#7c3aed;background:#f5f3ff;}
+.btn-react span{font-weight:500;font-size:0.9rem;}
+.comments-section{margin-top:2.5rem;}
+.comments-section h2{font-family:var(--font-serif);font-size:1.2rem;margin-bottom:1.25rem;color:var(--ink);}
+.comment{padding:1rem 0;border-bottom:1px solid var(--paper2);}
+.comment:last-child{border-bottom:none;}
+.comment-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem;font-size:.83rem;}
+.comment-header strong{color:var(--ink);}
+.comment-date{color:var(--ink3);}
+.comment p{font-size:.9rem;color:var(--ink2);line-height:1.7;}
+.comment-form{margin-top:1.5rem;}
+.comment-form textarea{width:100%;padding:.75rem 1rem;border:1.5px solid var(--paper3);border-radius:var(--radius);font-family:var(--font-sans);font-size:.9rem;resize:vertical;}
+.comment-form textarea:focus{outline:none;border-color:var(--gold);}
+.comment-form-footer{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;font-size:.78rem;color:var(--ink3);}
+.login-prompt{font-size:.88rem;color:var(--ink3);margin-top:1rem;padding:1rem;background:var(--paper2);border-radius:var(--radius);text-align:center;}
+.mypage-header{background:#B3AB8D;color:var(--ink);padding:2.5rem;border-radius:12px;margin-bottom:2rem;}
+.mypage-header h1{font-family:var(--font-serif);font-size:1.6rem;margin-bottom:.25rem;}
+.mypage-section{margin-bottom:2.5rem;}
+.mypage-section h2{font-family:var(--font-serif);font-size:1.1rem;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid var(--paper3);display:flex;align-items:center;gap:.5rem;}
+.mypage-section h2 .count{background:var(--gold);color:white;font-size:.72rem;padding:.1rem .5rem;border-radius:10px;font-family:var(--font-sans);}
+.mypage-item{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;background:white;border:1px solid var(--paper3);border-radius:var(--radius);margin-bottom:.5rem;cursor:pointer;transition:all .15s;flex-wrap:wrap;}
+.mypage-item:hover{border-color:var(--gold);}
+.mypage-item strong{flex:1;font-size:.92rem;}
+.mypage-item-meta{font-size:.78rem;color:var(--ink3);}
+.credits-wrap{max-width:700px;margin:0 auto;padding:3rem 1.5rem;text-align:center;}
+.credits-wrap h1{font-family:var(--font-serif);font-size:1.8rem;margin-bottom:.5rem;}
+.credits-divider{width:40px;height:3px;background:var(--gold);margin:1rem auto 2.5rem;border-radius:2px;}
+.credits-cards{display:grid;gap:1rem;margin-bottom:2.5rem;}
+.credit-card{background:white;border:1px solid var(--paper3);border-radius:10px;padding:1.5rem;text-align:left;}
+.credit-card .role{font-size:.78rem;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.25rem;}
+.credit-card .name{font-family:var(--font-serif);font-size:1.2rem;font-weight:700;margin-bottom:.5rem;}
+.credit-card .desc{font-size:.85rem;color:var(--ink2);line-height:1.6;}
+.credits-note{font-size:.8rem;color:var(--ink3);margin-top:2rem;}
+.btn-primary{background:var(--gold);color:white;border:none;padding:.65rem 1.5rem;border-radius:8px;cursor:pointer;font-family:var(--font-sans);font-size:.9rem;font-weight:500;transition:all .15s;}
+.btn-primary:hover{background:#b07a20;}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+.btn-outline{background:white;color:var(--ink);border:1.5px solid var(--paper3);padding:.4rem 1rem;border-radius:6px;cursor:pointer;font-family:var(--font-sans);font-size:.82rem;transition:all .15s;}
+.btn-outline:hover{border-color:var(--ink);}
+.btn-danger{background:#fef2f2;color:var(--red);border:1.5px solid #fecaca;padding:.4rem 1rem;border-radius:6px;cursor:pointer;font-family:var(--font-sans);font-size:.82rem;}
+.btn-danger:hover{background:#fee2e2;}
+.btn-sm{font-size:.78rem;padding:.3rem .75rem;}
+.btn-link{background:none;border:none;color:var(--gold);cursor:pointer;font-family:var(--font-sans);font-size:inherit;text-decoration:underline;}
+.btn-danger-text{color:var(--red)!important;}
+.comment-actions{margin-top:.4rem;}
+.btn-comment-like{background:none;border:1px solid var(--paper3);border-radius:20px;padding:.15rem .7rem;font-size:.8rem;color:var(--ink3);cursor:pointer;transition:all .15s;}
+.btn-comment-like:hover{border-color:var(--red);color:var(--red);}
+.btn-comment-like.liked{border-color:var(--red);color:var(--red);background:#fff2f0;}
+.modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:1rem;}
+.modal{background:white;border-radius:16px;padding:2rem;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal h2{font-family:var(--font-serif);font-size:1.4rem;margin-bottom:.5rem;}
+.modal p{font-size:.85rem;color:var(--ink3);margin-bottom:1.5rem;}
+.modal input{width:100%;padding:.75rem 1rem;border:1.5px solid var(--paper3);border-radius:var(--radius);font-family:var(--font-sans);font-size:1rem;margin-bottom:1rem;}
+.modal input:focus{outline:none;border-color:var(--gold);}
+.modal-hint{font-size:.78rem;color:var(--ink3);margin-bottom:1.25rem;line-height:1.6;}
+.modal-actions{display:flex;justify-content:flex-end;}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:var(--ink);color:var(--paper);padding:.75rem 1.25rem;border-radius:8px;font-size:.88rem;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;max-width:320px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.toast-success{background:#166534;}
+.toast.toast-error{background:#7f1d1d;}
+.empty-msg{color:var(--ink3);font-size:.88rem;padding:2rem;text-align:center;}
+.center-msg{text-align:center;padding:4rem 1rem;}
+.center-msg p{color:var(--ink3);margin-bottom:1.5rem;}
+footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5rem;font-size:.78rem;}
+
+.sort-tabs{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.5rem;flex:1;}
+.sort-btn{padding:.3rem .75rem;border-radius:20px;cursor:pointer;font-size:.78rem;border:1.5px solid var(--paper3);background:white;color:var(--ink3);transition:all .15s;font-family:var(--font-sans);}
+.sort-btn:hover{border-color:var(--gold);color:var(--gold);}
+.sort-btn.active{border-color:var(--gold);color:var(--gold);background:#fff8ec;font-weight:500;}
+.pagination{display:flex;justify-content:center;align-items:center;gap:.3rem;padding:2rem 0 1rem;grid-column:1/-1;}
+.page-btn{min-width:36px;height:36px;border-radius:8px;border:1.5px solid var(--paper3);background:white;color:var(--ink2);cursor:pointer;font-family:var(--font-sans);font-size:.85rem;transition:all .15s;}
+.page-btn:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.page-btn.active{background:var(--gold);color:white;border-color:var(--gold);font-weight:600;}
+.page-btn:disabled{opacity:.35;cursor:not-allowed;}
+.page-ellipsis{padding:0 .25rem;color:var(--ink3);}
+.gallery-count{grid-column:1/-1;text-align:center;font-size:.78rem;color:var(--ink3);padding-bottom:1rem;}
+
+.view-toggle-btns{display:flex;gap:0.3rem;margin-left:auto;}
+.view-btn{background:white;border:1px solid var(--paper3);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;color:var(--ink3);font-size:0.9rem;transition:all 0.15s;}
+.view-btn:hover{border-color:var(--gold);color:var(--gold);}
+.view-btn.active{border-color:var(--gold);color:var(--gold);background:#fff8ec;}
+.viewer-settings-btn{background:none;border:1px solid var(--paper3);padding:0.2rem 0.6rem;border-radius:4px;font-size:0.8rem;cursor:pointer;color:var(--ink2);transition:all 0.2s;font-family:var(--font-sans);}
+.viewer-settings-btn:hover{border-color:var(--gold);color:var(--gold);background:white;}
+.viewer-panel{display:none;position:absolute;right:0;top:100%;background:white;border:1px solid var(--paper3);border-radius:8px;padding:1.25rem;box-shadow:0 8px 24px var(--shadow);z-index:110;min-width:220px;margin-top:0.5rem;text-align:left;}
+.viewer-panel.show{display:block;}
+.viewer-opt-group{margin-bottom:1rem;}
+.viewer-opt-group:last-child{margin-bottom:0;}
+.viewer-opt-title{font-size:0.8rem;color:var(--ink3);margin-bottom:0.5rem;display:block;font-family:var(--font-sans);}
+.viewer-opt-btns{display:flex;gap:0.4rem;}
+.viewer-opt-btn{flex:1;background:var(--paper);border:1px solid var(--paper3);padding:0.4rem;border-radius:4px;font-size:0.85rem;cursor:pointer;color:var(--ink);font-family:var(--font-sans);transition:all 0.15s;}
+.viewer-opt-btn:hover{border-color:var(--gold);}
+.viewer-opt-btn.active{border-color:var(--gold);color:var(--gold);background:#fff8ec;font-weight:500;}
+
+.admin-header{background:#B3AB8D;color:var(--ink);padding:2rem 2.5rem;border-radius:12px;margin-bottom:2rem;}
+.admin-header h1{font-family:var(--font-serif);font-size:1.6rem;margin-bottom:.25rem;}
+.admin-header p{font-size:.85rem;color:rgba(255,255,255,.6);}
+.admin-section{background:white;border:1px solid var(--paper3);border-radius:12px;padding:1.75rem;margin-bottom:1.5rem;}
+.admin-section h2{font-family:var(--font-serif);font-size:1.1rem;margin-bottom:.5rem;color:var(--ink);}
+.admin-desc{font-size:.88rem;color:var(--ink3);margin-bottom:1.25rem;}
+.admin-desc strong{color:var(--gold);font-size:1rem;}
+.admin-btn-group{display:flex;flex-direction:column;gap:.75rem;}
+.admin-mode-btn,.admin-dl-btn{display:flex;flex-direction:column;gap:.2rem;padding:1rem 1.25rem;border-radius:10px;border:2px solid var(--paper3);background:var(--paper);cursor:pointer;font-family:var(--font-sans);text-align:left;transition:all .15s;}
+.admin-mode-btn{font-size:.95rem;font-weight:500;color:var(--ink);}
+.admin-mode-btn span,.admin-dl-btn span{font-size:.78rem;color:var(--ink3);font-weight:400;}
+.admin-mode-btn:hover{border-color:var(--gold);background:#fff8ec;}
+.admin-mode-btn.active-mode{border-color:var(--gold);background:#fff8ec;color:var(--gold);}
+#btn-test-mode.active-mode{border-color:#2563eb;background:#eff6ff;color:#2563eb;}
+#btn-rest-mode.active-mode{border-color:#e11d48;background:#fff1f2;color:#e11d48;}
+.admin-dl-btn{font-size:.92rem;font-weight:500;color:var(--ink);}
+.admin-dl-btn:hover{border-color:var(--prose);background:#edf5ef;}
+
+.editor-toolbar{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;background:var(--paper2);border:1.5px solid var(--paper3);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;flex-wrap:wrap;}
+.tb-btn{padding:.25rem .6rem;border:1.5px solid var(--paper3);border-radius:4px;background:white;cursor:pointer;font-size:.85rem;transition:all .15s;}
+.tb-btn:hover{border-color:var(--gold);background:#fff8ec;}
+.tb-select{padding:.25rem .5rem;border:1.5px solid var(--paper3);border-radius:4px;font-family:var(--font-sans);font-size:.82rem;background:white;cursor:pointer;}
+.tb-color{width:32px;height:28px;padding:1px;border:1.5px solid var(--paper3);border-radius:4px;cursor:pointer;}
+.tb-clear{font-size:.75rem;color:var(--ink3);}
+.body-editor{width:100%;min-height:280px;padding:.75rem 1rem;border:1.5px solid var(--paper3);border-radius:0 0 var(--radius) var(--radius);font-family:var(--font-serif);font-size:.95rem;background:white;color:var(--ink);line-height:1.9;outline:none;transition:border-color .15s;}
+.body-editor:focus{border-color:var(--gold);}
+.body-editor:empty::before{content:attr(placeholder);color:var(--ink3);pointer-events:none;}
+.auto-save-msg{font-size:0.75rem;color:var(--prose);margin-left:1rem;opacity:0;transition:opacity 0.3s;font-weight:400;}
+.auto-save-msg.show{opacity:1;}
+.prose-warning{display:none;color:var(--red);font-size:0.85rem;margin-top:0.4rem;font-weight:500;font-family:var(--font-sans);}
+
+.today-card{cursor:pointer;transition:all .2s;}
+.today-card:hover 2.5today-card-inner{transform:translateY(-2px);box-shadow:0 12px 32px var(--shadow);border-color:var(--gold);}
+.today-card-inner{background:white;border:1px solid var(--paper3);border-radius:14px;padding:2rem 2.5rem;transition:all .2s;}
+.today-title{font-family:var(--font-serif);font-size:1.6rem;font-weight:700;margin:.5rem 0 .75rem;color:var(--ink);}
+.today-intro{font-size:.9rem;color:var(--gold);font-style:italic;margin-bottom:.75rem;}
+.today-preview{font-family:var(--font-serif);font-size:.95rem;color:var(--ink2);line-height:1.9;margin-bottom:1.25rem;white-space:pre-line;}
+.today-meta{display:flex;align-items:center;gap:1.5rem;font-size:.83rem;color:var(--ink3);}
+.today-read-btn{margin-left:auto;color:var(--gold);font-weight:500;}
+
+.author-other-posts{margin-top:3rem;padding-top:2rem;border-top:2px dashed var(--paper3);}
+.author-other-posts h3{font-family:var(--font-serif);font-size:1.1rem;margin-bottom:1rem;color:var(--ink);}
+.other-post-list{display:flex;flex-direction:column;gap:0.5rem;}
+.other-post-item{display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:var(--paper2);border-radius:var(--radius);cursor:pointer;transition:all .15s;}
+.other-post-item:hover{background:var(--paper3);}
+.other-post-item-title{font-weight:500;font-size:0.95rem;color:var(--ink);}
+.other-post-item-meta{font-size:0.8rem;color:var(--ink3);}
+
+/* 미션 카드 스타일 추가 */
+.mission-card { background: white; border: 1px solid var(--paper3); border-radius: var(--radius); padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s; }
+.mission-card:hover { border-color: var(--gold); box-shadow: 0 4px 12px var(--shadow); }
+.mission-info strong { color: var(--ink); display: block; margin-bottom: 0.2rem; font-size: 0.95rem; }
+.mission-info span { font-size: 0.8rem; color: var(--ink3); }
+.mission-progress { font-weight: bold; color: var(--gold); background: #fff8ec; padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.85rem; border: 1px solid #f9e4d4; }
+  
+@media(max-width:768px){
+  .header-inner{padding:.6rem 1rem;position:relative;}
+  .site-logo{font-size:1.1rem;}
+  nav{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,15,10,.97);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
+  nav.open{display:flex;overflow-x:hidden;}
+  .nav-link{font-size:1.1rem;padding:.75rem 2rem;color:rgba(255,255,255,.85);width:100%;text-align:center;border-radius:8px;}
+  .nav-link:hover,.nav-link.active{background:rgba(255,255,255,.1);color:var(--gold2);}
+  .hamburger{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:.5rem;z-index:300;}
+  .hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,.85);border-radius:2px;transition:all .2s;}
+  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  .nav-right{gap:.35rem;}
+  #user-penname{display:none;}
+  .home-cards,.gallery-grid{grid-template-columns:1fr;}
+  .gallery-grid{padding:0 1rem 2rem;}
+  .post-detail{padding:1.25rem;}
+  .post-title{font-size:1.3rem;}
+  .gallery-controls{padding:1rem 1rem 0;flex-direction:column;align-items:stretch;}
+  .cat-tabs{justify-content:center;}
+  .hero{padding:3.5rem 1.25rem 3rem;}
+  .hero-title{font-size:clamp(1.6rem,6vw,2.5rem);}
+  .today-card-inner{padding:1.5rem;}
+  .today-title{font-size:1.3rem;}
+  .page-inner{padding:1.5rem 1rem;}
+  .mypage-header{padding:1.5rem;}
+  .admin-btn-group{gap:.5rem;}
+  .editor-toolbar{gap:.3rem;}
+  .gallery-grid.list-view .gallery-card{flex-direction:column;align-items:flex-start;gap:1rem;}
+  .gallery-grid.list-view .gallery-card-bottom{flex-direction:row;width:100%;border-top:1px solid var(--paper2);padding-top:0.75rem;margin-top:0.2rem;justify-content:space-between;align-items:center;}
+  .reaction-row{gap:0.3rem;}
+  .btn-react{padding:0.4rem 0.8rem;font-size:0.85rem;}
+}
+@media(min-width:769px){
+  .hamburger{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div id="mode-banner" style="background:var(--gold); color:white; text-align:center; padding:0.4rem; font-size:0.85rem; font-weight:500; font-family:var(--font-sans); display:none; z-index:90; position:relative;"></div>
+  <div class="header-inner">
+    <span class="site-logo" onclick="navigateTo('home')">큰별문학상 <span>온라인전시관</span></span>
+    <nav id="main-nav">
+      <span class="nav-link" data-page="intro" onclick="navigateTo('intro')">문학상 소개</span>
+      <span class="nav-link" data-page="submit" id="nav-submit" onclick="navigateTo('submit')">응모하기</span>
+      <span class="nav-link" data-page="gallery" id="nav-gallery" onclick="navigateTo('gallery')" style="display:none">감상하기</span>
+      <span class="nav-link" data-page="critique" id="nav-critique" onclick="navigateTo('critique')" style="display:none">비평게시판</span>
+      <span class="nav-link" data-page="mypage" id="nav-mypage" onclick="navigateTo('mypage')" style="display:none">나의 서재</span>
+      <span class="nav-link" data-page="credits" onclick="navigateTo('credits')">개발자 소개</span>
+      <span class="nav-link" data-page="admin" id="nav-admin" onclick="navigateTo('admin')" style="display:none">⚙️ 관리</span>
+    </nav>
+    <button class="hamburger" id="hamburger-btn" onclick="toggleNav()" aria-label="메뉴">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-right">
+      <div style="display:flex; align-items:center;">
+        <span id="user-penname" style="font-size:.8rem;color:var(--ink);font-weight:500;white-space:nowrap;margin-right:0.5rem;"></span>
+        
+        <div style="position:relative; margin-right:0.8rem; display:flex; align-items:center;">
+          <span id="noti-bell" onclick="toggleNotiPanel()" style="cursor:pointer; font-size:1.2rem; position:relative; display:none; user-select:none;">
+            🔔<span id="noti-badge" style="position:absolute; top:-5px; right:-8px; background:var(--red); color:white; font-size:0.6rem; font-weight:bold; padding:0.1rem 0.35rem; border-radius:10px; display:none;">0</span>
+          </span>
+          <div id="noti-panel" class="viewer-panel" style="width:280px; right:-50px; padding:1rem; max-height:400px; overflow-y:auto;">
+            <div style="font-weight:bold; margin-bottom:0.8rem; border-bottom:1px solid var(--paper3); padding-bottom:0.5rem; font-family:var(--font-sans); color:var(--ink);">알림 내역</div>
+            <div id="noti-list"><p class="empty-msg" style="padding:1rem;">새로운 알림이 없습니다.</p></div>
+          </div>
+        </div>
+
+        <button id="btn-penname-change" onclick="openPenNameChangeModal()" style="display:none; font-size:0.7rem; padding:0.15rem 0.4rem; background:transparent; border:1px solid var(--gold); color:var(--gold); border-radius:4px; cursor:pointer; margin-right:0.5rem; font-family:var(--font-sans);">필명변경신청</button>
+      </div>
+      <button class="btn-login" id="btn-login" onclick="doLogin()">Google 로그인</button>
+      <button class="btn-logout" id="btn-logout" onclick="doLogout()" style="display:none">로그아웃</button>
+    </div>
+  </div>
+</header>
+
+<div class="page" id="page-home">
+  <section class="hero">
+    <p class="hero-eyebrow">CNSA LITERARY AWARD · 온라인전시관</p>
+    <h1 class="hero-title">글로 피어나는<br><em>별빛 이야기</em></h1>
+    <p class="hero-sub">큰별문학상에 응모된 학생들의 소중한 작품들을 만나보세요.</p>
+    <div class="hero-cta" id="hero-btn-container">
+      <button class="cta-primary" id="hero-btn-gallery" onclick="navigateTo('gallery')">작품 감상하기</button>
+      <button class="cta-secondary" id="hero-btn-submit" onclick="navigateTo('submit')">작품 응모하기</button>
+    </div>
+  </section>
+  <section class="home-section" id="home-featured-section">
+    <h2 class="home-section-title">
+      <div style="display:flex; align-items:baseline; gap:0.5rem; flex-wrap:wrap;">
+        <span>📖 오늘의 추천작</span>
+        <span style="font-size:0.85rem; font-weight:400; color:var(--ink3); font-family:var(--font-sans);">당신에게 딱 맞는 작품을 추천해드립니다. 지금 읽어보세요!</span>
+      </div>
+    </h2>
+    <div id="home-featured"><p class="empty-msg">불러오는 중...</p></div>
+  </section>
+</div>
+
+<div class="page" id="page-intro">
+  <div class="page-inner">
+    <div class="intro-content">
+      <h1>큰별문학상 소개</h1>
+      <div class="intro-divider"></div>
+      <p>2026학년도 큰별문학상은 CNSA 학생들의 문학적 감수성과 표현 능력을 장려하기 위해 마련된 교내 문학상입니다.</p>
+      
+      <div class="highlight-box">
+        <strong>🏆 응모 자격</strong><br>
+        본교 재학생 중 희망자 (CNSA 계정 필수, 응모는 1인당 1회만 가능)
+      </div>
+
+      <h3 style="margin-top:2.5rem; margin-bottom:1rem; font-family:var(--font-serif); font-size:1.3rem;">📅 주요 일정</h3>
+      <ul style="margin-left:1.5rem; margin-bottom:1.5rem; line-height:1.8; color:var(--ink2);">
+        <li><strong>작품 응모 (온라인 접수):</strong> 5월 7일(목) ~ 5월 11일(월) 24:00까지</li>
+        <li><strong>작품 심사 및 감상 (전시관 개장):</strong> 5월 14일 ~ 5월 21일</li>
+        <li><strong>큰별 문학제 (초청작가 특강 및 시상식):</strong> 5월 27일(수) 갤럭시홀</li>
+      </ul>
+
+      <h3 style="margin-top:2.5rem; margin-bottom:1rem; font-family:var(--font-serif); font-size:1.3rem;">📝 응모 부문 및 제출 기준</h3>
+      <ul style="margin-left:1.5rem; margin-bottom:1.5rem; line-height:1.8; color:var(--ink2);">
+        <li><strong>운문 (현대시, 고전 시가 등):</strong> 반드시 <strong>2편</strong> 제출 (제출 폼에서 1편, 2편 모두 작성)</li>
+        <li><strong>산문 (소설, 수필, 희곡, 독후감, 평론 등):</strong> 1편 제출 (공백 포함 <strong>6,000자 이상 ~ 20,000자 이하</strong>)</li>
+      </ul>
+
+      <div style="background:var(--paper); border:1px solid var(--paper3); padding:1rem 1.5rem; border-radius:var(--radius); margin-top:2rem;">
+        <h4 style="margin-bottom:0.5rem; color:var(--red);">⚠️ 유의 사항</h4>
+        <ul style="margin-left:1.2rem; font-size:0.85rem; line-height:1.7; color:var(--ink3);">
+          <li>제출 기준(분량 등)을 충족하지 못할 경우 심사에서 감점될 수 있습니다.</li>
+          <li>타 대회 응모작 원본 그대로의 제출은 불가하나, 기준에 맞게 변형 및 확장한 경우 응모 가능합니다.</li>
+          <li>수행평가 창작물의 경우 제출 기준을 충족시키면 응모가 가능합니다.</li>
+          <li>표절작의 경우 수상 자격이 박탈되며, 사안에 따라 선도위원회에 회부될 수 있습니다.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:3rem; padding-top:2rem; border-top:2px dashed var(--paper3);">
+        <h3 style="font-family:var(--font-serif); font-size:1.3rem; margin-bottom:1rem; color:var(--ink);">📚 역대 큰별문학상 돌아보기</h3>
+        <p style="font-size:0.9rem; color:var(--ink2); margin-bottom:1rem;">과거 선배들과 친구들이 남긴 빛나는 작품들을 감상해보세요.</p>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <a href="#" target="_blank" style="display:inline-block; padding:0.75rem 1rem; background:white; border:1px solid var(--paper3); border-radius:var(--radius); color:var(--ink); text-decoration:none; transition:all 0.15s; font-weight:500;">📖 2025학년도 온라인전시관 가기 ↗</a>
+          <a href="#" target="_blank" style="display:inline-block; padding:0.75rem 1rem; background:white; border:1px solid var(--paper3); border-radius:var(--radius); color:var(--ink); text-decoration:none; transition:all 0.15s; font-weight:500;">📖 2024학년도 온라인전시관 가기 ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-submit">
+  <div class="page-inner">
+    <h1 class="page-title">작품 응모하기 <span id="auto-save-msg" class="auto-save-msg"></span></h1>
+    <p class="page-subtitle">여러분의 빛나는 작품을 세상에 선보이세요.</p>
+    <div id="submit-form-wrap"></div>
+  </div>
+</div>
+
+<div class="page" id="page-gallery">
+  <div class="gallery-controls">
+    <div class="cat-tabs">
+      <button class="cat-tab active" data-cat="all" onclick="setGalleryCategory('all')">전체</button>
+      <button class="cat-tab" data-cat="운문" onclick="setGalleryCategory('운문')">운문</button>
+      <button class="cat-tab" data-cat="산문" onclick="setGalleryCategory('산문')">산문</button>
+    </div>
+    <div style="display:flex; flex:1; gap:1rem; align-items:center; flex-wrap:wrap;">
+      <div class="sort-tabs">
+        <button class="sort-btn active" data-sort="random" onclick="setGallerySort('random')">무작위</button>
+        <button class="sort-btn" style="border-color:var(--gold2); color:var(--gold2);" onclick="shuffleGalleryRandom()" title="새로운 무작위 순서로 섞기">🔄 섞기</button>
+        <button class="sort-btn" data-sort="가나다" onclick="setGallerySort('가나다')">가나다순</button>
+        <button class="sort-btn" data-sort="좋아요" onclick="setGallerySort('좋아요')">반응순</button>
+        <button class="sort-btn" data-sort="댓글" onclick="setGallerySort('댓글')">댓글순</button>
+        <button class="sort-btn" data-sort="최신" onclick="setGallerySort('최신')">최신순</button>
+        <button class="sort-btn" data-sort="등록" onclick="setGallerySort('등록')">등록순</button>
+      </div>
+      <div class="view-toggle-btns">
+        <button id="view-btn-card" class="view-btn active" onclick="setGalleryView('card')" title="카드 뷰">𖽎</button>
+        <button id="view-btn-list" class="view-btn" onclick="setGalleryView('list')" title="리스트 뷰">≣</button>
+      </div>
+    </div>
+    <div class="gallery-search-wrap" style="width:100%;">
+      <input type="text" id="gallery-search" placeholder="제목, 내용, 필명으로 검색..." oninput="searchGallery()">
+    </div>
+  </div>
+  <div class="gallery-grid" id="gallery-grid"><p class="empty-msg">불러오는 중...</p></div>
+</div>
+
+<div class="page" id="page-critique">
+  <div class="page-critique-header">
+    <h1>✍️ 비평 게시판</h1>
+    <p>친구들의 작품을 깊이 있게 읽고 다채로운 시각을 나누는 공간입니다.</p>
+  </div>
+  <div class="gallery-controls">
+    <div style="display:flex; flex:1; gap:1rem; align-items:center; flex-wrap:wrap;">
+      <div class="sort-tabs">
+        <button class="sort-btn active" data-sort="random" onclick="setCritiqueSort('random')">무작위</button>
+        <button class="sort-btn" style="border-color:var(--gold2); color:var(--gold2);" onclick="shuffleCritiqueRandom()" title="새로운 무작위 순서로 섞기">🔄 섞기</button>
+        <button class="sort-btn" data-sort="가나다" onclick="setCritiqueSort('가나다')">가나다순</button>
+        <button class="sort-btn" data-sort="좋아요" onclick="setCritiqueSort('좋아요')">반응순</button>
+        <button class="sort-btn" data-sort="댓글" onclick="setCritiqueSort('댓글')">댓글순</button>
+        <button class="sort-btn" data-sort="최신" onclick="setCritiqueSort('최신')">최신순</button>
+        <button class="sort-btn" data-sort="등록" onclick="setCritiqueSort('등록')">등록순</button>
+      </div>
+      <div class="view-toggle-btns">
+        <button id="critique-view-btn-card" class="view-btn active" onclick="setCritiqueView('card')" title="카드 뷰">𖽎</button>
+        <button id="critique-view-btn-list" class="view-btn" onclick="setCritiqueView('list')" title="리스트 뷰">≣</button>
+      </div>
+    </div>
+    <div class="gallery-search-wrap" style="width:100%;">
+      <input type="text" id="critique-search" placeholder="비평 제목, 원작품, 내용, 필명으로 검색..." oninput="searchCritique()">
+    </div>
+  </div>
+  <div class="gallery-grid" id="critique-grid"><p class="empty-msg">불러오는 중...</p></div>
+</div>
+
+<div class="page" id="page-critique-write">
+  <div class="page-inner">
+    <button class="btn-back" onclick="navigateTo('gallery')">← 감상게시판으로 돌아가기</button>
+    <h1 class="page-title">✍️ 작품 비평하기</h1>
+    <div style="background:var(--paper2); padding:1rem 1.5rem; border-radius:var(--radius); margin-bottom:2rem; font-size:0.95rem; color:var(--ink2);">
+      <strong style="color:var(--gold);">비평할 원작품:</strong> <span id="critique-target-title-display"></span>
+    </div>
+    <form id="critique-form" onsubmit="submitCritique(event)">
+      <input type="hidden" id="critique-target-id">
+      <input type="hidden" id="critique-target-title">
+      <div class="form-group">
+        <label>비평 제목 <span class="required">*</span></label>
+        <input type="text" id="critique-title" maxlength="50" placeholder="비평 제목을 입력하세요" required>
+      </div>
+      <div class="form-group">
+        <label>비평 본문 <span class="required">*</span> <span class="char-info"><span id="critique-body-count">0</span>자</span></label>
+        <div class="editor-toolbar">
+          <button type="button" class="tb-btn" onclick="execFmt('bold', null, 'critique-body-editor')" title="굵게"><b>B</b></button>
+          <button type="button" class="tb-btn" onclick="execFmt('italic', null, 'critique-body-editor')" title="기울임"><i>I</i></button>
+          <select class="tb-select" onchange="execFmt('fontSize', this.value, 'critique-body-editor');this.selectedIndex=0" title="글자 크기">
+            <option value="">크기</option><option value="1">작게</option><option value="3">보통</option><option value="5">크게</option><option value="7">매우 크게</option>
+          </select>
+          <input type="color" class="tb-color" onchange="execFmt('foreColor', this.value, 'critique-body-editor')" title="글자 색상" value="#1a1714">
+          <button type="button" class="tb-btn tb-clear" onclick="clearFmt('critique-body-editor')" title="서식 초기화">초기화</button>
+        </div>
+        <div id="critique-body-editor" class="body-editor" contenteditable="true" oninput="syncBodyEditor('critique-body-editor', 'critique-body-count')" onpaste="handlePaste(event)" ondrop="e.preventDefault(); toast('이미지나 파일은 첨부할 수 없습니다.', 'error');" placeholder="비평 내용을 입력하세요"></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="critique-submit-btn">비평 등록하기 ✨</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="page" id="page-post"></div>
+
+<div class="page" id="page-mypage">
+  <div class="page-inner" id="mypage-content">
+    <div class="mypage-header">
+      <h1>📚 나의 서재</h1>
+      <p id="mypage-penname" style="font-size:1.1rem;font-family:var(--font-serif);color:var(--gold2)"></p>
+      <p id="mypage-email" style="font-size:.85rem;color:rgba(255,255,255,.6)"></p>
+    </div>
+    <div class="mypage-section" id="mypage-mission-section">
+      <h2>🎯 오늘의 미션 <span style="font-size:0.8rem; font-weight:normal; color:var(--ink3);">(자정 초기화 · 반복 수행 가능)</span></h2>
+      <div id="mypage-missions"><p class="empty-msg">불러오는 중...</p></div>
+    </div>
+    <div class="mypage-section" id="mypage-myposts-section">
+      <h2>✍ 내가 쓴 작품 <span class="count" id="mypost-count">0</span></h2>
+      <div id="mypage-posts"></div>
+    </div>
+    <div class="mypage-section" id="mypage-mycritiques-section" style="display:none;">
+      <h2>✍ 나의 비평 <span class="count" id="mycritique-count">0</span></h2>
+      <div id="mypage-critiques"></div>
+    </div>
+    <div class="mypage-section" id="mypage-liked-section">
+      <h2>♥ 반응한 작품 <span class="count" id="myliked-count">0</span></h2>
+      <div id="mypage-liked"></div>
+    </div>
+    <div class="mypage-section" id="mypage-commented-section">
+      <h2>💬 댓글단 작품 <span class="count" id="mycommented-count">0</span></h2>
+      <div id="mypage-commented"></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-credits">
+  <div class="credits-wrap">
+    <h1>개발자 소개</h1>
+    <div class="credits-divider"></div>
+    <div class="credits-cards">
+      <div class="credit-card">
+        <p class="role">기획 · 개발</p>
+        <p class="name">김민준 (31203) · 김윤서 (20107) · 차유근 (20529)</p>
+        <p class="desc">큰별문학상 온라인전시관의 기획, 디자인, 시스템 개발을 담당했습니다.</p>
+      </div>
+      <div class="credit-card">
+        <p class="role">지도 교사</p>
+        <p class="name">담당 선생님</p>
+        <p class="desc">큰별문학상 온라인전시관 프로젝트를 지도해 주셨습니다.</p>
+      </div>
+    </div>
+    <p class="credits-note">© 2026 큰별문학상 온라인전시관 · CNSA</p>
+  </div>
+</div>
+
+<div class="page" id="page-admin">
+  <div class="page-inner">
+    <div class="admin-header">
+      <h1>⚙️ 관리자 페이지</h1>
+      <p>큰별문학상 온라인전시관 관리 콘솔</p>
+    </div>
+    <div class="admin-section">
+      <h2>📌 사이트 모드 설정</h2>
+      <p class="admin-desc">현재 모드: <strong id="current-mode-label">로딩 중...</strong></p>
+      <div class="admin-btn-group">
+        <button class="admin-mode-btn" id="btn-apply-mode" onclick="setSiteMode('apply')">📝 응모기간 모드로 전환<span>감상하기 비활성화 · 응모하기 활성화</span></button>
+        <button class="admin-mode-btn" id="btn-view-mode" onclick="setSiteMode('view')">👀 감상기간 모드로 전환<span>응모하기 비활성화 · 감상/비평하기 활성화</span></button>
+        <button class="admin-mode-btn" id="btn-test-mode" onclick="setSiteMode('test')">🛠️ 테스트 모드<span>응모/감상/비평 모두 활성화 (테스트용)</span></button>
+        <button class="admin-mode-btn" id="btn-rest-mode" onclick="setSiteMode('rest')">🛑 휴식 모드<span>모든 기능 차단 (관리자 외 접근 불가)</span></button>
+      </div>
+    </div>
+    <div class="admin-section" style="background:#fffcf5; border-color:#f9e4d4;">
+      <h2>🗄️ 아카이브 및 DB 관리 (연도 전환)</h2>
+      <p class="admin-desc" style="color:var(--ink2);">새 학기 문학상 준비를 위한 데이터 관리 메뉴입니다. <strong>주의해서 사용하세요.</strong></p>
+      <div class="admin-btn-group">
+        <button class="admin-mode-btn" id="btn-archive" onclick="archiveData()" style="border-color:var(--gold); color:var(--ink);">🗂️ 전체 글 아카이브로 옮기기<span style="color:var(--ink3);">현재 응모/비평작을 보관소(archive_2026)로 안전하게 복사합니다</span></button>
+        <button class="admin-mode-btn" id="btn-reset" onclick="resetDB()" style="border-color:#fecaca; color:var(--red);">💣 DB 초기화 (새 학기 리셋)<span style="color:#ef4444;">응모작, 비평, 댓글, 학생 필명 정보를 모두 삭제합니다 (관리자 계정 유지)</span></button>
+        <button class="admin-mode-btn" onclick="rebuildIndex()" style="border-color:var(--verse); color:var(--verse);">🔄 강제 목차(Index) 동기화<span style="color:var(--ink3);">기존 낱개 글들을 서버 요금 절약을 위해 1개의 목차 문서로 압축합니다 (코드 업데이트 후 1회 권장)</span></button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h2>🔄 필명 변경 신청 관리</h2>
+      <div id="admin-penname-requests"><p class="empty-msg">불러오는 중...</p></div>
+    </div>
+    <div class="admin-section">
+      <h2>📥 DB 다운로드</h2>
+      <div class="admin-btn-group">
+        <button class="admin-dl-btn" onclick="downloadUsersDB()">👤 사용자계정 DB 다운로드<span>이메일 · 필명 · 가입일시 (Excel)</span></button>
+        <button class="admin-dl-btn" onclick="downloadPostsDB()">📄 응모작 DB 다운로드<span>필명 · 카테고리 · 제목 · 소개 · 본문 · 총반응수 · 댓글수 (Excel)</span></button>
+        <button class="admin-dl-btn" onclick="downloadCritiquesDB()">📝 비평 DB 다운로드<span>비평대상글 · 비평문제목 · 필명 · 본문 · 총반응수 · 댓글수 (Excel)</span></button>
+        <button class="admin-dl-btn" onclick="downloadCommentsDB()">💬 댓글 DB 다운로드<span>필명 · 글제목 · 글작성자 · 댓글내용 · 총반응수 (Excel)</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="wrong-account-modal" style="display:none">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:2.5rem;margin-bottom:.75rem">⚠️</div>
+    <h2 style="margin-bottom:.75rem">학교 계정으로 로그인해주세요</h2>
+    <p style="margin-bottom:1.5rem">이 서비스는 <strong>@cnsa.hs.kr</strong> 계정만 이용할 수 있습니다.</p>
+    <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn-primary" onclick="document.getElementById('wrong-account-modal').style.display='none';doLogin()">다른 계정으로 다시 로그인</button>
+      <button class="btn-outline" onclick="document.getElementById('wrong-account-modal').style.display='none'">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="penname-modal" style="display:none">
+  <div class="modal">
+    <h2>✨ 필명 설정</h2>
+    <p>큰별문학상 온라인전시관에 처음 오셨군요! 사용할 필명을 설정해주세요.</p>
+    <input type="text" id="penname-input" placeholder="필명 입력 (2~10자)" maxlength="10">
+    <p class="modal-hint">⚠️ <strong>[주의]</strong> 필명은 블라인드 심사를 위해 사용합니다.<br>절대로 '실명'이나 '실명이 짐작되는 이름'을 사용하지 말아주세요.<br>타인에 대한 비방, 속어, 혐오 표현이 포함되는 경우 학교폭력 사안이 될 수 있습니다.</p>
+    <div class="modal-actions"><button class="btn-primary" onclick="savePenName()">필명으로 시작하기</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="penname-change-modal" style="display:none">
+  <div class="modal">
+    <h2>📝 필명 변경 신청</h2>
+    <p>새롭게 사용하고 싶은 필명을 입력해주세요. 관리자 승인 후 변경됩니다.</p>
+    <input type="text" id="penname-change-input" placeholder="새 필명 입력 (2~10자)" maxlength="10">
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="document.getElementById('penname-change-modal').style.display='none'" style="margin-right:0.5rem;">취소</button>
+      <button class="btn-primary" onclick="requestPenNameChange()">신청하기</button>
+    </div>
+  </div>
+</div>
+
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.5 (오류 수정 및 전체 코드)</footer>
+
+<script>
+// Firebase Initialization
+const firebaseConfig = {
+  apiKey: "AIzaSyBGwvzMxCG7J5LN1x21s88LT04iJhWdTMs",
+  authDomain: "cnsalit-efaf1.firebaseapp.com",
+  projectId: "cnsalit-efaf1",
+  storageBucket: "cnsalit-efaf1.firebasestorage.app",
+  messagingSenderId: "932183436899",
+  appId: "1:932183436899:web:47a7bafd22a36be2b79256"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ==========================================
+// 🏆 일일 미션 및 칭호 시스템
+// ==========================================
+const MISSIONS = {
+  1: { id: 1, text: "마음에 드는 글 3개를 찾아 '반응하기'", goal: 3, points: 10 },
+  2: { id: 2, text: "내가 작성한 글에 달린 댓글에 답글 달기", goal: 1, points: 10 },
+  3: { id: 3, text: "감명깊게 읽은 글 2개에 '댓글달기'", goal: 2, points: 15 },
+  4: { id: 4, text: "구체적인 감상, 분석을 나누고 싶은 글을 찾아 '비평하기'", goal: 1, points: 30 },
+  5: { id: 5, text: "비평게시판 비평글 중 하나에 '댓글달기'", goal: 1, points: 15 }
+};
+
+function getUserTitle(points) {
+  if(points >= 501) return "문학 수호신";
+  if(points >= 251) return "비평의 달인";
+  if(points >= 151) return "전문 비평가";
+  if(points >= 91) return "문학관 지킴이";
+  if(points >= 31) return "따뜻한 감상자";
+  return "문학관 새내기";
+}
+
+function checkAndAssignDailyMissions(userData) {
+  const today = new Date().toLocaleDateString('ko-KR', {timeZone: 'Asia/Seoul'});
+  if (userData.lastMissionDate !== today) {
+    const allIds = [1, 2, 3, 4, 5];
+    const shuffled = allIds.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 2);
+    const newMissions = {};
+    selected.forEach(id => newMissions[id] = 0);
+
+    userData.lastMissionDate = today;
+    userData.dailyMissions = newMissions;
+    userData.points = userData.points || 0;
+
+    db.collection('users').doc(userData.uid).update({
+      lastMissionDate: today,
+      dailyMissions: newMissions,
+      points: userData.points
+    });
+  }
+}
+
+function addMissionProgress(missionId) {
+  if (!currentUserData || !currentUserData.dailyMissions || currentUserData.dailyMissions[missionId] === undefined) return;
+
+  let currentProgress = currentUserData.dailyMissions[missionId] + 1;
+  let missionDef = MISSIONS[missionId];
+  let earnedPoints = 0;
+  let completed = false;
+
+  if (currentProgress >= missionDef.goal) {
+    earnedPoints = missionDef.points;
+    currentProgress = 0; // 반복 수행을 위해 진행도 초기화
+    completed = true;
+  }
+
+  const updates = { [`dailyMissions.${missionId}`]: currentProgress };
+  currentUserData.dailyMissions[missionId] = currentProgress;
+
+  if (completed) {
+    updates.points = firebase.firestore.FieldValue.increment(earnedPoints);
+    currentUserData.points = (currentUserData.points || 0) + earnedPoints;
+    toast(`🎉 미션 달성! [${missionDef.text}] +${earnedPoints}P`, 'success');
+    updateNavUI();
+  }
+
+  db.collection('users').doc(currentUser.uid).update(updates).then(() => {
+    if(document.getElementById('page-mypage').style.display === 'block') renderMissionsUI();
+  });
+}
+
+function renderMissionsUI() {
+  if (!currentUserData || !currentUserData.dailyMissions) return;
+  let html = '';
+  for (const [mId, progress] of Object.entries(currentUserData.dailyMissions)) {
+    const def = MISSIONS[mId];
+    if(!def) continue;
+    html += `<div class="mission-card">
+      <div class="mission-info">
+        <strong>${def.text}</strong>
+        <span>수행 완료 시 ${def.points}P 지급</span>
+      </div>
+      <div class="mission-progress">${progress} / ${def.goal}</div>
+    </div>`;
+  }
+  setHTML('mypage-missions', html);
+}
+// ==========================================
+
+let currentUser = null;
+let currentUserData = null;
+let allPosts = [];
+let galleryCategory = 'all';
+let gallerySearch = '';
+let gallerySort = 'random';
+let galleryPage = 1;
+let siteMode = 'apply'; 
+
+let galleryViewMode = localStorage.getItem('cnsa_view_mode') || 'card';
+let viewerTheme = localStorage.getItem('cnsa_viewer_theme') || 'light';
+let viewerFontSize = localStorage.getItem('cnsa_viewer_font') || 'md';
+let autoSaveInterval = null;
+
+let critiqueSearch = '';
+let critiqueSort = 'random';
+let critiquePage = 1;
+let critiqueViewMode = localStorage.getItem('cnsa_critique_view_mode') || 'card';
+
+let currentViewPost = null; 
+let notiUnsubscribe = null; 
+
+function sanitizeHTML(html) {
+  if(!html) return '';
+  var clean = html;
+  clean = clean.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+  clean = clean.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+  clean = clean.replace(/<!--[\s\S]*?-->/g, '');
+  return clean.trim();
+}
+
+function extractPreview(html) {
+  let text = html.replace(/<div>/gi, '\n').replace(/<\/div>/gi, '')
+                 .replace(/<br\s*\/?>/gi, '\n')
+                 .replace(/<p>/gi, '').replace(/<\/p>/gi, '\n');
+  text = text.replace(/<[^>]*>/g, '').replace(/\n\n+/g, '\n').trim();
+  return text.substring(0, 100);
+}
+
+function seededShuffle(array, seed) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+  var currentSeed = seed;
+  while (0 !== currentIndex) {
+    var randomVal = Math.sin(currentSeed++) * 10000;
+    randomVal = randomVal - Math.floor(randomVal);
+    randomIndex = Math.floor(randomVal * currentIndex);
+    currentIndex -= 1;
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+  return array;
+}
+
+function shuffleGalleryRandom() {
+  var offset = parseInt(sessionStorage.getItem('cnsa_random_offset') || '0');
+  sessionStorage.setItem('cnsa_random_offset', offset + 1);
+  setGallerySort('random');
+}
+
+function shuffleCritiqueRandom() {
+  var offset = parseInt(sessionStorage.getItem('cnsa_critique_random_offset') || '0');
+  sessionStorage.setItem('cnsa_critique_random_offset', offset + 1);
+  setCritiqueSort('random');
+}
+
+function loadSiteMode(){
+  return db.collection('config').doc('siteMode').get().then(doc=>{
+    if(doc.exists) siteMode = doc.data().mode || 'apply';
+    updateModeBanner(siteMode);
+  });
+}
+
+function updateModeBanner(mode) {
+  const isAdmin = currentUserData && currentUserData.role === 'admin';
+  const banner = document.getElementById('mode-banner');
+  const navSubmit = document.getElementById('nav-submit');
+  const navGallery = document.getElementById('nav-gallery');
+  const navCritique = document.getElementById('nav-critique');
+  const navMypage = document.getElementById('nav-mypage');
+  
+  if(banner) {
+    if(mode === 'rest' && !isAdmin) {
+      banner.style.display = 'none';
+    } else {
+      banner.style.display = 'block';
+      if(mode === 'apply') {
+        banner.textContent = '지금은 응모기간(5월 7일 ~ 11일)입니다';
+        banner.style.background = 'var(--gold)';
+      } else if(mode === 'view') {
+        banner.textContent = '지금은 감상기간(5월 14일 ~ 21일)입니다';
+        banner.style.background = 'var(--prose)';
+      } else if(mode === 'test') {
+        banner.textContent = '테스트 기간입니다';
+        banner.style.background = '#2563eb';
+      } else if(mode === 'rest' && isAdmin) {
+        banner.textContent = '[관리자 전용] 휴식 모드 (학생 접근 차단)';
+        banner.style.background = 'var(--red)';
+      }
+    }
+  }
+
+  if(mode === 'rest' && !isAdmin) {
+    if(navSubmit) navSubmit.style.display = 'none';
+    if(navGallery) navGallery.style.display = 'none';
+    if(navCritique) navCritique.style.display = 'none';
+    if(navMypage) navMypage.style.display = 'none';
+  } else if (mode === 'apply') {
+    if(navCritique) navCritique.style.display = 'none';
+    if(navGallery) navGallery.style.display = 'none';
+    if(navSubmit) navSubmit.style.display = 'inline-block';
+    if(navMypage && currentUser) navMypage.style.display = 'inline-block';
+  } else if (mode === 'view') {
+    if(navCritique) navCritique.style.display = 'inline-block';
+    if(navGallery) navGallery.style.display = 'inline-block';
+    if(navSubmit) navSubmit.style.display = 'none';
+    if(navMypage && currentUser) navMypage.style.display = 'inline-block';
+  } else if (mode === 'test' || isAdmin) {
+    if(navCritique) navCritique.style.display = 'inline-block';
+    if(navGallery) navGallery.style.display = 'inline-block';
+    if(navSubmit) navSubmit.style.display = 'inline-block';
+    if(navMypage && currentUser) navMypage.style.display = 'inline-block';
+  }
+}
+
+const $ = id => document.getElementById(id);
+const setText = (id,v) => { const e=$(id); if(e) e.textContent=v; };
+const setHTML = (id,v) => { const e=$(id); if(e) e.innerHTML=v; };
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function formatDate(ts){ if(!ts) return ''; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'}); }
+function toast(msg,type='info'){
+  const t=document.createElement('div');
+  t.className='toast toast-'+type;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3000);
+}
+
+function navigateTo(page, param) {
+  const isAdmin = currentUserData && currentUserData.role === 'admin';
+  if(siteMode === 'rest' && page !== 'home' && !isAdmin) {
+    _doNavigate('home');
+    return;
+  }
+
+  _doNavigate(page, param);
+
+  db.collection('config').doc('siteMode').get().then(doc=>{
+    if(doc.exists) siteMode = doc.data().mode || 'apply';
+    updateModeBanner(siteMode);
+    
+    if(siteMode === 'rest' && page !== 'home' && !isAdmin) {
+      _doNavigate('home');
+      return;
+    }
+
+    if((page==='gallery' || page==='critique' || page==='critique-write') && siteMode==='apply' && !isAdmin){
+      toast('감상 및 비평은 감상기간 (5월 14일 ~ 21일)에만 가능합니다.','error');
+      _doNavigate('home');
+      return;
+    }
+    if(page==='submit' && siteMode==='view' && !isAdmin){
+      toast('응모가 마감되었습니다.','error');
+      _doNavigate('gallery');
+      return;
+    }
+
+    if(page === 'home') renderHome();
+    if(page === 'mypage') renderMyPage();
+
+  }).catch(e=>console.log(e));
+}
+
+function _doNavigate(page, param) {
+  closeNav();
+  
+  if(autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
+  const msg = $('auto-save-msg');
+  if(msg) msg.classList.remove('show');
+
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  
+  const targetNav = (page === 'critique-write') ? 'critique' : page;
+  const navEl = document.querySelector('.nav-link[data-page="'+targetNav+'"]');
+  if(navEl) navEl.classList.add('active');
+  
+  const pageEl = $('page-'+page);
+  if(pageEl) pageEl.style.display='block';
+  
+  if(page==='home') renderHome();
+  else if(page==='submit') {
+    renderSubmit();
+  }
+  else if(page==='gallery') renderGallery();
+  else if(page==='critique') renderCritique();
+  else if(page==='critique-write') renderCritiqueWrite(param);
+  else if(page==='mypage') renderMyPage();
+  else if(page==='post') renderPost(param);
+  else if(page==='admin') renderAdmin();
+  
+  window.scrollTo(0,0);
+}
+
+function doLogin(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({prompt:'select_account'});
+  auth.signInWithPopup(provider).then(result=>{
+    const email = result.user.email||'';
+    if(!email.endsWith('@cnsa.hs.kr')){
+      auth.signOut();
+      $('wrong-account-modal').style.display='flex';
+      return;
+    }
+    db.collection('users').doc(result.user.uid).get().then(doc=>{
+      if(!doc.exists) showPenNameModal(result.user);
+    });
+  }).catch(e=>{
+    if(e.code!=='auth/popup-closed-by-user') toast('로그인 실패: '+e.message,'error');
+  });
+}
+
+function doLogout(){
+  auth.signOut();
+  currentUser=null; currentUserData=null;
+  updateNavUI();
+  navigateTo('home');
+  toast('로그아웃 되었습니다.');
+}
+
+function showPenNameModal(user){
+  const m=$('penname-modal');
+  m.style.display='flex';
+  m.dataset.uid=user.uid;
+  m.dataset.email=user.email;
+  $('penname-input').value='';
+  $('penname-input').focus();
+  $('penname-input').onkeydown=e=>{ if(e.key==='Enter') savePenName(); };
+}
+
+function savePenName(){
+  const m=$('penname-modal');
+  const penName=$('penname-input').value.trim();
+  if(!penName){toast('필명을 입력해주세요.','error');return;}
+  if(penName.length<2||penName.length>10){toast('필명은 2~10자로 입력해주세요.','error');return;}
+  
+  db.collection('users').where('penName','==',penName).get().then(snap=>{
+    if(!snap.empty){toast('이미 사용중인 필명입니다.','error');return;}
+    
+    db.collection('users').doc(m.dataset.uid).set({
+      uid:m.dataset.uid, email:m.dataset.email, penName,
+      role:'student', createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(()=>{
+      m.style.display='none';
+      toast('환영합니다, '+penName+' 님! 🎉','success');
+    });
+  });
+}
+
+function openPenNameChangeModal() {
+  $('penname-change-input').value = '';
+  $('penname-change-modal').style.display = 'flex';
+  $('penname-change-input').focus();
+}
+
+function requestPenNameChange() {
+  const newPenName = $('penname-change-input').value.trim();
+  if(!newPenName){toast('새 필명을 입력해주세요.','error');return;}
+  if(newPenName.length<2 || newPenName.length>10){toast('필명은 2~10자로 입력해주세요.','error');return;}
+  if(newPenName === currentUserData.penName) {toast('현재 필명과 동일합니다.','error');return;}
+
+  if(!confirm('필명변경은 1회에 한정하여 신청 가능합니다. 그래도 신청하시겠습니까?')) return;
+
+  db.collection('users').where('penName','==',newPenName).get().then(snap=>{
+    if(!snap.empty){toast('이미 사용중인 필명입니다.','error');return;}
+
+    db.collection('penNameRequests').add({
+      uid: currentUser.uid,
+      email: currentUserData.email,
+      oldPenName: currentUserData.penName,
+      newPenName: newPenName,
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      $('penname-change-modal').style.display = 'none';
+      toast('필명 변경 신청이 완료되었습니다.', 'success');
+    }).catch(e => toast('신청 실패: ' + e.message, 'error'));
+  });
+}
+
+function updateNotiUI(notis) {
+  const bell = $('noti-bell');
+  const badge = $('noti-badge');
+  const list = $('noti-list');
+  if(!bell) return;
+
+  let unreadCount = notis.filter(n => !n.read).length;
+  if(unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+
+  if(notis.length === 0) {
+    list.innerHTML = '<p class="empty-msg" style="padding:1rem">새로운 알림이 없습니다.</p>';
+    return;
+  }
+
+  let html = '';
+  notis.forEach(n => {
+    let bg = n.read ? 'transparent' : 'rgba(200, 146, 42, 0.08)';
+    let msg = n.type === 'like'
+        ? `<strong>${escHtml(n.actorName)}</strong>님이 회원님의 <strong>[${escHtml(n.postTitle)}]</strong> 작품에 반응을 남겼습니다.`
+        : `<strong>${escHtml(n.actorName)}</strong>님이 <strong>[${escHtml(n.postTitle)}]</strong> 작품에 댓글을 남겼습니다: "${escHtml(n.body)}..."`;
+
+    html += `<div style="padding:0.75rem 1rem; border-bottom:1px solid var(--paper3); background:${bg}; cursor:pointer; font-size:0.85rem; line-height:1.5;" onclick="readNoti('${n.id}', '${n.postId}')">
+        ${msg}<br><span style="font-size:0.7rem; color:var(--ink3);">${formatDate(n.createdAt)}</span>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function toggleNotiPanel() {
+  $('noti-panel').classList.toggle('show');
+}
+
+function readNoti(notiId, postId) {
+  $('noti-panel').classList.remove('show');
+  db.collection('notifications').doc(notiId).update({read: true}).then(() => {
+     navigateTo('post', postId);
+  }).catch(e => console.error("알림 읽음 처리 실패:", e));
+}
+
+
+auth.onAuthStateChanged(user=>{
+  currentUser=user;
+  if(user){
+    db.collection('users').doc(user.uid).get().then(doc=>{
+      if(doc.exists){
+        currentUserData=doc.data();
+        checkAndAssignDailyMissions(currentUserData);
+        updateNavUI();
+        
+        $('noti-bell').style.display = 'inline-block';
+        notiUnsubscribe = db.collection('notifications')
+          .where('targetUid', '==', user.uid)
+          .onSnapshot(snap => {
+             let notis = snap.docs.map(d => ({id: d.id, ...d.data()}));
+             notis.sort((a,b) => b.createdAt - a.createdAt);
+             updateNotiUI(notis.slice(0, 30));
+          });
+
+      } else {
+        if(!(user.email||'').endsWith('@cnsa.hs.kr')){ auth.signOut(); return; }
+        showPenNameModal(user);
+      }
+    });
+  } else {
+    currentUserData=null;
+    $('noti-bell').style.display = 'none';
+    if(notiUnsubscribe) { notiUnsubscribe(); notiUnsubscribe = null; }
+    updateNavUI();
+  }
+});
+
+function updateNavUI(){
+  const on=!!(currentUser&&currentUserData);
+  $('btn-login').style.display=on?'none':'';
+  $('btn-logout').style.display=on?'':'none';
+  
+  if(on) {
+    // --- 칭호 및 포인트 표시 추가 부분 ---
+    const pts = currentUserData.points || 0;
+    const title = getUserTitle(pts);
+    setText('user-penname', `[${title}] ${currentUserData.penName} (${pts}P)`);
+    // -------------------------------------
+
+    const btnChange = $('btn-penname-change');
+    if(btnChange) btnChange.style.display = 'inline-block';
+  } else {
+    setText('user-penname','');
+    const btnChange = $('btn-penname-change');
+    if(btnChange) btnChange.style.display = 'none';
+  }
+  
+  const isAdmin = on && currentUserData.role === 'admin';
+  const adminNav = $('nav-admin');
+  if(adminNav) adminNav.style.display = isAdmin ? '' : 'none';
+
+  updateModeBanner(siteMode);
+}
+function renderHome(){
+  const heroGal = $('hero-btn-gallery');
+  const heroSub = $('hero-btn-submit');
+  const featSec = $('home-featured-section');
+  const heroContainer = $('hero-btn-container');
+  const isAdmin = currentUserData && currentUserData.role === 'admin';
+
+  if(siteMode === 'rest' && !isAdmin) {
+    setHTML('hero-btn-container', '<div style="font-size:1.3rem; font-weight:500; margin-top:1rem; color:var(--gold2);">지금은 준비중입니다.</div>');
+    if(featSec) featSec.style.display = 'none';
+  } else if(siteMode === 'apply'){
+    setHTML('hero-btn-container', '<button class="cta-primary" id="hero-btn-submit" onclick="navigateTo(\'submit\')">작품 응모하기</button>');
+    if(featSec) featSec.style.display = 'none';
+  } else {
+    setHTML('hero-btn-container', '<button class="cta-primary" id="hero-btn-gallery" onclick="navigateTo(\'gallery\')">작품 감상하기</button>');
+    if(featSec) featSec.style.display = 'block';
+
+    db.collection('indexes').doc('posts').get().then(doc=>{
+      if(!doc.exists){setHTML('home-featured','<p class="empty-msg">데이터를 불러오지 못했습니다. (보안 규칙/동기화를 확인하세요)</p>');return;}
+      let postsData = Object.values(doc.data().posts || {}).filter(d => d.docType !== 'critique');
+      if(postsData.length === 0) {setHTML('home-featured','<p class="empty-msg">아직 감상작이 없습니다.</p>');return;}
+      
+      let readPosts = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
+      let unreadPosts = postsData.filter(p => !readPosts.includes(p.id));
+      
+      if (unreadPosts.length === 0) unreadPosts = postsData;
+      
+      unreadPosts.sort((a, b) => {
+        let scoreA = (a.likeCount || 0) + (a.commentCount || 0);
+        let scoreB = (b.likeCount || 0) + (b.commentCount || 0);
+        return scoreA - scoreB;
+      });
+
+      let poolSize = Math.max(3, Math.min(10, Math.ceil(unreadPosts.length * 0.3)));
+      if(poolSize > unreadPosts.length) poolSize = unreadPosts.length;
+      let pool = unreadPosts.slice(0, poolSize);
+      
+      const p = pool[Math.floor(Math.random() * pool.length)];
+
+      db.collection('posts').doc(p.id).collection('comments').orderBy('createdAt','asc').limit(4).get().then(cSnap => {
+        let commentHtml = '';
+        if(!cSnap.empty) {
+          commentHtml = `<div style="margin-top:1.5rem; padding:1.2rem; background:var(--paper2); border-radius:var(--radius); border:1px solid var(--paper3);">
+            <h4 style="font-size:0.9rem; color:var(--ink); margin-bottom:0.8rem; font-family:var(--font-serif);">💬 이 작품에 달린 댓글</h4>
+            <div style="display:flex; flex-direction:column; gap:0.5rem;">`;
+          let cCount = 0;
+          cSnap.forEach(cDoc => {
+            if(cCount >= 3) return;
+            const c = cDoc.data();
+            let cBody = c.body || '';
+            if(cBody.length > 40) cBody = cBody.substring(0, 40) + '...';
+            commentHtml += `<div style="font-size:0.85rem; color:var(--ink2);"><strong>${escHtml(c.penName||'')}</strong>: ${escHtml(cBody)}</div>`;
+            cCount++;
+          });
+          if(cSnap.size > 3) {
+            commentHtml += `<div style="font-size:0.75rem; color:var(--gold); margin-top:0.3rem;">+ ${cSnap.size - 3}개의 댓글 더보기</div>`;
+          }
+          commentHtml += `</div></div>`;
+        }
+
+        setHTML('home-featured',`<div class="today-card" onclick="navigateTo('post','${p.id}')">
+          <div class="today-card-inner">
+            <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
+            <h2 class="today-title">${escHtml(p.title||'')}</h2>
+              <p class="today-preview" >${escHtml(p.preview||'')}…</p>
+            <div class="today-meta">
+              <span>✍ ${escHtml(p.penName||'')}</span>
+              <span>🎭 반응 ${p.likeCount||0}</span>
+              <span class="today-read-btn">작품 읽기 →</span>
+            </div>
+            ${commentHtml}
+          </div>
+        </div>`);
+      });
+    }).catch(e=>console.error(e));
+  }
+}
+
+function togglePoemForm() {
+  const cat = document.querySelector('input[name="category"]:checked');
+  const p1Title = document.getElementById('part1-title');
+  const p2Form = document.getElementById('form-part-2');
+  const title2 = document.getElementById('submit-title2');
+  const intro2 = document.getElementById('submit-intro2');
+
+  if (cat && cat.value === '운문') {
+    if(p1Title) p1Title.style.display = 'block';
+    if(p2Form) p2Form.style.display = 'block';
+    if(title2) title2.required = true;
+    if(intro2) intro2.required = true;
+  } else {
+    if(p1Title) p1Title.style.display = 'none';
+    if(p2Form) p2Form.style.display = 'none';
+    if(title2) title2.required = false;
+    if(intro2) intro2.required = false;
+  }
+  syncBodyEditor('submit-body-editor', 'body-count');
+}
+
+function saveDraft() {
+  if (!document.getElementById('submission-form')) return;
+  
+  const catEl = document.querySelector('input[name="category"]:checked');
+  const draftData = {
+    cat: catEl ? catEl.value : '운문',
+    t1: $('submit-title') ? $('submit-title').value : '',
+    i1: $('submit-intro') ? $('submit-intro').value : '',
+    b1: $('submit-body-editor') ? $('submit-body-editor').innerHTML : '',
+    t2: $('submit-title2') ? $('submit-title2').value : '',
+    i2: $('submit-intro2') ? $('submit-intro2').value : '',
+    b2: $('submit-body-editor2') ? $('submit-body-editor2').innerHTML : ''
+  };
+  
+  localStorage.setItem('cnsa_draft', JSON.stringify(draftData));
+  
+  const msg = $('auto-save-msg');
+  if(msg) {
+    const now = new Date();
+    msg.textContent = `임시저장 완료 (${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')})`;
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 2500);
+  }
+}
+
+function renderSubmit(){
+  const isAdmin = currentUserData && currentUserData.role === 'admin';
+  if(siteMode==='view' && !isAdmin){
+    setHTML('submit-form-wrap',`<div class="center-msg" style="padding:4rem 1rem">
+      <p style="font-size:1.3rem;margin-bottom:.5rem">🔒 응모가 마감되었습니다.</p>
+      <p style="color:var(--ink3)">감상기간에는 응모가 불가합니다.</p>
+    </div>`);
+    return;
+  }
+  if(!currentUser||!currentUserData){
+    setHTML('submit-form-wrap',`<div class="center-msg"><p>로그인 후 응모할 수 있습니다.</p><button class="btn-primary" onclick="doLogin()">Google 로그인</button></div>`);
+    return;
+  }
+
+  db.collection('posts').where('uid','==',currentUser.uid).get().then(snap => {
+    const hasPost = snap.docs.some(d => d.data().docType !== 'critique');
+    if(hasPost) {
+       setHTML('submit-form-wrap', `<div class="center-msg" style="padding:4rem 1rem">
+         <p style="font-size:1.3rem; margin-bottom:.5rem; color:var(--red); font-weight:bold;">⚠️ 응모는 1회만 가능합니다.</p>
+         <p style="color:var(--ink3)">수정을 원하시는 경우 [나의 서재]에서 응모하신 작품을 수정해주세요.</p>
+         <button class="btn-primary" style="margin-top:1.5rem;" onclick="navigateTo('mypage')">나의 서재로 이동</button>
+       </div>`);
+    } else {
+       _renderSubmitFormHTML();
+    }
+  });
+}
+
+function _renderSubmitFormHTML() {
+  $('submit-form-wrap').innerHTML=`<form id="submission-form" onsubmit="submitPost(event)">
+    <div class="form-group">
+      <label>카테고리 <span class="required">*</span></label>
+      <div class="radio-group">
+        <label class="radio-label"><input type="radio" name="category" value="운문" onchange="togglePoemForm()" required> 운문 (시 2편 필수 제출)</label>
+        <label class="radio-label"><input type="radio" name="category" value="산문" onchange="togglePoemForm()"> 산문 (1편 제출)</label>
+      </div>
+    </div>
+
+    <div id="form-part-1">
+      <h3 class="part-title" id="part1-title" style="display:none; margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:2px solid var(--paper3); color:var(--gold);">📝 제1편</h3>
+      <div class="form-group">
+        <label>작품 제목 <span class="required">*</span></label>
+        <input type="text" id="submit-title" maxlength="50" placeholder="작품 제목을 입력하세요" required oninput="saveDraft()">
+      </div>
+      <div class="form-group">
+        <label>작품 소개 <span class="required">*</span> <span class="char-info"><span id="intro-count">0</span>/200자</span></label>
+        <textarea id="submit-intro" rows="3" maxlength="200" placeholder="작품을 간단히 소개해주세요" required oninput="document.getElementById('intro-count').textContent=this.value.length; saveDraft();"></textarea>
+      </div>
+      <div class="form-group">
+        <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count">0</span>자</span></label>
+        <div class="editor-toolbar">
+          <button type="button" class="tb-btn" onclick="execFmt('bold', null, 'submit-body-editor')" title="굵게"><b>B</b></button>
+          <button type="button" class="tb-btn" onclick="execFmt('italic', null, 'submit-body-editor')" title="기울임"><i>I</i></button>
+          <select class="tb-select" onchange="execFmt('fontSize', this.value, 'submit-body-editor');this.selectedIndex=0" title="글자 크기">
+            <option value="">크기</option>
+            <option value="1">작게</option>
+            <option value="3">보통</option>
+            <option value="5">크게</option>
+            <option value="7">매우 크게</option>
+          </select>
+          <input type="color" class="tb-color" onchange="execFmt('foreColor', this.value, 'submit-body-editor')" title="글자 색상" value="#1a1714">
+          <button type="button" class="tb-btn tb-clear" onclick="clearFmt('submit-body-editor')" title="서식 초기화">초기화</button>
+        </div>
+        <div id="submit-body-editor" class="body-editor" contenteditable="true" 
+          oninput="syncBodyEditor('submit-body-editor', 'body-count'); saveDraft();"
+          onpaste="handlePaste(event)"
+          ondrop="e.preventDefault(); toast('이미지나 파일은 끌어다 놓을 수 없습니다.', 'error');"
+          placeholder="작품 본문을 입력하세요 (최대 3000자, 산문은 6000자~19999자)"></div>
+        <div id="prose-warning" class="prose-warning">⚠️ 현재 분량은 기준 분량(6,000자 ~ 19,999자)을 벗어납니다. 감점될 수 있습니다.</div>
+      </div>
+    </div>
+
+    <div id="form-part-2" style="display:none; margin-top:3rem; padding-top:2rem; border-top:2px dashed var(--gold);">
+      <h3 class="part-title" style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:2px solid var(--paper3); color:var(--gold);">📝 제2편</h3>
+      <div class="form-group">
+        <label>작품 제목 <span class="required">*</span></label>
+        <input type="text" id="submit-title2" maxlength="50" placeholder="두 번째 작품 제목을 입력하세요" oninput="saveDraft()">
+      </div>
+      <div class="form-group">
+        <label>작품 소개 <span class="required">*</span> <span class="char-info"><span id="intro-count2">0</span>/200자</span></label>
+        <textarea id="submit-intro2" rows="3" maxlength="200" placeholder="두 번째 작품을 간단히 소개해주세요" oninput="document.getElementById('intro-count2').textContent=this.value.length; saveDraft();"></textarea>
+      </div>
+      <div class="form-group">
+        <label>작품 본문 <span class="required">*</span> <span class="char-info"><span id="body-count2">0</span>자</span></label>
+        <div class="editor-toolbar">
+          <button type="button" class="tb-btn" onclick="execFmt('bold', null, 'submit-body-editor2')" title="굵게"><b>B</b></button>
+          <button type="button" class="tb-btn" onclick="execFmt('italic', null, 'submit-body-editor2')" title="기울임"><i>I</i></button>
+          <select class="tb-select" onchange="execFmt('fontSize', this.value, 'submit-body-editor2');this.selectedIndex=0" title="글자 크기">
+            <option value="">크기</option>
+            <option value="1">작게</option>
+            <option value="3">보통</option>
+            <option value="5">크게</option>
+            <option value="7">매우 크게</option>
+          </select>
+          <input type="color" class="tb-color" onchange="execFmt('foreColor', this.value, 'submit-body-editor2')" title="글자 색상" value="#1a1714">
+          <button type="button" class="tb-btn tb-clear" onclick="clearFmt('submit-body-editor2')" title="서식 초기화">초기화</button>
+        </div>
+        <div id="submit-body-editor2" class="body-editor" contenteditable="true" 
+          oninput="syncBodyEditor('submit-body-editor2', 'body-count2'); saveDraft();"
+          onpaste="handlePaste(event)"
+          ondrop="e.preventDefault(); toast('이미지나 파일은 끌어다 놓을 수 없습니다.', 'error');"
+          placeholder="두 번째 작품 본문을 입력하세요 (최대 3000자)"></div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" id="submit-btn">작품 응모하기 ✨</button>
+    </div>
+  </form>`;
+
+  const draftRaw = localStorage.getItem('cnsa_draft');
+  if(draftRaw) {
+    try {
+      const draft = JSON.parse(draftRaw);
+      if(draft.cat) {
+        const catEl = document.querySelector(`input[name="category"][value="${draft.cat}"]`);
+        if(catEl) { catEl.checked = true; togglePoemForm(); }
+      }
+      if($('submit-title')) $('submit-title').value = draft.t1 || '';
+      if($('submit-intro')) $('submit-intro').value = draft.i1 || '';
+      if($('submit-body-editor')) $('submit-body-editor').innerHTML = draft.b1 || '';
+      if($('submit-title2')) $('submit-title2').value = draft.t2 || '';
+      if($('submit-intro2')) $('submit-intro2').value = draft.i2 || '';
+      if($('submit-body-editor2')) $('submit-body-editor2').innerHTML = draft.b2 || '';
+      
+      if($('submit-intro')) $('intro-count').textContent = $('submit-intro').value.length;
+      if($('submit-intro2')) $('intro-count2').textContent = $('submit-intro2').value.length;
+      syncBodyEditor('submit-body-editor', 'body-count');
+      syncBodyEditor('submit-body-editor2', 'body-count2');
+      
+      toast('임시저장된 글을 불러왔습니다.', 'info');
+    } catch(e) { console.warn("임시저장 로드 실패:", e); }
+  }
+  
+  if(!autoSaveInterval) {
+    autoSaveInterval = setInterval(saveDraft, 10000);
+  }
+}
+
+function handlePaste(e){
+  e.preventDefault();
+  let text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  if(text.length > 20000) {
+    text = text.substring(0, 20000);
+    toast('최대 분량을 초과하여 20,000자까지만 붙여넣기 되었습니다.', 'error');
+  }
+  document.execCommand('insertText', false, text);
+}
+
+function submitPost(e){
+  e.preventDefault();
+  if(!currentUser||!currentUserData){toast('로그인이 필요합니다.','error');return;}
+  const cat=document.querySelector('input[name="category"]:checked');
+  if(!cat){toast('카테고리를 선택해주세요.','error');return;}
+
+  const title1=$('submit-title').value.trim();
+  const intro1=$('submit-intro').value.trim();
+  const bodyEl1=$('submit-body-editor');
+  const body1=bodyEl1 ? sanitizeHTML(bodyEl1.innerHTML.trim()) : '';
+
+  if(!title1||!intro1||!body1){toast('제1편의 모든 항목을 입력해주세요.','error');return;}
+
+  let isPoem = (cat.value === '운문');
+  let title2 = '', intro2 = '', body2 = '';
+
+  if(isPoem) {
+    title2=$('submit-title2').value.trim();
+    intro2=$('submit-intro2').value.trim();
+    const bodyEl2=$('submit-body-editor2');
+    body2=bodyEl2 ? sanitizeHTML(bodyEl2.innerHTML.trim()) : '';
+    if(!title2||!intro2||!body2){toast('제2편의 모든 항목을 입력해주세요.','error');return;}
+  }
+
+  const btn=$('submit-btn');
+  btn.disabled=true; btn.textContent='제출 중...';
+
+  let batch = db.batch();
+  let indexRef = db.collection('indexes').doc('posts');
+  let createTime = Date.now();
+  
+  let postRef1 = db.collection('posts').doc();
+  batch.set(postRef1, {
+    category:cat.value, title:title1, intro:intro1, body:body1,
+    uid:currentUser.uid, penName:currentUserData.penName,
+    likeCount:0, likes:[], tears:[], shocks:[], fears:[], commentCount:0,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  batch.set(indexRef, {
+    ['posts.' + postRef1.id]: {
+      id: postRef1.id, uid: currentUser.uid, docType: 'post',
+      category: cat.value, title: title1, penName: currentUserData.penName,
+      preview: extractPreview(body1), 
+      likeCount: 0, commentCount: 0, createdAt: createTime
+    }
+  }, { merge: true });
+
+  if(isPoem) {
+    let postRef2 = db.collection('posts').doc();
+    batch.set(postRef2, {
+      category:cat.value, title:title2, intro:intro2, body:body2,
+      uid:currentUser.uid, penName:currentUserData.penName,
+      likeCount:0, likes:[], tears:[], shocks:[], fears:[], commentCount:0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    batch.set(indexRef, {
+      ['posts.' + postRef2.id]: {
+        id: postRef2.id, uid: currentUser.uid, docType: 'post',
+        category: cat.value, title: title2, penName: currentUserData.penName,
+        preview: extractPreview(body2), 
+        likeCount: 0, commentCount: 0, createdAt: createTime + 1
+      }
+    }, { merge: true });
+  }
+
+  batch.commit().then(()=>{
+    localStorage.removeItem('cnsa_draft');
+    if(autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
+    toast('작품이 성공적으로 응모되었습니다! 🌟','success');
+    _doNavigate('gallery', null);
+  }).catch(err=>{
+    toast('응모 실패: '+err.message,'error');
+    btn.disabled=false; btn.textContent='작품 응모하기 ✨';
+  });
+}
+
+function renderGallery(){
+  const isAdmin = currentUserData && currentUserData.role === 'admin';
+  if(siteMode==='apply' && !isAdmin){
+    setHTML('gallery-grid',`<div class="center-msg" style="padding:4rem 1rem; grid-column:1/-1;">
+      <p style="font-size:1.3rem;margin-bottom:.5rem">📝 현재 응모기간입니다.</p>
+      <p style="color:var(--ink3)">감상은 감상기간 (5월 14일 ~ 21일)에만 가능합니다.</p>
+    </div>`);
+    return;
+  }
+  if(!currentUser||!currentUserData){
+    setHTML('gallery-grid',`<div class="center-msg" style="padding:4rem 1rem; grid-column:1/-1;">
+      <p style="font-size:1.1rem;margin-bottom:1.5rem">🔒 감상하기는 로그인 후 이용할 수 있습니다.</p>
+      <button class="btn-primary" onclick="doLogin()">Google 로그인</button>
+    </div>`);
+    return;
+  }
+  
+  const btnC = $('view-btn-card');
+  const btnL = $('view-btn-list');
+  if(btnC) btnC.classList.toggle('active', galleryViewMode === 'card');
+  if(btnL) btnL.classList.toggle('active', galleryViewMode === 'list');
+  
+  db.collection('indexes').doc('posts').get().then(doc=>{
+    if(doc.exists) {
+      allPosts = Object.values(doc.data().posts || {});
+    } else {
+      allPosts = [];
+    }
+    filterAndRenderGallery();
+  }).catch(e=>{console.error(e);setHTML('gallery-grid','<p class="empty-msg">데이터를 불러오지 못했습니다. (보안 규칙 및 동기화를 확인하세요)</p>');});
+}
+
+function setGalleryView(mode) {
+  galleryViewMode = mode;
+  localStorage.setItem('cnsa_view_mode', mode);
+  const btnC = $('view-btn-card');
+  const btnL = $('view-btn-list');
+  if(btnC) btnC.classList.toggle('active', mode === 'card');
+  if(btnL) btnL.classList.toggle('active', mode === 'list');
+  filterAndRenderGallery();
+}
+
+function filterAndRenderGallery(){
+  var posts = allPosts.slice();
+  posts = posts.filter(function(p){ return p.docType !== 'critique'; }); 
+  
+  if(galleryCategory !== 'all') posts = posts.filter(function(p){ return p.category === galleryCategory; });
+  var s = gallerySearch.toLowerCase();
+  if(s) posts = posts.filter(function(p){
+    return (p.title||'').toLowerCase().indexOf(s) > -1 ||
+           (p.penName||'').toLowerCase().indexOf(s) > -1;
+  });
+  
+  if(gallerySort === 'random'){
+    var readPosts = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
+    var unread = posts.filter(function(p){ return !readPosts.includes(p.id); });
+    var read = posts.filter(function(p){ return readPosts.includes(p.id); });
+    
+    var baseSeed = Math.floor(Date.now() / (30 * 60 * 1000));
+    var offset = parseInt(sessionStorage.getItem('cnsa_random_offset') || '0');
+    var seed = baseSeed + offset;
+    
+    seededShuffle(unread, seed);
+    seededShuffle(read, seed + 999);
+    posts = unread.concat(read);
+  } else if(gallerySort === '가나다'){
+    posts.sort(function(a,b){ return (a.title||'').localeCompare(b.title||'','ko'); });
+  } else if(gallerySort === '좋아요'){
+    posts.sort(function(a,b){ return (b.likeCount||0)-(a.likeCount||0); });
+  } else if(gallerySort === '댓글'){
+    posts.sort(function(a,b){ return (b.commentCount||0)-(a.commentCount||0); });
+  } else if(gallerySort === '최신'){
+    posts.sort(function(a,b){ return b.createdAt - a.createdAt; });
+  } else if(gallerySort === '등록'){
+    posts.sort(function(a,b){ return a.createdAt - b.createdAt; });
+  }
+  var total = posts.length;
+  var perPage = galleryViewMode === 'list' ? 20 : 12;
+  var totalPages = Math.max(1, Math.ceil(total / perPage));
+  if(galleryPage > totalPages) galleryPage = 1;
+  var start = (galleryPage - 1) * perPage;
+  var pagePosts = posts.slice(start, start + perPage);
+  var html = '';
+  
+  pagePosts.forEach(function(p){
+    html += `<article class="gallery-card" onclick="navigateTo('post','${p.id}')">
+      <div>
+        <span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'산문')}</span>
+        <h3>${escHtml(p.title||'제목 없음')}</h3>
+        <p class="body-preview" >${escHtml(p.preview||'')}…</p>
+      </div>
+      <div class="gallery-card-bottom">
+        <span class="author">✍ ${escHtml(p.penName||'')}</span>
+        <span>🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
+      </div>
+    </article>`;
+  });
+  var pageHtml = '';
+  if(totalPages > 1){
+    pageHtml = '<div class="pagination">';
+    pageHtml += '<button class="page-btn" onclick="setGalleryPage(' + (galleryPage-1) + ')" ' + (galleryPage<=1?'disabled':'') + '>‹</button>';
+    for(var i=1; i<=totalPages; i++){
+      if(i===1 || i===totalPages || Math.abs(i-galleryPage)<=2){
+        pageHtml += '<button class="page-btn ' + (i===galleryPage?'active':'') + '" onclick="setGalleryPage(' + i + ')">' + i + '</button>';
+      } else if(Math.abs(i-galleryPage)===3){
+        pageHtml += '<span class="page-ellipsis">…</span>';
+      }
+    }
+    pageHtml += '<button class="page-btn" onclick="setGalleryPage(' + (galleryPage+1) + ')" ' + (galleryPage>=totalPages?'disabled':'') + '>›</button>';
+    pageHtml += '</div>';
+  }
+  var countHtml = '<p class="gallery-count">전체 ' + total + '개 작품 · ' + galleryPage + '/' + totalPages + ' 페이지</p>';
+  
+  const gridEl = $('gallery-grid');
+  if(gridEl) {
+    gridEl.className = 'gallery-grid ' + (galleryViewMode === 'list' ? 'list-view' : '');
+    gridEl.innerHTML = (html||'<p class="empty-msg" style="grid-column:1/-1;">해당하는 작품이 없습니다.</p>') + pageHtml + countHtml;
+  }
+}
+
+function setGalleryPage(page){
+  var perPage = galleryViewMode === 'list' ? 20 : 12;
+  var totalPages = Math.ceil(allPosts.filter(p=>p.docType!=='critique').length / perPage) || 1;
+  if(page < 1 || page > totalPages) return;
+  galleryPage = page;
+  filterAndRenderGallery();
+  document.getElementById('page-gallery').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setGallerySort(sort){
+  gallerySort = sort;
+  galleryPage = 1;
+  document.querySelectorAll('#page-gallery .sort-btn[data-sort]').forEach(function(b){ b.classList.toggle('active', b.dataset.sort===sort); });
+  filterAndRenderGallery();
+}
+function setGalleryCategory(cat){
+  galleryCategory=cat;
+  galleryPage = 1;
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.toggle('active',t.dataset.cat===cat));
+  filterAndRenderGallery();
+}
+function searchGallery(){
+  gallerySearch=$('gallery-search').value;
+  galleryPage = 1;
+  filterAndRenderGallery();
+}
+
+function renderCritique(){
+  const isAdmin = currentUserData && currentUserData.role === 'admin';
+  if(siteMode==='apply' && !isAdmin){
+    setHTML('critique-grid',`<div class="center-msg" style="padding:4rem 1rem; grid-column:1/-1;">
+      <p style="font-size:1.3rem;margin-bottom:.5rem">📝 현재 응모기간입니다.</p>
+      <p style="color:var(--ink3)">비평은 감상기간 (5월 14일 ~ 21일)에만 가능합니다.</p>
+    </div>`);
+    return;
+  }
+  if(!currentUser||!currentUserData){
+    setHTML('critique-grid',`<div class="center-msg" style="padding:4rem 1rem; grid-column:1/-1;">
+      <p style="font-size:1.1rem;margin-bottom:1.5rem">🔒 비평게시판은 로그인 후 이용할 수 있습니다.</p>
+      <button class="btn-primary" onclick="doLogin()">Google 로그인</button>
+    </div>`);
+    return;
+  }
+  
+  const btnC = $('critique-view-btn-card');
+  const btnL = $('critique-view-btn-list');
+  if(btnC) btnC.classList.toggle('active', critiqueViewMode === 'card');
+  if(btnL) btnL.classList.toggle('active', critiqueViewMode === 'list');
+  
+  db.collection('indexes').doc('posts').get().then(doc=>{
+    if(doc.exists) {
+      allPosts = Object.values(doc.data().posts || {});
+    } else {
+      allPosts = [];
+    }
+    filterAndRenderCritique();
+  }).catch(e=>{console.error(e);setHTML('critique-grid','<p class="empty-msg">목차를 불러오지 못했습니다.</p>');});
+}
+
+function setCritiqueView(mode) {
+  critiqueViewMode = mode;
+  localStorage.setItem('cnsa_critique_view_mode', mode);
+  const btnC = $('critique-view-btn-card');
+  const btnL = $('critique-view-btn-list');
+  if(btnC) btnC.classList.toggle('active', mode === 'card');
+  if(btnL) btnL.classList.toggle('active', mode === 'list');
+  filterAndRenderCritique();
+}
+
+function filterAndRenderCritique(){
+  var posts = allPosts.slice();
+  posts = posts.filter(function(p){ return p.docType === 'critique'; });
+  
+  var s = critiqueSearch.toLowerCase();
+  if(s) posts = posts.filter(function(p){
+    return (p.title||'').toLowerCase().indexOf(s) > -1 ||
+           (p.targetPostTitle||'').toLowerCase().indexOf(s) > -1 ||
+           (p.penName||'').toLowerCase().indexOf(s) > -1;
+  });
+
+  if(critiqueSort === 'random'){
+    var readPosts = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
+    var unread = posts.filter(function(p){ return !readPosts.includes(p.id); });
+    var read = posts.filter(function(p){ return readPosts.includes(p.id); });
+    
+    var baseSeed = Math.floor(Date.now() / (30 * 60 * 1000));
+    var offset = parseInt(sessionStorage.getItem('cnsa_critique_random_offset') || '0');
+    var seed = baseSeed + offset;
+    
+    seededShuffle(unread, seed);
+    seededShuffle(read, seed + 999);
+    posts = unread.concat(read);
+  } else if(critiqueSort === '가나다'){
+    posts.sort(function(a,b){ return (a.title||'').localeCompare(b.title||'','ko'); });
+  } else if(critiqueSort === '좋아요'){
+    posts.sort(function(a,b){ return (b.likeCount||0)-(a.likeCount||0); });
+  } else if(critiqueSort === '댓글'){
+    posts.sort(function(a,b){ return (b.commentCount||0)-(a.commentCount||0); });
+  } else if(critiqueSort === '최신'){
+    posts.sort(function(a,b){ return b.createdAt - a.createdAt; });
+  } else if(critiqueSort === '등록'){
+    posts.sort(function(a,b){ return a.createdAt - b.createdAt; });
+  }
+
+  var total = posts.length;
+  var perPage = critiqueViewMode === 'list' ? 20 : 12;
+  var totalPages = Math.max(1, Math.ceil(total / perPage));
+  if(critiquePage > totalPages) critiquePage = 1;
+  var start = (critiquePage - 1) * perPage;
+  var pagePosts = posts.slice(start, start + perPage);
+  var html = '';
+  
+  pagePosts.forEach(function(p){
+    html += `<article class="gallery-card" onclick="navigateTo('post','${p.id}')">
+      <div>
+        <span class="cat-badge badge-critique">비평</span>
+        <span style="font-size:0.8rem; color:var(--ink3); margin-left:0.5rem; font-family:var(--font-sans);">원작품: ${escHtml(p.targetPostTitle)}</span>
+        <h3>${escHtml(p.title||'제목 없음')}</h3>
+        <p class="body-preview" >${escHtml(p.preview||'')}…</p>
+      </div>
+      <div class="gallery-card-bottom">
+        <span class="author">✍ ${escHtml(p.penName||'')}</span>
+        <span>🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
+      </div>
+    </article>`;
+  });
+  
+  var pageHtml = '';
+  if(totalPages > 1){
+    pageHtml = '<div class="pagination">';
+    pageHtml += '<button class="page-btn" onclick="setCritiquePage(' + (critiquePage-1) + ')" ' + (critiquePage<=1?'disabled':'') + '>‹</button>';
+    for(var i=1; i<=totalPages; i++){
+      if(i===1 || i===totalPages || Math.abs(i-critiquePage)<=2){
+        pageHtml += '<button class="page-btn ' + (i===critiquePage?'active':'') + '" onclick="setCritiquePage(' + i + ')">' + i + '</button>';
+      } else if(Math.abs(i-critiquePage)===3){
+        pageHtml += '<span class="page-ellipsis">…</span>';
+      }
+    }
+    pageHtml += '<button class="page-btn" onclick="setCritiquePage(' + (critiquePage+1) + ')" ' + (critiquePage>=totalPages?'disabled':'') + '>›</button>';
+    pageHtml += '</div>';
+  }
+  var countHtml = '<p class="gallery-count">전체 비평 ' + total + '개 · ' + critiquePage + '/' + totalPages + ' 페이지</p>';
+  
+  const gridEl = $('critique-grid');
+  if(gridEl) {
+    gridEl.className = 'gallery-grid ' + (critiqueViewMode === 'list' ? 'list-view' : '');
+    gridEl.innerHTML = (html||'<p class="empty-msg" style="grid-column:1/-1;">해당하는 비평이 없습니다.</p>') + pageHtml + countHtml;
+  }
+}
+
+function setCritiquePage(page){
+  var perPage = critiqueViewMode === 'list' ? 20 : 12;
+  var totalPages = Math.ceil(allPosts.filter(p=>p.docType==='critique').length / perPage) || 1;
+  if(page < 1 || page > totalPages) return;
+  critiquePage = page;
+  filterAndRenderCritique();
+  document.getElementById('page-critique').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function setCritiqueSort(sort){
+  critiqueSort = sort;
+  critiquePage = 1;
+  document.querySelectorAll('#page-critique .sort-btn[data-sort]').forEach(function(b){ b.classList.toggle('active', b.dataset.sort===sort); });
+  filterAndRenderCritique();
+}
+
+function searchCritique(){
+  critiqueSearch=$('critique-search').value;
+  critiquePage = 1;
+  filterAndRenderCritique();
+}
+
+function renderCritiqueWrite(targetPostId) {
+  if(!targetPostId) { navigateTo('gallery'); return; }
+  db.collection('posts').doc(targetPostId).get().then(doc => {
+    if(!doc.exists) { toast('원작품을 찾을 수 없습니다.', 'error'); navigateTo('gallery'); return; }
+    const targetData = doc.data();
+    $('critique-target-title-display').textContent = targetData.title;
+    $('critique-target-id').value = targetPostId;
+    $('critique-target-title').value = targetData.title;
+    $('critique-title').value = '';
+    $('critique-body-editor').innerHTML = '';
+    $('critique-body-count').textContent = '0';
+  }).catch(e => console.error(e));
+}
+
+function submitCritique(e) {
+  e.preventDefault();
+  if(!currentUser||!currentUserData){toast('로그인이 필요합니다.','error');return;}
+  const targetId = $('critique-target-id').value;
+  const targetTitle = $('critique-target-title').value;
+  const title = $('critique-title').value.trim();
+  const bodyEl = $('critique-body-editor');
+  const body = bodyEl ? sanitizeHTML(bodyEl.innerHTML.trim()) : '';
+
+  if(!title||!body){toast('모든 항목을 입력해주세요.','error');return;}
+  const btn=$('critique-submit-btn');
+  btn.disabled=true; btn.textContent='등록 중...';
+
+  let batch = db.batch();
+  let postRef = db.collection('posts').doc();
+  let indexRef = db.collection('indexes').doc('posts');
+
+  batch.set(postRef, {
+    docType: 'critique',
+    targetPostId: targetId,
+    targetPostTitle: targetTitle,
+    category: '비평',
+    title: title,
+    body: body,
+    uid: currentUser.uid,
+    penName: currentUserData.penName,
+    likeCount: 0, likes: [], tears:[], shocks:[], fears:[], commentCount: 0,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  batch.set(indexRef, {
+    ['posts.' + postRef.id]: {
+      id: postRef.id, uid: currentUser.uid, docType: 'critique',
+      targetPostTitle: targetTitle, category: '비평',
+      title: title, penName: currentUserData.penName,
+      preview: extractPreview(body), 
+      likeCount: 0, commentCount: 0, createdAt: Date.now()
+    }
+  }, { merge: true });
+
+  batch.commit().then(() => {
+    toast('비평이 성공적으로 등록되었습니다!', 'success');
+    addMissionProgress(4); // 4번 미션 (비평하기) 달성 체크
+    navigateTo('critique');
+    btn.disabled=false; btn.textContent='비평 등록하기 ✨';
+  }).catch(err => {
+    toast('등록 실패: '+err.message, 'error');
+    btn.disabled=false; btn.textContent='비평 등록하기 ✨';
+  });
+}
+
+function toggleViewerPanel() {
+  const p = $('viewer-panel');
+  if(p) p.classList.toggle('show');
+}
+document.addEventListener('click', function(e) {
+  const panel = $('viewer-panel');
+  if(panel && panel.classList.contains('show') && !e.target.closest('.viewer-panel') && !e.target.closest('.viewer-settings-btn')) {
+    panel.classList.remove('show');
+  }
+  
+  const notiPanel = $('noti-panel');
+  if(notiPanel && notiPanel.classList.contains('show') && !e.target.closest('#noti-panel') && !e.target.closest('#noti-bell')) {
+    notiPanel.classList.remove('show');
+  }
+});
+
+function setViewerTheme(theme) {
+  viewerTheme = theme;
+  localStorage.setItem('cnsa_viewer_theme', theme);
+  const el = $('post-detail-article');
+  if(el) {
+    el.classList.remove('theme-light', 'theme-sepia', 'theme-dark');
+    el.classList.add('theme-' + theme);
+  }
+  document.querySelectorAll('.viewer-opt-btn[onclick^="setViewerTheme"]').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick').includes(theme));
+  });
+}
+
+function setViewerFontSize(size) {
+  viewerFontSize = size;
+  localStorage.setItem('cnsa_viewer_font', size);
+  const el = $('post-detail-article');
+  if(el) {
+    el.classList.remove('text-sm', 'text-md', 'text-lg', 'text-xl');
+    el.classList.add('text-' + size);
+  }
+  document.querySelectorAll('.viewer-opt-btn[onclick^="setViewerFontSize"]').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick').includes(size));
+  });
+}
+if (delta > 0) addMissionProgress(1); // 1번 미션 (반응하기) 달성 체크
+function renderPost(postId){
+  if(!postId){navigateTo('gallery');return;}
+  
+  let readList = JSON.parse(localStorage.getItem('cnsa_read_posts') || '[]');
+  if (!readList.includes(postId)) {
+    readList.push(postId);
+    localStorage.setItem('cnsa_read_posts', JSON.stringify(readList));
+  }
+
+  let otherPostsHtml = '<div id="author-other-posts-container"></div>';
+
+  Promise.all([
+    db.collection('posts').doc(postId).get(),
+    db.collection('config').doc('siteMode').get()
+  ]).then(([snap, modeDoc])=>{
+    if(modeDoc.exists) siteMode = modeDoc.data().mode || 'apply';
+    if(!snap.exists){toast('작품을 찾을 수 없습니다.','error');navigateTo('gallery');return;}
+    
+    const p = {id:snap.id,...snap.data()};
+    currentViewPost = p; 
+
+    const isOwner=currentUser&&p.uid===currentUser.uid;
+    const isAdmin=currentUserData&&currentUserData.role==='admin';
+    const currentMode = modeDoc.exists ? modeDoc.data().mode : 'apply';
+    siteMode = currentMode;
+    const canEdit = isAdmin || (isOwner && currentMode !== 'view');
+    
+    const actionBtns = canEdit ? `<span id="post-action-btns"><button class="btn-outline btn-sm" onclick="editPost('${postId}')">수정</button><button class="btn-danger btn-sm" onclick="deletePost('${postId}')">삭제</button></span>` : `<span id="post-action-btns"></span>`;
+    
+    let critiqueTargetHtml = '';
+    if(p.docType === 'critique') {
+      critiqueTargetHtml = `<div style="background:var(--paper2); padding:0.8rem 1.2rem; border-radius:var(--radius); margin-bottom:1.5rem; font-size:0.95rem; color:var(--ink2);">
+        <strong style="color:var(--gold);">원작품:</strong> ${escHtml(p.targetPostTitle)}
+      </div>`;
+    }
+
+    let btnCritique = '';
+    if((siteMode === 'view' || siteMode === 'test') && p.docType !== 'critique') {
+      btnCritique = `<button class="btn-outline" style="margin-left:0.5rem; border-color:var(--gold); color:var(--gold);" onclick="navigateTo('critique-write', '${postId}')">✍️ 비평하기</button>`;
+    }
+
+    let badgeHtml = p.docType === 'critique' 
+        ? `<span class="cat-badge badge-critique">비평</span>`
+        : `<span class="cat-badge ${p.category==='운문'?'badge-verse':'badge-prose'}">${escHtml(p.category||'')}</span>`;
+
+    const likes = p.likes || [];
+    const tears = p.tears || [];
+    const shocks = p.shocks || [];
+    const fears = p.fears || [];
+
+    const hasHeart = currentUser && likes.includes(currentUser.uid);
+    const hasTear = currentUser && tears.includes(currentUser.uid);
+    const hasShock = currentUser && shocks.includes(currentUser.uid);
+    const hasFear = currentUser && fears.includes(currentUser.uid);
+
+    setHTML('page-post',`<div class="page-inner">
+      <button class="btn-back" onclick="navigateTo('${p.docType==='critique' ? 'critique' : 'gallery'}')">← 목록으로</button>
+      <article class="post-detail theme-${viewerTheme} text-${viewerFontSize}" id="post-detail-article">
+        ${critiqueTargetHtml}
+        <header class="post-header">
+          ${badgeHtml}
+          <h1 class="post-title">${escHtml(p.title||'')}</h1>
+          <div class="post-meta">
+            <span>✍ ${escHtml(p.penName||'')}</span>
+            <span>${formatDate(p.createdAt)}</span>
+            ${actionBtns}
+            <div style="position:relative; margin-left:auto;">
+              <button class="viewer-settings-btn" onclick="toggleViewerPanel()">Aa 뷰어 설정</button>
+              <div class="viewer-panel" id="viewer-panel">
+                <div class="viewer-opt-group">
+                  <span class="viewer-opt-title">배경 테마</span>
+                  <div class="viewer-opt-btns">
+                    <button class="viewer-opt-btn ${viewerTheme==='light'?'active':''}" onclick="setViewerTheme('light')">라이트</button>
+                    <button class="viewer-opt-btn ${viewerTheme==='sepia'?'active':''}" onclick="setViewerTheme('sepia')">세피아</button>
+                    <button class="viewer-opt-btn ${viewerTheme==='dark'?'active':''}" onclick="setViewerTheme('dark')">다크</button>
+                  </div>
+                </div>
+                <div class="viewer-opt-group">
+                  <span class="viewer-opt-title">글자 크기</span>
+                  <div class="viewer-opt-btns">
+                    <button class="viewer-opt-btn ${viewerFontSize==='sm'?'active':''}" onclick="setViewerFontSize('sm')">작게</button>
+                    <button class="viewer-opt-btn ${viewerFontSize==='md'?'active':''}" onclick="setViewerFontSize('md')">보통</button>
+                    <button class="viewer-opt-btn ${viewerFontSize==='lg'?'active':''}" onclick="setViewerFontSize('lg')">크게</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div class="post-body" id="post-body-content"></div>
+        
+        <div class="reaction-row">
+          <button class="btn-react r-heart ${hasHeart?'active':''}" onclick="toggleReact('${postId}','heart')">❤️ 감동 <span>${likes.length}</span></button>
+          <button class="btn-react r-tear ${hasTear?'active':''}" onclick="toggleReact('${postId}','tear')">😢 눈물 <span>${tears.length}</span></button>
+          <button class="btn-react r-shock ${hasShock?'active':''}" onclick="toggleReact('${postId}','shock')">😮 놀람 <span>${shocks.length}</span></button>
+          <button class="btn-react r-fear ${hasFear?'active':''}" onclick="toggleReact('${postId}','fear')">😱 공포 <span>${fears.length}</span></button>
+          ${btnCritique}
+        </div>
+      </article>
+      ${otherPostsHtml}
+      <section class="comments-section">
+        <h2>댓글 <span id="comment-count">${p.commentCount||0}</span></h2>
+        <div id="comments-list"></div>
+        ${currentUser?`<div class="comment-form">
+          <textarea id="comment-input" rows="3" maxlength="500" placeholder="댓글을 입력하세요 (최대 500자)" oninput="document.getElementById('cmt-char').textContent=this.value.length"></textarea>
+          <div class="comment-form-footer"><span><span id="cmt-char">0</span>/500자</span>
+          <button class="btn-primary btn-sm" onclick="submitComment('${postId}')">댓글 달기</button></div>
+        </div>`:`<p class="login-prompt">댓글을 달려면 <button class="btn-link" onclick="doLogin()">로그인</button>하세요.</p>`}
+      </section>
+    </div>`);
+    
+    const bodyEl = document.getElementById('post-body-content');
+    if(bodyEl){
+      const raw = p.body || '';
+      const tmp = document.createElement('div');
+      tmp.innerHTML = raw;
+      bodyEl.innerHTML = tmp.innerHTML
+        .split('<div>').join('<br>')
+        .split('</div>').join('')
+        .split('<p>').join('')
+        .split('</p>').join('<br>')
+        .split('<span>').join('')
+        .split('</span>').join('')
+        .replace(/<span[^>]*>/g, '')
+        .replace(/<br><br>/g, '<br>');
+    }
+
+    if (p.uid && p.docType !== 'critique') {
+      db.collection('posts').where('uid', '==', p.uid).get().then(authorSnap => {
+        let otherPosts = [];
+        authorSnap.forEach(d => {
+          if(d.id !== postId && d.data().docType !== 'critique') {
+            otherPosts.push({id: d.id, ...d.data()});
+          }
+        });
+        
+        if(otherPosts.length > 0) {
+          let listHtml = '<div class="author-other-posts"><h3>📖 이 작가의 다른 작품</h3><div class="other-post-list">';
+          otherPosts.forEach(op => {
+            listHtml += `<div class="other-post-item" onclick="navigateTo('post', '${op.id}')">
+              <span class="other-post-item-title">${escHtml(op.title)}</span>
+              <span class="other-post-item-meta">🎭 반응 ${op.likeCount||0} · 💬 댓글 ${op.commentCount||0}</span>
+            </div>`;
+          });
+          listHtml += '</div></div>';
+          setHTML('author-other-posts-container', listHtml);
+        }
+      }).catch(e => console.warn("다른 작품 로드 실패:", e));
+    }
+
+    loadComments(postId);
+  }).catch(e=>console.error(e));
+}
+
+function toggleReact(postId, type){
+  if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
+  if(!currentViewPost) return;
+
+  const ref=db.collection('posts').doc(postId);
+  ref.get().then(snap=>{
+    const d = snap.data();
+    let targetField = '';
+    if(type==='heart') targetField = 'likes';
+    else if(type==='tear') targetField = 'tears';
+    else if(type==='shock') targetField = 'shocks';
+    else if(type==='fear') targetField = 'fears';
+
+    const fields = ['likes', 'tears', 'shocks', 'fears'];
+    let activeFields = [];
+    fields.forEach(f => {
+      if((d[f]||[]).includes(currentUser.uid)) activeFields.push(f);
+    });
+
+    let updates = {};
+    let indexUpdates = {};
+    let delta = 0;
+    
+    if (activeFields.includes(targetField) && activeFields.length === 1) {
+      updates[targetField] = firebase.firestore.FieldValue.arrayRemove(currentUser.uid);
+      delta = -1;
+    } 
+    else {
+      activeFields.forEach(f => {
+        updates[f] = firebase.firestore.FieldValue.arrayRemove(currentUser.uid);
+      });
+      updates[targetField] = firebase.firestore.FieldValue.arrayUnion(currentUser.uid);
+      
+      if (activeFields.length === 0) delta = 1;
+      else if (activeFields.length > 1) delta = 1 - activeFields.length;
+    }
+
+    if (delta !== 0) {
+      updates.likeCount = firebase.firestore.FieldValue.increment(delta);
+      indexUpdates['posts.' + postId + '.likeCount'] = firebase.firestore.FieldValue.increment(delta);
+    }
+
+    let batch = db.batch();
+    batch.update(ref, updates);
+    if(Object.keys(indexUpdates).length > 0) {
+      let indexRef = db.collection('indexes').doc('posts');
+      batch.set(indexRef, indexUpdates, { merge: true });
+    }
+
+    if(delta > 0 && currentViewPost.uid !== currentUser.uid) {
+      let notiRef = db.collection('notifications').doc();
+      batch.set(notiRef, {
+        targetUid: currentViewPost.uid,
+        actorName: currentUserData.penName,
+        type: 'like',
+        postId: postId,
+        postTitle: currentViewPost.title,
+        read: false,
+        createdAt: Date.now()
+      });
+    }
+    
+    batch.commit().then(()=>{
+      renderPost(postId);
+    });
+  });
+}
+
+function loadComments(postId){
+  db.collection('posts').doc(postId).collection('comments').orderBy('createdAt','asc').get().then(snap=>{
+    let html='';
+    snap.docs.forEach(d=>{
+      const c={id:d.id,...d.data()};
+      const canDel=currentUser&&(c.uid===currentUser.uid||(currentUserData&&currentUserData.role==='admin'));
+      const liked=currentUser&&(c.likes||[]).includes(currentUser.uid);
+      const likeCount=c.likeCount||0;
+      html+=`<div class="comment">
+        <div class="comment-header">
+          <strong>${escHtml(c.penName||'')}</strong>
+          <span class="comment-date">${formatDate(c.createdAt)}</span>
+          ${canDel?`<button class="btn-link btn-danger-text" onclick="deleteComment('${postId}','${c.id}')">삭제</button>`:''}
+        </div>
+        <p>${escHtml(c.body||'').replace(/\n/g,'<br>')}</p>
+        <div class="comment-actions">
+          <button class="btn-comment-like ${liked?'liked':''}" onclick="toggleCommentLike('${postId}','${c.id}',this)">
+            ${liked?'♥':'♡'} <span class="clike-count">${likeCount}</span>
+          </button>
+        </div>
+      </div>`;
+    });
+    setHTML('comments-list',html||'<p class="empty-msg">첫 댓글을 남겨보세요.</p>');
+  });
+}
+
+function toggleCommentLike(postId, commentId, btn){
+  if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
+  const ref=db.collection('posts').doc(postId).collection('comments').doc(commentId);
+  ref.get().then(snap=>{
+    const liked=(snap.data().likes||[]).includes(currentUser.uid);
+    ref.update({
+      likes: liked?firebase.firestore.FieldValue.arrayRemove(currentUser.uid):firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+      likeCount: firebase.firestore.FieldValue.increment(liked?-1:1)
+    }).then(()=>{
+      const newCount=(snap.data().likeCount||0)+(liked?-1:1);
+      btn.innerHTML=(liked?'♡':'♥')+' <span class="clike-count">'+newCount+'</span>';
+      btn.classList.toggle('liked',!liked);
+    });
+  });
+}
+
+function submitComment(postId){
+  if(!currentUser||!currentUserData){toast('로그인이 필요합니다.','error');return;}
+  if(!currentViewPost) return;
+
+  const input=$('comment-input');
+  const body=input.value.trim();
+  if(!body){toast('댓글을 입력해주세요.','error');return;}
+  const btn = document.querySelector('.comment-form .btn-primary');
+  if(btn){btn.disabled=true; btn.textContent='저장 중...';}
+
+  let batch = db.batch();
+  let commentRef = db.collection('posts').doc(postId).collection('comments').doc();
+  let postRef = db.collection('posts').doc(postId);
+  let indexRef = db.collection('indexes').doc('posts');
+
+  batch.set(commentRef, {
+    uid:currentUser.uid, penName:currentUserData.penName,
+    body, createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  batch.update(postRef, {
+    commentCount: firebase.firestore.FieldValue.increment(1),
+    commenters: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+  });
+
+  batch.set(indexRef, {
+    ['posts.' + postId + '.commentCount']: firebase.firestore.FieldValue.increment(1)
+  }, { merge: true });
+
+  if(currentViewPost.uid !== currentUser.uid) {
+    let notiRef = db.collection('notifications').doc();
+    batch.set(notiRef, {
+      targetUid: currentViewPost.uid,
+      actorName: currentUserData.penName,
+      type: 'comment',
+      postId: postId,
+      postTitle: currentViewPost.title,
+      body: body.substring(0, 30), 
+      read: false,
+      createdAt: Date.now()
+    });
+  }
+
+  batch.commit().then(()=>{
+    return postRef.get();
+  }).then(s=>{
+    const newCount = s.data().commentCount||0;
+    setText('comment-count', newCount);
+    input.value='';
+    const cc=$('cmt-char'); if(cc) cc.textContent='0';
+    if(btn){btn.disabled=false; btn.textContent='댓글 달기';}
+    loadComments(postId);
+    toast('댓글이 등록되었습니다.','success');
+    if (currentViewPost.uid === currentUser.uid) {
+  addMissionProgress(2); // 내 글에 답글 달기
+} else if (currentViewPost.docType === 'critique') {
+  addMissionProgress(5); // 비평에 댓글 달기
+} else {
+  addMissionProgress(3); // 남의 글에 댓글 달기
+}
+  }).catch(e=>{
+    toast('댓글 등록 실패: '+e.message,'error');
+    if(btn){btn.disabled=false; btn.textContent='댓글 달기';}
+  });
+}
+
+function deleteComment(postId,commentId){
+  if(!confirm('댓글을 삭제할까요?')) return;
+  
+  let batch = db.batch();
+  let commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
+  let postRef = db.collection('posts').doc(postId);
+  let indexRef = db.collection('indexes').doc('posts');
+
+  batch.delete(commentRef);
+  batch.update(postRef, { commentCount: firebase.firestore.FieldValue.increment(-1) });
+  batch.set(indexRef, {
+    ['posts.' + postId + '.commentCount']: firebase.firestore.FieldValue.increment(-1)
+  }, { merge: true });
+
+  batch.commit().then(()=>{
+    postRef.get().then(s=>{
+      setText('comment-count',s.data().commentCount||0);
+      loadComments(postId);
+    });
+  });
+}
+
+function deletePost(postId){
+  db.collection('config').doc('siteMode').get().then(mDoc=>{
+    const mode = mDoc.exists ? mDoc.data().mode : 'apply';
+    const isAdmin = currentUserData && currentUserData.role === 'admin';
+    if(mode === 'view' && !isAdmin){
+      toast('감상기간에는 삭제할 수 없습니다.', 'error');
+      return;
+    }
+    if(!confirm('작품을 삭제할까요?')) return;
+    
+    db.collection('posts').doc(postId).get().then(snap => {
+      const isCritique = snap.data().docType === 'critique';
+      
+      let batch = db.batch();
+      batch.delete(db.collection('posts').doc(postId));
+      batch.set(db.collection('indexes').doc('posts'), {
+        ['posts.' + postId]: firebase.firestore.FieldValue.delete()
+      }, { merge: true });
+
+      batch.commit().then(()=>{
+        toast('삭제되었습니다.','success');
+        navigateTo(isCritique ? 'critique' : 'gallery');
+      });
+    });
+  });
+}
+
+function editPost(postId){
+  db.collection('config').doc('siteMode').get().then(mDoc=>{
+    const mode = mDoc.exists ? mDoc.data().mode : 'apply';
+    const isAdmin = currentUserData && currentUserData.role === 'admin';
+    if(mode === 'view' && !isAdmin){
+      toast('감상기간에는 수정할 수 없습니다.', 'error');
+      return;
+    }
+    _doEditPost(postId);
+  });
+}
+
+function _doEditPost(postId){
+  db.collection('posts').doc(postId).get().then(snap=>{
+    const p=snap.data();
+    if(p.docType === 'critique') {
+      toast('비평문은 현재 삭제 후 재등록만 가능합니다.', 'info');
+      return;
+    }
+    setHTML('page-post',`<div class="page-inner">
+      <button class="btn-back" onclick="navigateTo('post','${postId}')">← 취소</button>
+      <h2 style="margin-bottom:1.5rem">작품 수정</h2>
+      <form onsubmit="saveEdit(event,'${postId}')">
+        <div class="form-group"><label>카테고리</label><div class="radio-group">
+          <label class="radio-label"><input type="radio" name="ecat" value="운문" ${p.category==='운문'?'checked':''}> 운문</label>
+          <label class="radio-label"><input type="radio" name="ecat" value="산문" ${p.category==='산문'?'checked':''}> 산문</label>
+        </div></div>
+        <div class="form-group"><label>제목</label><input type="text" id="edit-title" value="${escHtml(p.title||'')}" maxlength="50" required></div>
+        <div class="form-group"><label>작품 소개</label><textarea id="edit-intro" rows="3" maxlength="200">${escHtml(p.intro||'')}</textarea></div>
+        <div class="form-group"><label>본문</label><textarea id="edit-body" rows="16" maxlength="3000">${escHtml(p.body||'')}</textarea></div>
+        <div class="form-actions"><button type="submit" class="btn-primary">수정 저장</button></div>
+      </form>
+    </div>`);
+  });
+}
+
+function saveEdit(e,postId){
+  e.preventDefault();
+  db.collection('config').doc('siteMode').get().then(mDoc=>{
+    const mode = mDoc.exists ? mDoc.data().mode : 'apply';
+    const isAdmin = currentUserData && currentUserData.role === 'admin';
+    if(mode === 'view' && !isAdmin){
+      toast('감상기간에는 수정할 수 없습니다.','error');
+      return;
+    }
+    const cat=document.querySelector('input[name="ecat"]:checked');
+    const title=$('edit-title').value.trim();
+    const intro=$('edit-intro').value.trim();
+    const bodyEl = document.getElementById('edit-body');
+    const body = bodyEl ? sanitizeHTML(bodyEl.value.trim()) : '';
+
+    if(!cat||!title||!intro||!body){toast('모든 항목을 입력하세요.','error');return;}
+    
+    let batch = db.batch();
+    batch.update(db.collection('posts').doc(postId), {
+      category:cat.value, title, intro, body,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    batch.set(db.collection('indexes').doc('posts'), {
+      ['posts.' + postId + '.category']: cat.value,
+      ['posts.' + postId + '.title']: title,
+      ['posts.' + postId + '.preview']: extractPreview(body) 
+    }, { merge: true });
+
+    batch.commit().then(()=>{
+      toast('수정되었습니다.','success');
+      navigateTo('post',postId);
+    });
+  });
+}
+
+function renderMyPage(){
+  if(!currentUser||!currentUserData){
+    setHTML('mypage-content','<div class="center-msg"><p>로그인 후 이용할 수 있습니다.</p><button class="btn-primary" onclick="doLogin()">Google 로그인</button></div>');
+    return;
+  }
+  setText('mypage-penname', currentUserData.penName);
+  setText('mypage-email', currentUserData.email||'');
+
+  db.collection('indexes').doc('posts').get().then(function(snap){
+    var posts = snap.exists ? Object.values(snap.data().posts || {}) : [];
+    posts.sort((a,b) => b.createdAt - a.createdAt);
+
+    var myWorks = posts.filter(p => p.uid === currentUser.uid && p.docType !== 'critique');
+    var myCritiques = posts.filter(p => p.uid === currentUser.uid && p.docType === 'critique');
+
+    setText('mypost-count', myWorks.length);
+    var htmlWorks = '';
+    myWorks.forEach(function(p){
+      let catLabel = p.category;
+      let catClass = p.category==='운문'?'badge-verse':'badge-prose';
+      htmlWorks += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
+        <span class="cat-badge ${catClass}">${escHtml(catLabel)}</span>
+        <strong>${escHtml(p.title||'')}</strong>
+        <span class="mypage-item-meta">🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
+      </div>`;
+    });
+    setHTML('mypage-posts', htmlWorks || '<p class="empty-msg">작성한 작품이 없습니다.</p>');
+
+    setText('mycritique-count', myCritiques.length);
+    var htmlCritiques = '';
+    myCritiques.forEach(function(p){
+      htmlCritiques += `<div class="mypage-item" onclick="navigateTo('post','${p.id}')">
+        <span class="cat-badge badge-critique">비평</span>
+        <strong>${escHtml(p.title||'')}</strong>
+        <span class="mypage-item-meta">🎭 반응 ${p.likeCount||0} · 💬 댓글 ${p.commentCount||0}</span>
+      </div>`;
+    });
+    setHTML('mypage-critiques', htmlCritiques || '<p class="empty-msg">작성한 비평이 없습니다.</p>');
+  });
+
+  const critiqueSec = document.getElementById('mypage-mycritiques-section');
+  const likedSec = document.getElementById('mypage-liked-section');
+  const commentedSec = document.getElementById('mypage-commented-section');
+
+  const isAdmin = currentUserData && currentUserData.role === 'admin';
+
+  if(siteMode === 'apply' || (siteMode === 'rest' && !isAdmin)){
+    if(critiqueSec) critiqueSec.style.display = 'none';
+    if(likedSec) likedSec.style.display = 'none';
+    if(commentedSec) commentedSec.style.display = 'none';
+  } else {
+    if(critiqueSec) critiqueSec.style.display = 'block';
+    if(likedSec) likedSec.style.display = 'block';
+    if(commentedSec) commentedSec.style.display = 'block';
+
+    Promise.all([
+      db.collection('posts').where('likes', 'array-contains', currentUser.uid).get(),
+      db.collection('posts').where('tears', 'array-contains', currentUser.uid).get(),
+      db.collection('posts').where('shocks', 'array-contains', currentUser.uid).get(),
+      db.collection('posts').where('fears', 'array-contains', currentUser.uid).get()
+    ]).then(snaps => {
+      let map = {};
+      snaps.forEach(snap => snap.docs.forEach(d => map[d.id] = {id: d.id, ...d.data()}));
+      let likedPosts = Object.values(map);
+      
+      likedPosts.sort(function(a,b){
+        var ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+        var tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+        return tb - ta;
+      });
+      setText('myliked-count', likedPosts.length);
+      var html = '';
+      likedPosts.forEach(function(p, i){
+        var extraClass = i >= 5 ? ' extra-liked' : '';
+        var hiddenStyle = i >= 5 ? 'style="display:none;"' : '';
+        let catLabel = p.docType === 'critique' ? '비평' : p.category;
+        let catClass = p.docType === 'critique' ? 'badge-critique' : (p.category==='운문'?'badge-verse':'badge-prose');
+        html += `<div class="mypage-item${extraClass}" onclick="navigateTo('post','${p.id}')" ${hiddenStyle}>
+          <span class="cat-badge ${catClass}">${escHtml(catLabel)}</span>
+          <strong>${escHtml(p.title||'')}</strong>
+          <span class="mypage-item-meta">✍ ${escHtml(p.penName||'')} · 🎭 반응 ${p.likeCount||0}</span>
+        </div>`;
+      });
+      if(likedPosts.length > 5){
+        html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-liked').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
+      }
+      setHTML('mypage-liked', html || '<p class="empty-msg">반응한 작품이 없습니다.</p>');
+    });
+
+    setText('mycommented-count', '...');
+    setHTML('mypage-commented', '<p class="empty-msg">불러오는 중...</p>');
+    
+    db.collection('posts').where('commenters', 'array-contains', currentUser.uid).get().then(snap => {
+      let commentedItems = [];
+      let promises = snap.docs.map(doc => {
+        return db.collection('posts').doc(doc.id).collection('comments').where('uid', '==', currentUser.uid).get()
+        .then(cSnap => {
+          if(!cSnap.empty) {
+            let cmts = cSnap.docs.map(d=>d.data());
+            cmts.sort((a,b) => b.createdAt - a.createdAt);
+            commentedItems.push({
+              postId: doc.id,
+              postData: doc.data(),
+              commentBody: cmts[0].body,
+              commentDate: cmts[0].createdAt
+            });
+          }
+        });
+      });
+      
+      Promise.all(promises).then(() => {
+        commentedItems.sort(function(a, b) {
+           var ta = a.commentDate ? (a.commentDate.toMillis ? a.commentDate.toMillis() : new Date(a.commentDate).getTime()) : 0;
+           var tb = b.commentDate ? (b.commentDate.toMillis ? b.commentDate.toMillis() : new Date(b.commentDate).getTime()) : 0;
+           return tb - ta;
+        });
+
+        setText('mycommented-count', commentedItems.length);
+        if(commentedItems.length===0){
+          setHTML('mypage-commented','<p class="empty-msg">댓글단 작품이 없습니다.</p>');
+          return;
+        }
+        
+        var html = '';
+        commentedItems.forEach(function(item, i){
+          var extraClass = i >= 5 ? ' extra-commented' : '';
+          var hiddenStyle = i >= 5 ? 'style="display:none;"' : '';
+          var p = item.postData;
+          var cBody = item.commentBody || '';
+          if(cBody.length > 30) cBody = cBody.substring(0, 30) + '...';
+          let catLabel = p.docType === 'critique' ? '비평' : p.category;
+          let catClass = p.docType === 'critique' ? 'badge-critique' : (p.category==='운문'?'badge-verse':'badge-prose');
+
+          html += `<div class="mypage-item${extraClass}" onclick="navigateTo('post','${item.postId}')" ${hiddenStyle} style="align-items:flex-start; flex-direction:column; gap:0.4rem;">
+            <div style="font-size:0.95rem; color:var(--ink); line-height:1.5; word-break:keep-all; width:100%;">💬 "${escHtml(cBody)}"</div>
+            <div style="display:flex; align-items:center; gap:0.5rem; width:100%;">
+              <span class="cat-badge ${catClass}">${escHtml(catLabel)}</span>
+              <strong style="font-size:0.85rem; color:var(--ink2); font-weight:500;">${escHtml(p.title||'')}</strong>
+            </div>
+          </div>`;
+        });
+        if(commentedItems.length > 5){
+          html += `<button class="btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="document.querySelectorAll('.extra-commented').forEach(function(el){el.style.display='';}); this.style.display='none';">더보기 ↓</button>`;
+        }
+        setHTML('mypage-commented', html);
+      });
+    }).catch(e => {
+        console.error('댓글단 작품 오류:',e);
+        setHTML('mypage-commented','<p class="empty-msg">불러오지 못했습니다.</p>');
+    });
+  }
+}
+
+function syncBodyEditor(editorId, countId){
+  const editor = document.getElementById(editorId);
+  if(!editor) return;
+  const text = editor.innerText || '';
+  const len = text.length;
+  const countEl = document.getElementById(countId);
+  if(countEl) countEl.textContent = len;
+
+  if(editorId === 'submit-body-editor') {
+    const cat = document.querySelector('input[name="category"]:checked');
+    const warningMsg = document.getElementById('prose-warning');
+    if(cat && cat.value === '산문') {
+      if(len < 6000 || len >= 20000) {
+        countEl.style.color = 'var(--red)';
+        if(warningMsg) warningMsg.style.display = 'block';
+      } else {
+        countEl.style.color = 'inherit';
+        if(warningMsg) warningMsg.style.display = 'none';
+      }
+    } else {
+      countEl.style.color = 'inherit';
+      if(warningMsg) warningMsg.style.display = 'none';
+    }
+  }
+}
+
+function execFmt(cmd, val, editorId){
+  var ed = document.getElementById(editorId || 'submit-body-editor');
+  if(ed) { ed.focus(); document.execCommand(cmd, false, val||null); }
+}
+function clearFmt(editorId){
+  var ed = document.getElementById(editorId || 'submit-body-editor');
+  if(ed) { ed.focus(); document.execCommand('removeFormat', false, null); }
+}
+
+function renderAdmin(){
+  if(!currentUserData||currentUserData.role!=='admin'){
+    toast('관리자만 접근할 수 있습니다.','error');
+    navigateTo('home');
+    return;
+  }
+  
+  db.collection('config').doc('siteMode').get().then(doc=>{
+    const mode=doc.exists?doc.data().mode:'apply';
+    siteMode=mode;
+    setText('current-mode-label', mode==='apply'?'📝 응모기간 모드':(mode==='view'?'👀 감상기간 모드':(mode==='test'?'🛠️ 테스트 모드':'🛑 휴식 모드')));
+    
+    document.getElementById('btn-apply-mode').classList.toggle('active-mode', mode==='apply');
+    document.getElementById('btn-view-mode').classList.toggle('active-mode', mode==='view');
+    document.getElementById('btn-test-mode').classList.toggle('active-mode', mode==='test');
+    document.getElementById('btn-rest-mode').classList.toggle('active-mode', mode==='rest');
+  });
+
+  loadPenNameRequests();
+}
+
+function loadPenNameRequests() {
+  const container = $('admin-penname-requests');
+  if(!container) return;
+  db.collection('penNameRequests').get().then(snap => {
+    let reqs = [];
+    snap.forEach(doc => {
+      const data = doc.data();
+      if(data.status === 'pending') {
+        reqs.push({id: doc.id, ...data});
+      }
+    });
+    if(reqs.length === 0) {
+      setHTML('admin-penname-requests', '<p class="empty-msg">대기 중인 필명 변경 신청이 없습니다.</p>');
+      return;
+    }
+    reqs.sort((a,b) => {
+      const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+      const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+      return ta - tb; // 오래된 순
+    });
+
+    let html = '<div style="display:flex; flex-direction:column; gap:0.5rem;">';
+    reqs.forEach(r => {
+      html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--paper2); border-radius:var(--radius); border:1px solid var(--paper3);">
+        <div>
+          <strong style="color:var(--ink);">${escHtml(r.oldPenName)}</strong>
+          <span style="color:var(--ink3); margin:0 0.5rem;">→</span>
+          <strong style="color:var(--gold);">${escHtml(r.newPenName)}</strong>
+          <div style="font-size:0.75rem; color:var(--ink3); margin-top:0.2rem;">${escHtml(r.email)} | ${formatDate(r.createdAt)}</div>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn-primary btn-sm" onclick="approvePenName('${r.id}', '${r.uid}', '${r.newPenName}')">승인</button>
+          <button class="btn-danger btn-sm" onclick="rejectPenName('${r.id}')">거부</button>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    setHTML('admin-penname-requests', html);
+  }).catch(e => console.log('필명 변경 신청 로드 에러:', e));
+}
+
+async function approvePenName(reqId, uid, newPenName) {
+  if(!confirm(`필명을 '${newPenName}'(으)로 변경 승인하시겠습니까?`)) return;
+
+  try {
+    const snap = await db.collection('users').where('penName','==',newPenName).get();
+    if(!snap.empty) {
+      toast('이미 다른 사용자가 등록한 필명입니다. 거부 처리해주세요.', 'error');
+      return;
+    }
+
+    toast('데이터를 업데이트 중입니다. 잠시만 기다려주세요...', 'info');
+
+    await db.collection('users').doc(uid).update({ penName: newPenName });
+    await db.collection('penNameRequests').doc(reqId).update({ status: 'approved', processedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+    if(currentUser && currentUser.uid === uid) {
+       currentUserData.penName = newPenName;
+       updateNavUI();
+    }
+    
+    const allPostsSnap = await db.collection('posts').get();
+    let batch = db.batch();
+    let count = 0;
+    const batchArray = [];
+    const indexRef = db.collection('indexes').doc('posts');
+
+    for (const pDoc of allPostsSnap.docs) {
+      if (pDoc.data().uid === uid) {
+        batch.update(pDoc.ref, { penName: newPenName });
+        batch.set(indexRef, { ['posts.' + pDoc.id + '.penName']: newPenName }, {merge: true});
+        count+=2;
+        if (count >= 490) { batchArray.push(batch); batch = db.batch(); count = 0; }
+      }
+      
+      const cSnap = await pDoc.ref.collection('comments').where('uid','==',uid).get();
+      for (const cDoc of cSnap.docs) {
+        batch.update(cDoc.ref, { penName: newPenName });
+        count++;
+        if (count >= 490) { batchArray.push(batch); batch = db.batch(); count = 0; }
+      }
+    }
+    
+    if (count > 0) batchArray.push(batch);
+    for (const b of batchArray) {
+      await b.commit();
+    }
+    
+    toast('필명 변경이 일괄 소급 적용되어 승인되었습니다.', 'success');
+    loadPenNameRequests();
+  } catch (e) {
+    toast('승인 실패: ' + e.message, 'error');
+  }
+}
+
+function rejectPenName(reqId) {
+  if(!confirm('해당 필명 변경 신청을 거부(취소)하시겠습니까?')) return;
+  db.collection('penNameRequests').doc(reqId).update({
+    status: 'rejected',
+    processedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    toast('거부 처리되었습니다.', 'info');
+    loadPenNameRequests();
+  });
+}
+
+function setSiteMode(mode){
+  if(!currentUserData||currentUserData.role!=='admin') return;
+  db.collection('config').doc('siteMode').set({mode}).then(()=>{
+    siteMode=mode;
+    updateModeBanner(mode);
+    toast('사이트 모드가 성공적으로 변경되었습니다.','success');
+    renderAdmin();
+    setTimeout(() => location.reload(), 500); 
+  });
+}
+
+async function rebuildIndex() {
+  if(!confirm('모든 작품을 읽어 목차(Index) 문서를 새로 생성합니다. 시간이 걸릴 수 있습니다. 실행할까요?')) return;
+  
+  const btn = document.querySelector('button[onclick="rebuildIndex()"]');
+  if(btn) { btn.disabled = true; btn.textContent = '압축 팩 동기화 중...'; }
+
+  try {
+    const snap = await db.collection('posts').get();
+    let postsIndex = {};
+    snap.docs.forEach(doc => {
+      let d = doc.data();
+      postsIndex[doc.id] = {
+        id: doc.id, uid: d.uid, docType: d.docType || 'post',
+        targetPostTitle: d.targetPostTitle || '', category: d.category || '',
+        title: d.title || '', penName: d.penName || '',
+        preview: extractPreview(d.body || ''), 
+        likeCount: d.likeCount || 0, commentCount: d.commentCount || 0,
+        createdAt: d.createdAt ? (d.createdAt.toMillis ? d.createdAt.toMillis() : new Date(d.createdAt).getTime()) : Date.now()
+      };
+    });
+    
+    await db.collection('indexes').doc('posts').set({ posts: postsIndex });
+    toast('목차 동기화가 성공적으로 완료되었습니다!', 'success');
+  } catch(e) {
+    toast('오류 발생: ' + e.message, 'error');
+  }
+  
+  if(btn) { btn.disabled = false; btn.innerHTML = '🔄 강제 목차(Index) 동기화<span style="color:var(--ink3);">기존 낱개 글들을 서버 요금 절약을 위해 1개의 목차 문서로 압축합니다 (코드 업데이트 후 1회 권장)</span>'; }
+}
+
+async function archiveData() {
+  if(!confirm('해당 작업을 실행하면 DB에 복구불가능한 변화가 생깁니다. 실행합니까?')) return;
+  const btn = document.getElementById('btn-archive');
+  btn.disabled = true; btn.textContent = '아카이브 복사 중...';
+
+  try {
+    const postsSnap = await db.collection('posts').get();
+    const batchArray = [];
+    let batch = db.batch();
+    let count = 0;
+
+    for (const doc of postsSnap.docs) {
+      const archiveRef = db.collection('archive_2026').doc(doc.id);
+      batch.set(archiveRef, doc.data());
+      count++;
+      if(count === 500) { batchArray.push(batch); batch = db.batch(); count = 0; }
+
+      const commentsSnap = await doc.ref.collection('comments').get();
+      for (const cDoc of commentsSnap.docs) {
+        const archiveCommentRef = archiveRef.collection('comments').doc(cDoc.id);
+        batch.set(archiveCommentRef, cDoc.data());
+        count++;
+        if(count === 500) { batchArray.push(batch); batch = db.batch(); count = 0; }
+      }
+    }
+    if(count > 0) batchArray.push(batch);
+
+    for(const b of batchArray) await b.commit();
+
+    toast('아카이브 복사가 완료되었습니다.', 'success');
+  } catch(e) {
+    toast('오류 발생: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.innerHTML = '🗂️ 전체 글 아카이브로 옮기기<span>현재 응모/비평작을 보관소(archive_2026)로 안전하게 복사합니다</span>';
+}
+
+async function resetDB() {
+  if(!confirm('해당 작업을 실행하면 DB에 복구불가능한 변화가 생깁니다. 실행합니까?')) return;
+  const promptText = prompt('초기화를 진행하려면 "초기화확인" 이라고 입력해주세요.');
+  if(promptText !== '초기화확인') { toast('입력값이 일치하지 않아 취소되었습니다.', 'info'); return; }
+
+  const btn = document.getElementById('btn-reset');
+  btn.disabled = true; btn.textContent = 'DB 초기화 중...';
+
+  try {
+    const postsSnap = await db.collection('posts').get();
+    for (const doc of postsSnap.docs) {
+      const commentsSnap = await doc.ref.collection('comments').get();
+      const cBatch = db.batch();
+      commentsSnap.docs.forEach(c => cBatch.delete(c.ref));
+      await cBatch.commit();
+      await doc.ref.delete();
+    }
+
+    const reqsSnap = await db.collection('penNameRequests').get();
+    const rBatch = db.batch();
+    reqsSnap.docs.forEach(r => rBatch.delete(r.ref));
+    await rBatch.commit();
+
+    const notisSnap = await db.collection('notifications').get();
+    const nBatch = db.batch();
+    notisSnap.docs.forEach(n => nBatch.delete(n.ref));
+    await nBatch.commit();
+
+    const usersSnap = await db.collection('users').get();
+    const uBatch = db.batch();
+    usersSnap.docs.forEach(u => {
+      if (u.data().role !== 'admin') {
+        uBatch.delete(u.ref);
+      }
+    });
+    await uBatch.commit();
+    
+    await db.collection('indexes').doc('posts').delete();
+
+    toast('DB 초기화가 완료되었습니다. 새 학기를 시작할 수 있습니다.', 'success');
+  } catch(e) {
+    toast('오류 발생: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.innerHTML = '💣 DB 초기화 (새 학기 리셋)<span>응모작, 비평, 댓글, 학생 필명 정보를 모두 삭제합니다 (관리자 계정 유지)</span>';
+}
+
+function downloadCSV(rows, filename){
+  const BOM='\uFEFF';
+  const csv=BOM+rows.map(r=>r.map(c=>{
+    const s=String(c===null||c===undefined?'':c);
+    return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadUsersDB(){
+  toast('사용자 DB 준비 중...','info');
+  db.collection('users').get().then(snap=>{
+    const rows=[['이메일','필명','가입일시']];
+    snap.docs.forEach(d=>{
+      const u=d.data();
+      const date=u.createdAt?u.createdAt.toDate().toLocaleString('ko-KR'):'';
+      rows.push([u.email||'',u.penName||'',date]);
+    });
+    downloadCSV(rows,'사용자계정DB.csv');
+    toast('사용자 DB 다운로드 완료!','success');
+  }).catch(e=>toast('오류: '+e.message,'error'));
+}
+
+function downloadPostsDB(){
+  toast('응모작 DB 준비 중...','info');
+  db.collection('posts').get().then(snap=>{
+    const rows=[['필명','카테고리','제목','작품소개(비평은 원작)','작품본문','총반응수','댓글수']];
+    snap.docs.forEach(d=>{
+      const p=d.data();
+      if(p.docType === 'critique') return; 
+      const bodyText=(p.body||'').replace(/<[^>]*>/g,'');
+      rows.push([
+        p.penName||'', p.category||'', p.title||'',
+        p.intro||'', bodyText,
+        p.likeCount||0, p.commentCount||0
+      ]);
+    });
+    downloadCSV(rows,'응모작DB.csv');
+    toast('응모작 DB 다운로드 완료!','success');
+  }).catch(e=>toast('오류: '+e.message,'error'));
+}
+
+function downloadCritiquesDB(){
+  toast('비평 DB 준비 중...','info');
+  db.collection('posts').where('docType', '==', 'critique').get().then(snap=>{
+    const rows=[['비평대상글','비평문제목','필명','본문','총반응수','댓글수']];
+    snap.docs.forEach(d=>{
+      const p=d.data();
+      const bodyText=(p.body||'').replace(/<[^>]*>/g,'');
+      rows.push([
+        p.targetPostTitle||'', p.title||'', p.penName||'',
+        bodyText, p.likeCount||0, p.commentCount||0
+      ]);
+    });
+    downloadCSV(rows,'비평DB.csv');
+    toast('비평 DB 다운로드 완료!','success');
+  }).catch(e=>toast('오류: '+e.message,'error'));
+}
+
+async function downloadCommentsDB(){
+  toast('댓글 DB 준비 중...','info');
+  try {
+    const postsSnap=await db.collection('posts').get();
+    const rows=[['필명','댓글달린글제목','글작성자','댓글내용','총반응수']];
+    for(const postDoc of postsSnap.docs){
+      const p=postDoc.data();
+      const commentsSnap=await db.collection('posts').doc(postDoc.id).collection('comments').get();
+      commentsSnap.docs.forEach(cd=>{
+        const c=cd.data();
+        rows.push([c.penName||'',p.title||'',p.penName||'',c.body||'',c.likeCount||0]);
+      });
+    }
+    downloadCSV(rows,'댓글DB.csv');
+    toast('댓글 DB 다운로드 완료!','success');
+  } catch(e){ toast('오류: '+e.message,'error'); }
+}
+
+
+function toggleNav(){
+  const nav = document.getElementById('main-nav');
+  const btn = document.getElementById('hamburger-btn');
+  nav.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+function closeNav(){
+  const nav = document.getElementById('main-nav');
+  const btn = document.getElementById('hamburger-btn');
+  if(nav)nav.classList.remove('open');
+  if(btn)btn.classList.remove('open');
+}
+
+loadSiteMode().then(() => {
+  navigateTo('home');
+});
+</script>
+</body>
+</html>
