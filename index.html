@@ -672,6 +672,17 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
+<div class="modal-overlay" id="mission-success-modal" style="display:none">
+  <div class="modal" style="text-align:center;max-width:340px;">
+    <div id="mission-success-emoji" style="font-size:3rem;margin-bottom:0.5rem;">🎉</div>
+    <h2 style="font-family:var(--font-serif);font-size:1.4rem;margin-bottom:0.4rem;">미션 달성!</h2>
+    <p id="mission-success-text" style="font-size:0.9rem;color:var(--ink2);margin-bottom:0.75rem;"></p>
+    <div id="mission-success-points" style="display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:white;font-size:1.5rem;font-weight:700;padding:0.5rem 1.5rem;border-radius:30px;margin-bottom:1.25rem;"></div>
+    <div style="font-size:0.82rem;color:var(--ink3);margin-bottom:1.25rem;">포인트가 적립되었습니다. 반복 수행 가능합니다!</div>
+    <button class="btn-primary" onclick="document.getElementById('mission-success-modal').style.display='none'" style="width:100%;">계속하기</button>
+  </div>
+</div>
+
 <footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.5 (오류 수정 및 전체 코드)</footer>
 
 <script>
@@ -752,7 +763,11 @@ function addMissionProgress(missionId) {
   if (completed) {
     updates.points = firebase.firestore.FieldValue.increment(earnedPoints);
     currentUserData.points = (currentUserData.points || 0) + earnedPoints;
-    toast(`🎉 미션 달성! [${missionDef.text}] +${earnedPoints}P`, 'success');
+    toast(`🎉 미션 달성! +${earnedPoints}P`, 'success');
+    document.getElementById('mission-success-emoji').textContent = missionDef.icon || '🎉';
+    document.getElementById('mission-success-text').textContent = missionDef.text;
+    document.getElementById('mission-success-points').textContent = '+' + earnedPoints + 'P';
+    document.getElementById('mission-success-modal').style.display = 'flex';
     updateNavUI();
   }
 
@@ -1178,6 +1193,7 @@ auth.onAuthStateChanged(user=>{
         currentUserData=doc.data();
         checkAndAssignDailyMissions(currentUserData);
         updateNavUI();
+        if($('page-home').style.display === 'block') renderHome();
         
         $('noti-bell').style.display = 'flex';
         notiUnsubscribe = db.collection('notifications')
@@ -1239,7 +1255,7 @@ function renderHome(){
     if(featSec) featSec.style.display = 'none';
   } else if(siteMode === 'apply'){
     setHTML('hero-btn-container', '<button class="cta-primary" id="hero-btn-submit" onclick="navigateTo(\'submit\')">작품 응모하기</button>');
-    if(featSec) featSec.style.display = 'none';
+    if(featSec) featSec.style.display = 'block';
   } else {
     setHTML('hero-btn-container', '<button class="cta-primary" id="hero-btn-gallery" onclick="navigateTo(\'gallery\')">작품 감상하기</button>');
     if(featSec) featSec.style.display = 'block';
