@@ -2149,6 +2149,34 @@ function renderPost(postId){
   }).catch(e=>console.error(e));
 }
 
+function _updateReactUI(targetField, activeFields, delta, prevData) {
+  const fieldToClass = {likes:'r-heart', tears:'r-tear', shocks:'r-shock', fears:'r-fear'};
+  const isRemoving = activeFields.includes(targetField) && activeFields.length === 1;
+  const newActive = isRemoving ? [] : [targetField];
+  const counts = {
+    likes:(prevData.likes||[]).length, tears:(prevData.tears||[]).length,
+    shocks:(prevData.shocks||[]).length, fears:(prevData.fears||[]).length
+  };
+  activeFields.forEach(f => { if(counts[f] > 0) counts[f]--; });
+  if(!isRemoving) counts[targetField]++;
+  if(currentViewPost) {
+    currentViewPost.likeCount = (currentViewPost.likeCount || 0) + delta;
+    ['likes','tears','shocks','fears'].forEach(f => {
+      let arr = [...(currentViewPost[f]||[])];
+      if(activeFields.includes(f)) arr = arr.filter(u => u !== currentUser.uid);
+      if(f === targetField && !isRemoving) arr.push(currentUser.uid);
+      currentViewPost[f] = arr;
+    });
+  }
+  ['likes','tears','shocks','fears'].forEach(f => {
+    const btn = document.querySelector('.reaction-row .btn-react.' + fieldToClass[f]);
+    if(!btn) return;
+    btn.classList.toggle('active', newActive.includes(f));
+    const span = btn.querySelector('span');
+    if(span) span.textContent = Math.max(0, counts[f]);
+  });
+}
+
 function toggleReact(postId, type){
   if(!currentUser){toast('로그인 후 이용 가능합니다.','error');return;}
   if(!currentViewPost) return;
@@ -2213,7 +2241,7 @@ function toggleReact(postId, type){
     
     batch.commit().then(()=>{
       if(delta > 0) addMissionProgress(1);
-      renderPost(postId);
+      _updateReactUI(targetField, activeFields, delta, d);
     });
   });
 }
@@ -2404,10 +2432,30 @@ function _doEditPost(postId){
         </div></div>
         <div class="form-group"><label>제목</label><input type="text" id="edit-title" value="${escHtml(p.title||'')}" maxlength="50" required></div>
         <div class="form-group"><label>작품 소개</label><textarea id="edit-intro" rows="3" maxlength="200">${escHtml(p.intro||'')}</textarea></div>
-        <div class="form-group"><label>본문</label><textarea id="edit-body" rows="16" maxlength="3000">${escHtml(p.body||'')}</textarea></div>
+        <div class="form-group">
+          <label>본문 <span class="char-info"><span id="edit-body-count">0</span>자</span></label>
+          <div class="editor-toolbar">
+            <button type="button" class="tb-btn" onclick="execFmt('bold',null,'edit-body-editor')"><b>B</b></button>
+            <button type="button" class="tb-btn" onclick="execFmt('italic',null,'edit-body-editor')"><i>I</i></button>
+            <select class="tb-select" onchange="execFmt('fontSize',this.value,'edit-body-editor');this.selectedIndex=0">
+              <option value="">크기</option><option value="1">작게</option><option value="3">보통</option><option value="5">크게</option><option value="7">매우 크게</option>
+            </select>
+            <input type="color" class="tb-color" onchange="execFmt('foreColor',this.value,'edit-body-editor')" value="#1a1714">
+            <button type="button" class="tb-btn tb-clear" onclick="clearFmt('edit-body-editor')">초기화</button>
+          </div>
+          <div id="edit-body-editor" class="body-editor" contenteditable="true"
+            oninput="syncBodyEditor('edit-body-editor','edit-body-count')"
+            onpaste="handlePaste(event)"
+            placeholder="본문을 입력하세요"></div>
+        </div>
         <div class="form-actions"><button type="submit" class="btn-primary">수정 저장</button></div>
       </form>
     </div>`);
+    const bodyEditor = document.getElementById('edit-body-editor');
+    if(bodyEditor) {
+      bodyEditor.innerHTML = p.body || '';
+      syncBodyEditor('edit-body-editor', 'edit-body-count');
+    }
   });
 }
 
@@ -2423,8 +2471,8 @@ function saveEdit(e,postId){
     const cat=document.querySelector('input[name="ecat"]:checked');
     const title=$('edit-title').value.trim();
     const intro=$('edit-intro').value.trim();
-    const bodyEl = document.getElementById('edit-body');
-    const body = bodyEl ? sanitizeHTML(bodyEl.value.trim()) : '';
+    const bodyEl = document.getElementById('edit-body-editor');
+    const body = bodyEl ? sanitizeHTML(bodyEl.innerHTML.trim()) : '';
 
     if(!cat||!title||!intro||!body){toast('모든 항목을 입력하세요.','error');return;}
     
