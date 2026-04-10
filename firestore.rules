@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isCnsaUser() {
+      return request.auth != null
+          && request.auth.token.email.matches('.*@cnsa\\.hs\\.kr');
+    }
+
+    // 모든 경로: @cnsa.hs.kr 인증 사용자만 읽기/쓰기
+    match /{document=**} {
+      allow read, write: if isCnsaUser();
+    }
+  }
+}

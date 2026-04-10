@@ -725,7 +725,7 @@ function getUserTitle(points) {
 function checkAndAssignDailyMissions(userData) {
   const today = new Date().toLocaleDateString('ko-KR', {timeZone: 'Asia/Seoul'});
   if (userData.lastMissionDate !== today) {
-    const allIds = [1, 2, 3, 4, 5];
+    const allIds = [1, 2, 3, 4, 5, 6, 7, 8];
     const shuffled = allIds.sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
     const newMissions = {};
@@ -739,7 +739,7 @@ function checkAndAssignDailyMissions(userData) {
       lastMissionDate: today,
       dailyMissions: newMissions,
       points: userData.points
-    });
+    }).catch(e => console.error('미션 배정 저장 실패:', e.message));
   }
 }
 
@@ -773,6 +773,14 @@ function addMissionProgress(missionId) {
 
   db.collection('users').doc(currentUser.uid).update(updates).then(() => {
     if(document.getElementById('page-mypage').style.display === 'block') renderMissionsUI();
+    if(document.getElementById('page-mypage').style.display === 'block') {
+      const _p = currentUserData.points || 0;
+      setText('mypage-email', `${currentUserData.email||''} · ${_p}P`);
+      setText('mypage-penname', `${getUserTitle(_p)} · ${currentUserData.penName}`);
+    }
+  }).catch(e => {
+    console.error('미션 저장 실패:', e.message);
+    toast('포인트 저장 중 오류가 발생했습니다. 새로고침 후 다시 시도해주세요.', 'error');
   });
 }
 
@@ -787,7 +795,13 @@ function getMidnightCountdown() {
 }
 
 function renderMissionsUI() {
-  if (!currentUserData || !currentUserData.dailyMissions) return;
+  if (!currentUserData) return;
+  if (!currentUserData.dailyMissions) {
+    checkAndAssignDailyMissions(currentUserData);
+    setHTML('mypage-missions', '<p class="empty-msg" style="color:rgba(255,255,255,.5);">미션을 불러오는 중입니다...</p>');
+    setTimeout(renderMissionsUI, 1200);
+    return;
+  }
   const missions = currentUserData.dailyMissions;
   const ids = Object.keys(missions);
   const pts = currentUserData.points || 0;
@@ -1226,7 +1240,7 @@ function updateNavUI(){
     // --- 칭호 및 포인트 표시 추가 부분 ---
     const pts = currentUserData.points || 0;
     const title = getUserTitle(pts);
-    setText('user-penname', `[${title}] ${currentUserData.penName} (${pts}P)`);
+    setText('user-penname', currentUserData.penName);
     // -------------------------------------
 
     const btnChange = $('btn-penname-change');
@@ -2499,8 +2513,11 @@ function renderMyPage(){
     setHTML('mypage-content','<div class="center-msg"><p>로그인 후 이용할 수 있습니다.</p><button class="btn-primary" onclick="doLogin()">Google 로그인</button></div>');
     return;
   }
-  setText('mypage-penname', currentUserData.penName);
-  setText('mypage-email', currentUserData.email||'');
+  const _pts = currentUserData.points || 0;
+  const _title = getUserTitle(_pts);
+  setText('mypage-penname', `${_title} · ${currentUserData.penName}`);
+  setText('mypage-email', `${currentUserData.email||''} · ${_pts}P`);
+  renderMissionsUI();
 
   db.collection('indexes').doc('posts').get().then(function(snap){
     var posts = snap.exists ? Object.values(snap.data().posts || {}) : [];
