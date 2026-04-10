@@ -1223,7 +1223,7 @@ function updateNavUI(){
   
   const isAdmin = on && currentUserData.role === 'admin';
   const adminNav = $('nav-admin');
-  if(adminNav) adminNav.style.display = isAdmin ? '' : 'none';
+  if(adminNav) adminNav.style.display = isAdmin ? 'inline-flex' : 'none';
 
   updateModeBanner(siteMode);
 }
