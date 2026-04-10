@@ -1642,7 +1642,8 @@ function filterAndRenderGallery(){
   var s = gallerySearch.toLowerCase();
   if(s) posts = posts.filter(function(p){
     return (p.title||'').toLowerCase().indexOf(s) > -1 ||
-           (p.penName||'').toLowerCase().indexOf(s) > -1;
+           (p.penName||'').toLowerCase().indexOf(s) > -1 ||
+           (p.preview||'').toLowerCase().indexOf(s) > -1;
   });
   
   if(gallerySort === 'random'){
@@ -1989,7 +1990,6 @@ function setViewerFontSize(size) {
     b.classList.toggle('active', b.getAttribute('onclick').includes(size));
   });
 }
-if (delta > 0) addMissionProgress(1); // 1번 미션 (반응하기) 달성 체크
 function renderPost(postId){
   if(!postId){navigateTo('gallery');return;}
   
@@ -1998,6 +1998,7 @@ function renderPost(postId){
     readList.push(postId);
     localStorage.setItem('cnsa_read_posts', JSON.stringify(readList));
   }
+  // 읽기 미션 트리거는 post 데이터 로드 후 docType 확인 후 처리
 
   let otherPostsHtml = '<div id="author-other-posts-container"></div>';
 
@@ -2009,7 +2010,11 @@ function renderPost(postId){
     if(!snap.exists){toast('작품을 찾을 수 없습니다.','error');navigateTo('gallery');return;}
     
     const p = {id:snap.id,...snap.data()};
-    currentViewPost = p; 
+    currentViewPost = p;
+    if(currentUser) {
+      if(p.docType === 'critique') addMissionProgress(8);
+      else addMissionProgress(6);
+    }
 
     const isOwner=currentUser&&p.uid===currentUser.uid;
     const isAdmin=currentUserData&&currentUserData.role==='admin';
@@ -2207,6 +2212,7 @@ function toggleReact(postId, type){
     }
     
     batch.commit().then(()=>{
+      if(delta > 0) addMissionProgress(1);
       renderPost(postId);
     });
   });
@@ -2972,6 +2978,23 @@ function closeNav(){
   if(nav)nav.classList.remove('open');
   if(btn)btn.classList.remove('open');
 }
+
+document.addEventListener('click', function(e) {
+  const notiPanel = document.getElementById('noti-panel');
+  const notiBell = document.getElementById('noti-bell');
+  if(notiPanel && notiPanel.classList.contains('show')) {
+    if(!notiPanel.contains(e.target) && e.target !== notiBell && !notiBell.contains(e.target)) {
+      notiPanel.classList.remove('show');
+    }
+  }
+  const viewerPanel = document.getElementById('viewer-panel');
+  if(viewerPanel && viewerPanel.classList.contains('show')) {
+    const settingsBtn = document.querySelector('.viewer-settings-btn');
+    if(settingsBtn && !viewerPanel.contains(e.target) && e.target !== settingsBtn) {
+      viewerPanel.classList.remove('show');
+    }
+  }
+});
 
 loadSiteMode().then(() => {
   navigateTo('home');
