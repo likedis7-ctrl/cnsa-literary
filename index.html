@@ -557,7 +557,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <div style="margin-top:0.75rem;"><button onclick="openPenNameChangeModal()" style="font-size:0.8rem;padding:0.3rem 0.85rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:rgba(255,255,255,.9);border-radius:20px;cursor:pointer;font-family:var(--font-sans);">📝 필명변경 신청</button></div>
     </div>
     <div class="mypage-section" id="mypage-mission-section">
-      <h2>🎯 오늘의 미션 <span style="font-size:0.8rem; font-weight:normal; color:var(--ink3);">(자정 초기화 · 반복 수행 가능)</span></h2>
+      <h2>🎯 오늘의 미션 <span style="font-size:0.8rem; font-weight:normal; color:var(--ink3);">(3시간마다 초기화)</span></h2>
       <div id="mypage-missions"><p class="empty-msg">불러오는 중...</p></div>
     </div>
     <div class="mypage-section" id="mypage-myposts-section">
@@ -750,20 +750,33 @@ function getTitleProgress(pts) {
   return {pct:Math.round(((pts-cur.min)/(cur.max-cur.min))*100), next:tiers[idx+1].title, needed:cur.max-pts, curMin:cur.min};
 }
 
+function getNext3HourBoundary() {
+  const now = new Date();
+  const nextSlot = (Math.floor(now.getHours() / 3) + 1) * 3;
+  const next = new Date(now);
+  next.setHours(nextSlot, 0, 0, 0);
+  return next.getTime();
+}
+
 function checkAndAssignDailyMissions(userData) {
-  if (!userData.dailyMissions || Object.keys(userData.dailyMissions).length === 0) {
-    const allIds = [1, 2, 3, 4, 5, 6, 7, 8];
-    const shuffled = [...allIds].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 3);
-    const newMissions = {};
-    selected.forEach(id => newMissions[id] = 0);
-    userData.dailyMissions = newMissions;
-    userData.points = userData.points || 0;
-    db.collection('users').doc(userData.uid).update({
-      dailyMissions: newMissions,
-      points: userData.points
-    }).catch(e => console.error('미션 배정 저장 실패:', e.message));
-  }
+  const now = Date.now();
+  const resetAt = userData.missionResetAt || 0;
+  const hasMissions = userData.dailyMissions && Object.keys(userData.dailyMissions).length > 0;
+  if (hasMissions && now < resetAt) return;
+
+  const allIds = [1, 2, 3, 4, 5, 6, 7, 8];
+  const shuffled = [...allIds].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 3);
+  const newMissions = {};
+  selected.forEach(id => newMissions[id] = 0);
+  userData.dailyMissions = newMissions;
+  userData.missionResetAt = getNext3HourBoundary();
+  userData.points = userData.points || 0;
+  db.collection('users').doc(userData.uid).update({
+    dailyMissions: newMissions,
+    missionResetAt: userData.missionResetAt,
+    points: userData.points
+  }).catch(e => console.error('미션 배정 저장 실패:', e.message));
 }
 
 function addMissionProgress(missionId) {
@@ -781,15 +794,6 @@ function addMissionProgress(missionId) {
 
     delete currentUserData.dailyMissions[missionId];
     updates[`dailyMissions.${missionId}`] = firebase.firestore.FieldValue.delete();
-
-    const currentIds = Object.keys(currentUserData.dailyMissions).map(Number);
-    const allIds = [1,2,3,4,5,6,7,8];
-    const available = allIds.filter(id => !currentIds.includes(id));
-    if (available.length > 0) {
-      const newId = available[Math.floor(Math.random() * available.length)];
-      currentUserData.dailyMissions[newId] = 0;
-      updates[`dailyMissions.${newId}`] = 0;
-    }
 
     toast(`🎉 미션 달성! +${earnedPoints}P`, 'success');
     document.getElementById('mission-success-emoji').textContent = missionDef.icon || '🎉';
@@ -836,14 +840,14 @@ function _checkMission7(postId) {
   }
 }
 
-function getMidnightCountdown() {
-  const now = new Date();
-  const midnight = new Date(now); midnight.setHours(24,0,0,0);
-  const diff = midnight - now;
-  const h = Math.floor(diff/3600000);
-  const m = Math.floor((diff%3600000)/60000);
-  const s = Math.floor((diff%60000)/1000);
-  return `${h}시간${m}분${s}초 후 새 미션으로 교체`;
+function get3HourCountdown() {
+  if (!currentUserData || !currentUserData.missionResetAt) return '3시간마다 초기화';
+  const diff = currentUserData.missionResetAt - Date.now();
+  if (diff <= 0) return '초기화 중...';
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  return `${h}시간 ${m}분 ${s}초 후 초기화`;
 }
 
 function renderMissionsUI() {
@@ -914,11 +918,20 @@ function renderMissionsUI() {
       <div class="mission-overall-bar"><div class="mission-overall-fill" style="width:${overallPct}%"></div></div>
     </div>
     ${cardsHtml}
-    <div style="text-align:center;font-size:.58rem;color:rgba(255,255,255,.3);margin-top:.15rem;">미션 달성 시 새 미션으로 교체됩니다</div>
+    <div style="text-align:center;font-size:.58rem;color:rgba(255,255,255,.3);margin-top:.15rem;">미션은 3시간마다 새로운 미션으로 교체됩니다 · <span id="mission-countdown">${get3HourCountdown()}</span></div>
   </div>`;
 
   setHTML('mypage-missions', html);
   if (window._missionTimer) { clearInterval(window._missionTimer); window._missionTimer = null; }
+  window._missionTimer = setInterval(() => {
+    const el = document.getElementById('mission-countdown');
+    if (el) el.textContent = get3HourCountdown();
+    if (currentUserData && currentUserData.missionResetAt && Date.now() >= currentUserData.missionResetAt) {
+      clearInterval(window._missionTimer); window._missionTimer = null;
+      checkAndAssignDailyMissions(currentUserData);
+      setTimeout(renderMissionsUI, 500);
+    }
+  }, 1000);
 }
 // ==========================================
 
@@ -2585,7 +2598,7 @@ function renderMyPage(){
       <div style="margin-top:0.75rem;"><button onclick="openPenNameChangeModal()" style="font-size:0.8rem;padding:0.3rem 0.85rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:rgba(255,255,255,.9);border-radius:20px;cursor:pointer;font-family:var(--font-sans);">📝 필명변경 신청</button></div>
     </div>
     <div class="mypage-section" id="mypage-mission-section">
-      <h2>🎯 오늘의 미션 <span style="font-size:0.8rem;font-weight:normal;color:var(--ink3);">(자정 초기화 · 반복 수행 가능)</span></h2>
+      <h2>🎯 오늘의 미션 <span style="font-size:0.8rem;font-weight:normal;color:var(--ink3);">(3시간마다 초기화)</span></h2>
       <div id="mypage-missions"><p class="empty-msg">불러오는 중...</p></div>
     </div>
     <div class="mypage-section" id="mypage-myposts-section">
