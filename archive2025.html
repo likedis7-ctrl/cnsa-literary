@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2025학년도 큰별문학상 온라인전시관 (아카이브)</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1714;--ink2:#4a4641;--ink3:#8a8580;--paper:#fdf8f2;--paper2:#f5ede0;--paper3:#ece0cc;--gold:#c8922a;--gold2:#e8b84a;--verse:#5a3e8c;--prose:#2a6b4a;--shadow:rgba(50,30,10,.1);--radius:8px;--font-serif:'Noto Serif KR',serif;--font-sans:'Noto Sans KR',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.7;}
+header{background:#B3AB8D;color:var(--ink);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px var(--shadow);}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:1rem;padding:.6rem 1.5rem;flex-wrap:wrap;}
+.site-logo{font-family:var(--font-serif);font-size:1.1rem;font-weight:700;color:var(--ink);white-space:nowrap;}
+.archive-badge{background:rgba(26,23,20,.15);color:var(--ink2);font-size:.72rem;padding:.2rem .6rem;border-radius:20px;font-weight:500;white-space:nowrap;}
+.back-btn{margin-left:auto;font-size:.8rem;padding:.35rem .9rem;border-radius:20px;border:1px solid rgba(26,23,20,.3);background:transparent;color:var(--ink);cursor:pointer;font-family:var(--font-sans);transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-block;}
+.back-btn:hover{background:rgba(26,23,20,.12);}
+.main{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;}
+.archive-hero{background:linear-gradient(135deg,#2d1f0e 0%,#4a3520 100%);color:var(--paper);border-radius:16px;padding:2.5rem 2rem;margin-bottom:2rem;position:relative;overflow:hidden;}
+.archive-hero::before{content:'📚';position:absolute;right:2rem;top:50%;transform:translateY(-50%);font-size:5rem;opacity:.15;}
+.archive-hero h1{font-family:var(--font-serif);font-size:1.8rem;font-weight:700;margin-bottom:.5rem;}
+.archive-hero p{font-size:.9rem;color:rgba(253,248,242,.65);margin-bottom:.25rem;}
+.archive-hero .stats{display:flex;gap:1.5rem;margin-top:1.2rem;flex-wrap:wrap;}
+.archive-hero .stat{text-align:center;}
+.archive-hero .stat-num{font-size:1.5rem;font-weight:700;color:var(--gold2);font-family:var(--font-serif);}
+.archive-hero .stat-label{font-size:.72rem;color:rgba(253,248,242,.5);}
+.controls{display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;}
+.search-wrap{flex:1;min-width:200px;position:relative;}
+.search-input{width:100%;padding:.55rem 1rem .55rem 2.2rem;border:1px solid var(--paper3);border-radius:24px;font-family:var(--font-sans);font-size:.875rem;background:white;color:var(--ink);outline:none;transition:border .15s;}
+.search-input:focus{border-color:var(--gold);}
+.search-icon{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:.9rem;pointer-events:none;}
+.filter-btns{display:flex;gap:.35rem;}
+.filter-btn{padding:.45rem .9rem;border-radius:20px;border:1px solid var(--paper3);background:white;color:var(--ink2);font-size:.8rem;cursor:pointer;font-family:var(--font-sans);transition:all .15s;}
+.filter-btn.active,.filter-btn:hover{background:var(--gold);color:white;border-color:var(--gold);}
+.sort-select{padding:.45rem .8rem;border-radius:20px;border:1px solid var(--paper3);background:white;color:var(--ink2);font-size:.8rem;cursor:pointer;font-family:var(--font-sans);outline:none;}
+.gallery-count{font-size:.8rem;color:var(--ink3);margin-bottom:1rem;}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;}
+.gallery-card{background:white;border:1px solid var(--paper3);border-radius:12px;padding:1.25rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:.6rem;}
+.gallery-card:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 8px 24px var(--shadow);}
+.cat-badge{display:inline-block;font-size:.7rem;padding:.18rem .55rem;border-radius:20px;font-weight:600;font-family:var(--font-sans);}
+.badge-verse{background:#ede8f7;color:var(--verse);}
+.badge-prose{background:#e6f2eb;color:var(--prose);}
+.card-title{font-family:var(--font-serif);font-size:1rem;font-weight:700;color:var(--ink);line-height:1.4;}
+.card-preview{font-size:.825rem;color:var(--ink2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:.5rem;border-top:1px solid var(--paper2);}
+.card-author{font-size:.8rem;color:var(--ink3);}
+.card-stats{font-size:.78rem;color:var(--ink3);}
+.empty-msg{grid-column:1/-1;text-align:center;padding:4rem;color:var(--ink3);}
+.loading{text-align:center;padding:4rem;color:var(--ink3);font-size:1rem;}
+
+/* Modal */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;overflow-y:auto;padding:2rem 1rem;}
+.modal-backdrop.show{display:block;}
+.modal{background:var(--paper);border-radius:16px;max-width:760px;margin:0 auto;padding:2.5rem;position:relative;}
+.modal-close{position:absolute;top:1.2rem;right:1.2rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink3);line-height:1;padding:.3rem;}
+.modal-close:hover{color:var(--ink);}
+.modal-cat{margin-bottom:.75rem;}
+.modal-title{font-family:var(--font-serif);font-size:1.6rem;font-weight:700;line-height:1.3;margin-bottom:.5rem;}
+.modal-meta{font-size:.85rem;color:var(--ink3);margin-bottom:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center;}
+.modal-meta .like-count{color:var(--gold);font-weight:600;}
+.divider{border:none;border-top:1px solid var(--paper3);margin:1.5rem 0;}
+.modal-body{font-family:var(--font-serif);font-size:1rem;line-height:2;color:var(--ink);white-space:pre-wrap;word-break:break-word;}
+.comments-section{margin-top:2rem;}
+.comments-title{font-family:var(--font-serif);font-size:1.1rem;font-weight:600;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid var(--paper3);}
+.comment-item{padding:1rem;border:1px solid var(--paper2);border-radius:10px;margin-bottom:.75rem;background:white;}
+.comment-item.is-critique{border-color:rgba(90,62,140,.2);background:#faf8fe;}
+.comment-item.is-best{border-color:var(--gold);background:#fffbf0;}
+.comment-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap;}
+.comment-pen{font-weight:600;font-size:.875rem;color:var(--ink);}
+.comment-date{font-size:.75rem;color:var(--ink3);}
+.badge-critique{background:#ede8f7;color:var(--verse);}
+.badge-best{background:#fff3cd;color:#856404;border:1px solid #ffc107;}
+.award-badge{display:inline-block;font-size:.68rem;padding:.15rem .5rem;border-radius:20px;font-weight:700;font-family:var(--font-sans);margin-left:.35rem;}
+.aw-대상{background:#1a1714;color:#ffd700;border:1px solid #c8922a;}
+.aw-최우수{background:#c8922a;color:white;}
+.aw-우수{background:#5a3e8c;color:white;}
+.aw-가작{background:#2a6b4a;color:white;}
+.aw-장려{background:#e8f4ec;color:#2a6b4a;border:1px solid #2a6b4a;}
+.aw-최고의화제작{background:#fff3cd;color:#856404;border:1px solid #ffc107;}
+.comment-text{font-size:.875rem;color:var(--ink2);line-height:1.75;white-space:pre-wrap;}
+.no-comments{font-size:.875rem;color:var(--ink3);text-align:center;padding:1.5rem;background:var(--paper2);border-radius:8px;}
+.pagination{display:flex;gap:.35rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap;}
+.page-btn{padding:.4rem .75rem;border-radius:8px;border:1px solid var(--paper3);background:white;color:var(--ink2);font-size:.8rem;cursor:pointer;font-family:var(--font-sans);transition:all .15s;}
+.page-btn.active,.page-btn:hover:not(:disabled){background:var(--gold);color:white;border-color:var(--gold);}
+.page-btn:disabled{opacity:.4;cursor:default;}
+@media(max-width:640px){
+  .archive-hero{padding:1.5rem 1.25rem;}
+  .archive-hero h1{font-size:1.4rem;}
+  .archive-hero::before{display:none;}
+  .modal{padding:1.5rem 1.25rem;}
+  .modal-title{font-size:1.3rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="site-logo">큰별문학상</div>
+    <span class="archive-badge">2025학년도 아카이브</span>
+    <a class="back-btn" href="/" >← 현재 전시관</a>
+  </div>
+</header>
+
+<div class="main">
+  <div class="archive-hero">
+    <h1>2025학년도 큰별문학상 온라인전시관</h1>
+    <p>충남삼성고등학교 · 큰별문학상 역대 전시관 아카이브</p>
+    <p style="font-size:.8rem;color:rgba(253,248,242,.4);margin-top:.3rem;">읽기 전용 · 로그인 불필요</p>
+    <div class="stats" id="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-total">-</div><div class="stat-label">총 작품</div></div>
+      <div class="stat"><div class="stat-num" id="stat-verse">-</div><div class="stat-label">운문</div></div>
+      <div class="stat"><div class="stat-num" id="stat-prose">-</div><div class="stat-label">산문</div></div>
+      <div class="stat"><div class="stat-num" id="stat-award">-</div><div class="stat-label">🏆 수상작</div></div>
+      <div class="stat"><div class="stat-num" id="stat-comments">-</div><div class="stat-label">감상 댓글</div></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="search-input" type="text" placeholder="제목 또는 필명으로 검색..." oninput="onSearch()">
+    </div>
+    <div class="filter-btns">
+      <button class="filter-btn active" data-cat="all" onclick="setFilter('all')">전체</button>
+      <button class="filter-btn" data-cat="운문" onclick="setFilter('운문')">운문</button>
+      <button class="filter-btn" data-cat="산문" onclick="setFilter('산문')">산문</button>
+      <button class="filter-btn" data-cat="award" onclick="setFilter('award')">🏆 수상작</button>
+    </div>
+    <select class="sort-select" onchange="setSort(this.value)">
+      <option value="like">좋아요 많은 순</option>
+      <option value="comment">댓글 많은 순</option>
+      <option value="title">제목 가나다순</option>
+      <option value="award">수상 등위 순</option>
+    </select>
+  </div>
+
+  <div class="gallery-count" id="gallery-count"></div>
+  <div class="gallery-grid" id="gallery-grid"><div class="loading">작품 목록을 불러오는 중...</div></div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- Post Detail Modal -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="onBackdropClick(event)">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-body-content"></div>
+  </div>
+</div>
+
+<script>
+var POSTS = [];
+var filtered = [];
+var currentFilter = 'all';
+var currentSort = 'like';
+var currentSearch = '';
+var currentPage = 1;
+var PER_PAGE = 12;
+
+var AWARD_ORDER = {'대상':1,'최우수':2,'우수':3,'가작':4,'장려':5,'최고의 화제작':6};
+
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function awardBadge(aw){
+  if(!aw) return '';
+  var cls = 'aw-' + aw.replace(/\s/g,'');
+  return '<span class="award-badge ' + cls + '">🏆 ' + esc(aw) + '</span>';
+}
+
+function loadData() {
+  fetch('/archive2025_data.json')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      POSTS = data;
+      var totalComments = POSTS.reduce(function(s,p){ return s + (p.cm ? p.cm.length : 0); }, 0);
+      var verseCount = POSTS.filter(function(p){ return p.ca === '운문'; }).length;
+      var proseCount = POSTS.filter(function(p){ return p.ca === '산문'; }).length;
+      var awardCount = POSTS.filter(function(p){ return p.aw; }).length;
+      document.getElementById('stat-total').textContent = POSTS.length;
+      document.getElementById('stat-verse').textContent = verseCount;
+      document.getElementById('stat-prose').textContent = proseCount;
+      document.getElementById('stat-award').textContent = awardCount;
+      document.getElementById('stat-comments').textContent = totalComments;
+      applyFilterSort();
+    })
+    .catch(function(e){
+      document.getElementById('gallery-grid').innerHTML = '<div class="empty-msg">데이터를 불러오지 못했습니다.<br><small>' + e.message + '</small></div>';
+    });
+}
+
+function onSearch(){
+  currentSearch = document.getElementById('search-input').value;
+  currentPage = 1;
+  applyFilterSort();
+}
+
+function setFilter(cat){
+  currentFilter = cat;
+  currentPage = 1;
+  document.querySelectorAll('.filter-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.cat === cat);
+  });
+  applyFilterSort();
+}
+
+function setSort(val){
+  currentSort = val;
+  currentPage = 1;
+  applyFilterSort();
+}
+
+function applyFilterSort(){
+  var s = currentSearch.toLowerCase().trim();
+  filtered = POSTS.filter(function(p){
+    if(currentFilter === 'award') return !!p.aw;
+    if(currentFilter !== 'all' && p.ca !== currentFilter) return false;
+    if(s && (p.ti.toLowerCase().indexOf(s) < 0) && (p.n.toLowerCase().indexOf(s) < 0)) return false;
+    return true;
+  });
+
+  if(currentSort === 'like'){
+    filtered.sort(function(a,b){ return b.lk - a.lk; });
+  } else if(currentSort === 'comment'){
+    filtered.sort(function(a,b){ return (b.cm?b.cm.length:0) - (a.cm?a.cm.length:0); });
+  } else if(currentSort === 'award'){
+    filtered.sort(function(a,b){
+      var oa = a.aw ? (AWARD_ORDER[a.aw] || 99) : 100;
+      var ob = b.aw ? (AWARD_ORDER[b.aw] || 99) : 100;
+      return oa !== ob ? oa - ob : b.lk - a.lk;
+    });
+  } else {
+    filtered.sort(function(a,b){ return a.ti.localeCompare(b.ti,'ko'); });
+  }
+
+  renderGallery();
+}
+
+function renderGallery(){
+  var total = filtered.length;
+  var totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  if(currentPage > totalPages) currentPage = 1;
+  var start = (currentPage - 1) * PER_PAGE;
+  var page = filtered.slice(start, start + PER_PAGE);
+
+  document.getElementById('gallery-count').textContent = '작품 ' + total + '편 · ' + currentPage + '/' + totalPages + ' 페이지';
+
+  var html = '';
+  if(page.length === 0){
+    html = '<div class="empty-msg">해당하는 작품이 없습니다.</div>';
+  } else {
+    page.forEach(function(p){
+      var catClass = p.ca === '운문' ? 'badge-verse' : 'badge-prose';
+      var preview = (p.bo || '').replace(/\s+/g,' ').trim().substring(0,100);
+      html += '<div class="gallery-card" onclick="openPost(' + p.id + ')">'
+        + '<div><span class="cat-badge ' + catClass + '">' + esc(p.ca) + '</span>' + awardBadge(p.aw) + '</div>'
+        + '<div class="card-title">' + esc(p.ti) + '</div>'
+        + '<div class="card-preview">' + esc(preview) + '</div>'
+        + '<div class="card-bottom">'
+        + '<span class="card-author">✍ ' + esc(p.n) + '</span>'
+        + '<span class="card-stats">🎭 ' + p.lk + ' · 💬 ' + (p.cm ? p.cm.length : 0) + '</span>'
+        + '</div></div>';
+    });
+  }
+  document.getElementById('gallery-grid').innerHTML = html;
+  renderPagination(totalPages);
+  window.scrollTo({top: document.querySelector('.controls').offsetTop - 80, behavior:'smooth'});
+}
+
+function renderPagination(totalPages){
+  if(totalPages <= 1){ document.getElementById('pagination').innerHTML = ''; return; }
+  var html = '<button class="page-btn" onclick="goPage(' + (currentPage-1) + ')" ' + (currentPage<=1?'disabled':'') + '>‹</button>';
+  for(var i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||Math.abs(i-currentPage)<=2){
+      html += '<button class="page-btn' + (i===currentPage?' active':'') + '" onclick="goPage(' + i + ')">' + i + '</button>';
+    } else if(Math.abs(i-currentPage)===3){
+      html += '<span style="padding:.4rem .2rem;color:var(--ink3)">…</span>';
+    }
+  }
+  html += '<button class="page-btn" onclick="goPage(' + (currentPage+1) + ')" ' + (currentPage>=totalPages?'disabled':'') + '>›</button>';
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function goPage(p){ currentPage = p; renderGallery(); }
+
+function openPost(id){
+  var p = POSTS[id];
+  if(!p) return;
+  var catClass = p.ca === '운문' ? 'badge-verse' : 'badge-prose';
+  var bodyHtml = p.bo ? esc(p.bo) : ('<em style="color:var(--ink3)">본문 데이터가 없습니다.</em>');
+
+  var commentsHtml = '';
+  if(p.cm && p.cm.length > 0){
+    var total = p.cm.length;
+    var critiques = p.cm.filter(function(c){ return c.c; }).length;
+    commentsHtml += '<div class="comments-title">감상 댓글 <span style="color:var(--ink3);font-size:.85rem;font-weight:400;">' + total + '개'
+      + (critiques > 0 ? ' (비평 ' + critiques + '개)' : '') + '</span></div>';
+    p.cm.forEach(function(c){
+      var cls = 'comment-item' + (c.c ? ' is-critique' : '') + (c.b ? ' is-best' : '');
+      commentsHtml += '<div class="' + cls + '">'
+        + '<div class="comment-header">'
+        + '<span class="comment-pen">' + esc(c.p) + '</span>'
+        + (c.c ? '<span class="cat-badge badge-critique" style="font-size:.67rem;">비평</span>' : '')
+        + (c.b ? '<span class="cat-badge badge-best" style="font-size:.67rem;">✨ 최고의비평가</span>' : '')
+        + '<span class="comment-date">' + esc(c.d) + '</span>'
+        + '</div>'
+        + '<div class="comment-text">' + esc(c.t) + '</div>'
+        + '</div>';
+    });
+  } else {
+    commentsHtml = '<div class="no-comments">감상 댓글이 없습니다.</div>';
+  }
+
+  document.getElementById('modal-body-content').innerHTML =
+    '<div class="modal-cat"><span class="cat-badge ' + catClass + '">' + esc(p.ca) + '</span>' + awardBadge(p.aw) + '</div>'
+    + '<div class="modal-title">' + esc(p.ti) + '</div>'
+    + '<div class="modal-meta">'
+    + '<span>✍ ' + esc(p.n) + '</span>'
+    + '<span class="like-count">🎭 좋아요 ' + p.lk + '</span>'
+    + '<span style="color:var(--ink3);">💬 댓글 ' + (p.cm ? p.cm.length : 0) + '</span>'
+    + '</div>'
+    + '<hr class="divider">'
+    + '<div class="modal-body">' + bodyHtml + '</div>'
+    + '<div class="comments-section">' + commentsHtml + '</div>';
+
+  document.getElementById('modal-backdrop').classList.add('show');
+  document.getElementById('modal-backdrop').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(){
+  document.getElementById('modal-backdrop').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function onBackdropClick(e){
+  if(e.target === document.getElementById('modal-backdrop')) closeModal();
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeModal();
+});
+
+loadData();
+</script>
+</body>
+</html>

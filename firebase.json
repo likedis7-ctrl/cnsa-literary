@@ -8,7 +8,9 @@
       "firebase.json",
       ".firebaserc",
       ".git",
-      ".gitignore"
+      ".gitignore",
+      "2025/**",
+      "screenshot/**"
     ],
     "rewrites": [
       {
