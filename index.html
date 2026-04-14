@@ -726,22 +726,22 @@ const MISSIONS = {
 };
 
 function getUserTitle(points) {
-  if(points >= 501) return "문학 수호신";
-  if(points >= 251) return "비평의 달인";
-  if(points >= 151) return "전문 비평가";
-  if(points >= 91) return "문학관 지킴이";
-  if(points >= 31) return "따뜻한 감상자";
+  if(points >= 1000) return "문학 수호신";
+  if(points >= 580) return "비평의 달인";
+  if(points >= 320) return "전문 비평가";
+  if(points >= 150) return "문학관 지킴이";
+  if(points >= 50) return "따뜻한 감상자";
   return "문학관 새내기";
 }
 
 function getTitleProgress(pts) {
   var tiers = [
-    {title:'문학관 새내기', min:0, max:31},
-    {title:'따뜻한 감상자', min:31, max:91},
-    {title:'문학관 지킴이', min:91, max:151},
-    {title:'전문 비평가', min:151, max:251},
-    {title:'비평의 달인', min:251, max:501},
-    {title:'문학 수호신', min:501, max:null}
+    {title:'문학관 새내기', min:0, max:50},
+    {title:'따뜻한 감상자', min:50, max:150},
+    {title:'문학관 지킴이', min:150, max:320},
+    {title:'전문 비평가', min:320, max:580},
+    {title:'비평의 달인', min:580, max:1000},
+    {title:'문학 수호신', min:1000, max:null}
   ];
   var idx = 0;
   for(var i=0;i<tiers.length;i++){ if(pts>=tiers[i].min && (tiers[i].max===null||pts<tiers[i].max)){idx=i;break;} }
