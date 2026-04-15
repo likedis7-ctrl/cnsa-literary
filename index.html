@@ -701,7 +701,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 3.2 (응모기간 댓글 작성 차단)</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 3.3 (응모기간 홈 오늘의 추천작 섹션 숨김)</footer>
 
 <script>
 // Firebase Initialization
@@ -1372,7 +1372,7 @@ function renderHome(){
     if(featSec) featSec.style.display = 'none';
   } else if(siteMode === 'apply'){
     setHTML('hero-btn-container', '<button class="cta-primary" id="hero-btn-submit" onclick="navigateTo(\'submit\')">작품 응모하기</button>');
-    if(featSec) featSec.style.display = 'block';
+    if(featSec) featSec.style.display = 'none';
   } else {
     setHTML('hero-btn-container', '<button class="cta-primary" id="hero-btn-gallery" onclick="navigateTo(\'gallery\')">작품 감상하기</button>');
     if(featSec) featSec.style.display = 'block';
