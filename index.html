@@ -2653,9 +2653,11 @@ function renderMyPage(){
   const critiqueSec = document.getElementById('mypage-mycritiques-section');
   const likedSec = document.getElementById('mypage-liked-section');
   const commentedSec = document.getElementById('mypage-commented-section');
+  const missionSec = document.getElementById('mypage-mission-section');
   const isAdmin = currentUserData && currentUserData.role === 'admin';
   const showExtra = !(siteMode === 'apply' || (siteMode === 'rest' && !isAdmin));
 
+  if(missionSec) missionSec.style.display = siteMode === 'apply' ? 'none' : 'block';
   if(critiqueSec) critiqueSec.style.display = showExtra ? 'block' : 'none';
   if(likedSec) likedSec.style.display = showExtra ? 'block' : 'none';
   if(commentedSec) commentedSec.style.display = showExtra ? 'block' : 'none';
