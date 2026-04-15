@@ -2308,6 +2308,10 @@ function toggleReact(postId, type){
     }
 
     batch.commit().then(()=>{
+      if(_indexCache) {
+        const cached = _indexCache.find(p => p.id === postId);
+        if(cached && delta !== 0) cached.likeCount = (cached.likeCount||0) + delta;
+      }
       if(willHaveNoReaction) {
         if(currentUserData.reactedPostIds) currentUserData.reactedPostIds = currentUserData.reactedPostIds.filter(id=>id!==postId);
       } else {
@@ -2415,6 +2419,10 @@ function submitComment(postId){
   }
 
   batch.commit().then(()=>{
+    if(_indexCache) {
+      const cached = _indexCache.find(p => p.id === postId);
+      if(cached) cached.commentCount = (cached.commentCount||0) + 1;
+    }
     return postRef.get();
   }).then(s=>{
     const newCount = s.data().commentCount||0;
@@ -2456,6 +2464,10 @@ function deleteComment(postId,commentId){
   batch.update(indexRef, { ['posts.' + postId + '.commentCount']: firebase.firestore.FieldValue.increment(-1) });
 
   batch.commit().then(()=>{
+    if(_indexCache) {
+      const cached = _indexCache.find(p => p.id === postId);
+      if(cached) cached.commentCount = Math.max(0, (cached.commentCount||0) - 1);
+    }
     postRef.get().then(s=>{
       setText('comment-count',s.data().commentCount||0);
       loadComments(postId);
