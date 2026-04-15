@@ -701,7 +701,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.8 (응모 완료 후 나의 서재로 이동)</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.9 (삭제 후 미리보기 카드 잔존 버그 수정)</footer>
 
 <script>
 // Firebase Initialization
@@ -2504,9 +2504,9 @@ function deletePost(postId){
       
       let batch = db.batch();
       batch.delete(db.collection('posts').doc(postId));
-      batch.set(db.collection('indexes').doc('posts'), {
+      batch.update(db.collection('indexes').doc('posts'), {
         ['posts.' + postId]: firebase.firestore.FieldValue.delete()
-      }, { merge: true });
+      });
 
       batch.commit().then(()=>{
         if(_indexCache) _indexCache = _indexCache.filter(p => p.id !== postId);
