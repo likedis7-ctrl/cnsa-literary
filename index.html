@@ -639,6 +639,12 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <div id="admin-penname-requests"><p class="empty-msg">불러오는 중...</p></div>
     </div>
     <div class="admin-section">
+      <h2>🔧 인덱스 정리</h2>
+      <div class="admin-btn-group">
+        <button class="admin-dl-btn" onclick="fixOrphanIndex()" style="border-color:#e11d48;color:#e11d48;">🧹 고아 인덱스 정리<span>posts 문서가 없는 인덱스 항목을 찾아 삭제합니다</span></button>
+      </div>
+    </div>
+    <div class="admin-section">
       <h2>📥 DB 다운로드</h2>
       <div class="admin-btn-group">
         <button class="admin-dl-btn" onclick="downloadUsersDB()">👤 사용자계정 DB 다운로드<span>이메일 · 필명 · 가입일시 (Excel)</span></button>
@@ -2495,7 +2501,8 @@ function deletePost(postId){
       }, { merge: true });
 
       batch.commit().then(()=>{
-        _invalidateIndex();
+        if(_indexCache) _indexCache = _indexCache.filter(p => p.id !== postId);
+        else _invalidateIndex();
         toast('삭제되었습니다.','success');
         navigateTo(isCritique ? 'critique' : 'gallery');
       });
@@ -2588,6 +2595,14 @@ function saveEdit(e,postId){
     }, { merge: true });
 
     batch.commit().then(()=>{
+      if(_indexCache) {
+        const cached = _indexCache.find(p => p.id === postId);
+        if(cached) {
+          cached.category = cat.value;
+          cached.title = title;
+          cached.preview = extractPreview(body);
+        }
+      }
       toast('수정되었습니다.','success');
       navigateTo('post',postId);
     });
@@ -3134,6 +3149,40 @@ async function downloadCommentsDB(){
   } catch(e){ toast('오류: '+e.message,'error'); }
 }
 
+
+async function fixOrphanIndex(){
+  if(!confirm('posts 문서가 없는 인덱스 항목을 찾아 삭제합니다. 계속할까요?')) return;
+  toast('인덱스 검사 중...','info');
+  try {
+    const indexDoc = await db.collection('indexes').doc('posts').get();
+    if(!indexDoc.exists){ toast('인덱스 문서가 없습니다.','error'); return; }
+    const entries = indexDoc.data().posts || {};
+    const ids = Object.keys(entries);
+    if(ids.length === 0){ toast('인덱스 항목이 없습니다.','info'); return; }
+
+    const orphans = [];
+    for(const id of ids){
+      const snap = await db.collection('posts').doc(id).get();
+      if(!snap.exists) orphans.push(id);
+    }
+
+    if(orphans.length === 0){
+      toast('고아 인덱스 없음. 모든 항목 정상.','success');
+      return;
+    }
+
+    if(!confirm(`고아 인덱스 ${orphans.length}건 발견:\n${orphans.map(id=>`• ${entries[id].title||id} (${entries[id].penName||''})`).join('\n')}\n\n삭제할까요?`)) return;
+
+    let batch = db.batch();
+    const indexRef = db.collection('indexes').doc('posts');
+    orphans.forEach(id => {
+      batch.update(indexRef, { ['posts.' + id]: firebase.firestore.FieldValue.delete() });
+    });
+    await batch.commit();
+    if(_indexCache) _indexCache = _indexCache.filter(p => !orphans.includes(p.id));
+    toast(`고아 인덱스 ${orphans.length}건 삭제 완료.`,'success');
+  } catch(e){ toast('오류: '+e.message,'error'); }
+}
 
 function toggleNav(){
   const nav = document.getElementById('main-nav');
