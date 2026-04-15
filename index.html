@@ -701,7 +701,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.6 (응모기간 미션 섹션 숨김)</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.7 (나의 서재 수정/삭제 후 네비게이션 버그 수정)</footer>
 
 <script>
 // Firebase Initialization
@@ -949,7 +949,9 @@ let galleryCategory = 'all';
 let gallerySearch = '';
 let gallerySort = 'random';
 let galleryPage = 1;
-let siteMode = 'apply'; 
+let siteMode = 'apply';
+let prevPage = 'gallery';
+let _currentPage = 'home';
 
 let galleryViewMode = localStorage.getItem('cnsa_view_mode') || 'card';
 let viewerTheme = localStorage.getItem('cnsa_viewer_theme') || 'light';
@@ -1115,7 +1117,7 @@ function navigateTo(page, param) {
 
     if((page==='gallery' || page==='critique' || page==='critique-write') && siteMode==='apply' && !isAdmin){
       toast('감상 및 비평은 감상기간 (5월 14일 ~ 21일)에만 가능합니다.','error');
-      _doNavigate('home');
+      _doNavigate(currentUser ? 'mypage' : 'home');
       return;
     }
     if(page==='submit' && siteMode==='view' && !isAdmin){
@@ -1132,7 +1134,13 @@ function navigateTo(page, param) {
 
 function _doNavigate(page, param) {
   closeNav();
-  
+
+  if(page === 'post') {
+    prevPage = _currentPage || 'gallery';
+  } else if(page !== 'post') {
+    _currentPage = page;
+  }
+
   if(autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
   const msg = $('auto-save-msg');
   if(msg) msg.classList.remove('show');
@@ -2117,7 +2125,7 @@ function renderPost(postId){
     const hasFear = currentUser && fears.includes(currentUser.uid);
 
     setHTML('page-post',`<div class="page-inner">
-      <button class="btn-back" onclick="navigateTo('${p.docType==='critique' ? 'critique' : 'gallery'}')">← 목록으로</button>
+      <button class="btn-back" onclick="navigateTo(prevPage)">← 목록으로</button>
       <article class="post-detail theme-${viewerTheme} text-${viewerFontSize}" id="post-detail-article">
         ${critiqueTargetHtml}
         <header class="post-header">
@@ -2504,7 +2512,7 @@ function deletePost(postId){
         if(_indexCache) _indexCache = _indexCache.filter(p => p.id !== postId);
         else _invalidateIndex();
         toast('삭제되었습니다.','success');
-        navigateTo(isCritique ? 'critique' : 'gallery');
+        navigateTo(isCritique ? 'critique' : prevPage);
       });
     });
   });
