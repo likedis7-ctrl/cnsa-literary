@@ -701,7 +701,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.7 (나의 서재 수정/삭제 후 네비게이션 버그 수정)</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 2.8 (응모 완료 후 나의 서재로 이동)</footer>
 
 <script>
 // Firebase Initialization
@@ -1702,7 +1702,7 @@ function submitPost(e){
     localStorage.removeItem('cnsa_draft');
     if(autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
     toast('작품이 성공적으로 응모되었습니다! 🌟','success');
-    _doNavigate('gallery', null);
+    _doNavigate('mypage', null);
   }).catch(err=>{
     toast('응모 실패: '+err.message,'error');
     btn.disabled=false; btn.textContent='작품 응모하기 ✨';
