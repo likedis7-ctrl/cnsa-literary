@@ -701,7 +701,7 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
   </div>
 </div>
 
-<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 3.0 (삭제 후 응모 횟수 미반영 버그 수정)</footer>
+<footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 3.1 (인덱스 갱신 전면 수정 - 응모/비평/수정/삭제 모두 적용)</footer>
 
 <script>
 // Firebase Initialization
@@ -1670,14 +1670,14 @@ function submitPost(e){
     likeCount:0, likes:[], tears:[], shocks:[], fears:[], commentCount:0,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
-  batch.set(indexRef, {
+  batch.update(indexRef, {
     ['posts.' + postRef1.id]: {
       id: postRef1.id, uid: currentUser.uid, docType: 'post',
       category: cat.value, title: title1, penName: currentUserData.penName,
-      preview: extractPreview(body1), 
+      preview: extractPreview(body1),
       likeCount: 0, commentCount: 0, createdAt: createTime
     }
-  }, { merge: true });
+  });
 
   if(isPoem) {
     let postRef2 = db.collection('posts').doc();
@@ -1687,14 +1687,14 @@ function submitPost(e){
       likeCount:0, likes:[], tears:[], shocks:[], fears:[], commentCount:0,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    batch.set(indexRef, {
+    batch.update(indexRef, {
       ['posts.' + postRef2.id]: {
         id: postRef2.id, uid: currentUser.uid, docType: 'post',
         category: cat.value, title: title2, penName: currentUserData.penName,
-        preview: extractPreview(body2), 
+        preview: extractPreview(body2),
         likeCount: 0, commentCount: 0, createdAt: createTime + 1
       }
-    }, { merge: true });
+    });
   }
 
   batch.commit().then(()=>{
@@ -1992,15 +1992,15 @@ function submitCritique(e) {
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  batch.set(indexRef, {
+  batch.update(indexRef, {
     ['posts.' + postRef.id]: {
       id: postRef.id, uid: currentUser.uid, docType: 'critique',
       targetPostTitle: targetTitle, category: '비평',
       title: title, penName: currentUserData.penName,
-      preview: extractPreview(body), 
+      preview: extractPreview(body),
       likeCount: 0, commentCount: 0, createdAt: Date.now()
     }
-  }, { merge: true });
+  });
 
   batch.commit().then(() => {
     _invalidateIndex();
@@ -2596,11 +2596,11 @@ function saveEdit(e,postId){
       category:cat.value, title, intro, body,
       updatedAt:firebase.firestore.FieldValue.serverTimestamp()
     });
-    batch.set(db.collection('indexes').doc('posts'), {
+    batch.update(db.collection('indexes').doc('posts'), {
       ['posts.' + postId + '.category']: cat.value,
       ['posts.' + postId + '.title']: title,
-      ['posts.' + postId + '.preview']: extractPreview(body) 
-    }, { merge: true });
+      ['posts.' + postId + '.preview']: extractPreview(body)
+    });
 
     batch.commit().then(()=>{
       if(_indexCache) {
