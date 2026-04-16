@@ -7,7 +7,30 @@ service cloud.firestore {
           && request.auth.token.email.matches('.*@cnsa\\.hs\\.kr');
     }
 
-    // 모든 경로: @cnsa.hs.kr 인증 사용자만 읽기/쓰기
+    function isAdmin() {
+      return request.auth != null
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function roleNotChanged() {
+      return !('role' in request.resource.data.diff(resource.data).affectedKeys());
+    }
+
+    // users 컬렉션: role 필드는 admin만 변경 가능
+    match /users/{userId} {
+      allow read: if isCnsaUser();
+      allow create: if isCnsaUser()
+                    && request.auth.uid == userId
+                    && (!('role' in request.resource.data) || request.resource.data.role == 'student');
+      allow update: if isCnsaUser()
+                    && (
+                      (request.auth.uid == userId && roleNotChanged())
+                      || isAdmin()
+                    );
+      allow delete: if isAdmin();
+    }
+
+    // 나머지 모든 컬렉션: cnsa 사용자 읽기/쓰기
     match /{document=**} {
       allow read, write: if isCnsaUser();
     }
