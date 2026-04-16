@@ -2347,6 +2347,7 @@ function toggleReact(postId, type){
       let notiRef = db.collection('notifications').doc();
       batch.set(notiRef, {
         targetUid: currentViewPost.uid,
+        actorUid: currentUser.uid,
         actorName: currentUserData.penName,
         type: 'like',
         postId: postId,
@@ -2466,11 +2467,12 @@ function submitComment(postId){
     let notiRef = db.collection('notifications').doc();
     batch.set(notiRef, {
       targetUid: currentViewPost.uid,
+      actorUid: currentUser.uid,
       actorName: currentUserData.penName,
       type: 'comment',
       postId: postId,
       postTitle: currentViewPost.title,
-      body: body.substring(0, 30), 
+      body: body.substring(0, 30),
       read: false,
       createdAt: Date.now()
     });
@@ -3348,7 +3350,29 @@ async function scanCheatPosts() {
       fixBatch.push({ ref: doc.ref, id: doc.id, cleanedLikes, cleanedTears, cleanedShocks, cleanedFears, correctedCount });
     }
 
-    if(cheats.length === 0) {
+    const indexEntries = (indexDoc.exists && indexDoc.data().posts) ? indexDoc.data().posts : {};
+    const indexFixBatch = [];
+    const indexCheats = [];
+
+    for(const doc of postsSnap.docs) {
+      const p = doc.data();
+      const likes   = p.likes   || [];
+      const tears   = p.tears   || [];
+      const shocks  = p.shocks  || [];
+      const fears   = p.fears   || [];
+      const realCount = likes.filter(u=>realUids.has(u)).length
+                      + tears.filter(u=>realUids.has(u)).length
+                      + shocks.filter(u=>realUids.has(u)).length
+                      + fears.filter(u=>realUids.has(u)).length;
+      const idxEntry = indexEntries[doc.id];
+      if(idxEntry && idxEntry.likeCount !== realCount) {
+        indexCheats.push({ id: doc.id, title: p.title, penName: p.penName,
+          idxCount: idxEntry.likeCount, realCount });
+        indexFixBatch.push({ id: doc.id, realCount });
+      }
+    }
+
+    if(cheats.length === 0 && indexCheats.length === 0) {
       toast('모든 작품 데이터가 정상입니다.', 'success');
       if(resultEl) resultEl.innerHTML = `<p style="color:var(--prose);font-weight:500;margin-top:.5rem;">✅ 이상 없음 — ${postsSnap.size}개 작품 모두 정상</p>`;
     } else {
@@ -3366,20 +3390,38 @@ async function scanCheatPosts() {
         count += 2;
         if(count >= 490) { await batch.commit(); batch = db.batch(); count = 0; }
       }
+
+      for(const fix of indexFixBatch) {
+        if(fixBatch.some(f => f.id === fix.id)) continue;
+        batch.update(indexRef, { [`posts.${fix.id}.likeCount`]: fix.realCount });
+        count += 1;
+        if(count >= 490) { await batch.commit(); batch = db.batch(); count = 0; }
+      }
+
       if(count > 0) await batch.commit();
 
       let html = `<div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.5rem;">`;
       cheats.forEach(c => {
         html += `<div style="background:#fff0f0;border:1px solid #fecaca;border-radius:8px;padding:.75rem 1rem;">
-          <strong style="color:var(--red);">🚨 ${escHtml(c.title)}</strong>
+          <strong style="color:var(--red);">🚨 [작품] ${escHtml(c.title)}</strong>
           <span style="color:var(--ink3);font-size:.82rem;margin-left:.5rem;">by ${escHtml(c.penName)}</span>
           <div style="font-size:.82rem;color:var(--ink2);margin-top:.3rem;">${c.issues.map(i=>`• ${escHtml(i)}`).join('<br>')}</div>
           <div style="font-size:.8rem;color:var(--prose);margin-top:.3rem;">→ 자동 교정 완료 (likeCount: ${c.realCount - c.fakeUids.length})</div>
         </div>`;
       });
+      indexCheats.forEach(c => {
+        if(cheats.some(p => p.id === c.id)) return;
+        html += `<div style="background:#fff8e0;border:1px solid #fde68a;border-radius:8px;padding:.75rem 1rem;">
+          <strong style="color:#92400e;">⚠️ [인덱스] ${escHtml(c.title)}</strong>
+          <span style="color:var(--ink3);font-size:.82rem;margin-left:.5rem;">by ${escHtml(c.penName)}</span>
+          <div style="font-size:.82rem;color:var(--ink2);margin-top:.3rem;">• 인덱스 likeCount 불일치 (인덱스: ${c.idxCount}, 실제: ${c.realCount})</div>
+          <div style="font-size:.8rem;color:var(--prose);margin-top:.3rem;">→ 인덱스 자동 교정 완료</div>
+        </div>`;
+      });
       html += `</div>`;
       if(resultEl) resultEl.innerHTML = html;
-      toast(`부정행위 ${cheats.length}건 감지 및 자동 교정 완료`, 'error');
+      const total = cheats.length + indexCheats.filter(c => !cheats.some(p=>p.id===c.id)).length;
+      toast(`부정행위 ${total}건 감지 및 자동 교정 완료`, 'error');
       _invalidateIndex();
     }
   } catch(e) {

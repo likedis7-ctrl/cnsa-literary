@@ -16,12 +16,24 @@ service cloud.firestore {
       return !('role' in request.resource.data.diff(resource.data).affectedKeys());
     }
 
+    function penNameNotChanged() {
+      return !('penName' in request.resource.data.diff(resource.data).affectedKeys());
+    }
+
     // 반응 배열 1개에 대해 본인 uid만 추가·삭제됐는지 검증 (헬퍼)
     function isValidArrayChange(newArr, oldArr, uid) {
       let added   = newArr.removeAll(oldArr);
       let removed = oldArr.removeAll(newArr);
       return (added.size()   == 0 || (added.size()   == 1 && added[0]   == uid))
           && (removed.size() == 0 || (removed.size() == 1 && removed[0] == uid));
+    }
+
+    // likeCount 가 배열 합계와 일치하는지 검증 (작성자 수정 경로에서도 적용)
+    function isLikeCountCorrect() {
+      let newD = request.resource.data;
+      let expected = newD.get('likes', []).size() + newD.get('tears', []).size()
+                   + newD.get('shocks',[]).size() + newD.get('fears', []).size();
+      return newD.get('likeCount', 0) == expected;
     }
 
     // 반응·댓글 메타 필드만 수정하는지, 그리고 본인 uid만 배열에 추가/삭제하는지 검증
@@ -58,7 +70,7 @@ service cloud.firestore {
                     && (!('role' in request.resource.data) || request.resource.data.role == 'student')
                     && (!('points' in request.resource.data) || request.resource.data.points == 0);
       allow update: if isCnsaUser()
-                    && ((request.auth.uid == userId && roleNotChanged()) || isAdmin());
+                    && ((request.auth.uid == userId && roleNotChanged() && penNameNotChanged()) || isAdmin());
       allow delete: if isAdmin();
     }
 
@@ -91,7 +103,9 @@ service cloud.firestore {
                          'docType','targetPostId','targetPostTitle'
                        ]);
       allow update: if isCnsaUser()
-                    && (resource.data.uid == request.auth.uid || isAdmin() || isMetaOnlyUpdate());
+                    && ((resource.data.uid == request.auth.uid && isLikeCountCorrect())
+                        || isAdmin()
+                        || isMetaOnlyUpdate());
       allow delete: if isCnsaUser()
                     && (resource.data.uid == request.auth.uid || isAdmin());
 
@@ -121,7 +135,13 @@ service cloud.firestore {
     // ── notifications ──────────────────────────────────────────────────────
     match /notifications/{notiId} {
       allow read:   if isCnsaUser() && resource.data.targetUid == request.auth.uid;
-      allow create: if isCnsaUser();
+      allow create: if isCnsaUser()
+                    && request.resource.data.actorUid == request.auth.uid
+                    && request.resource.data.targetUid != request.auth.uid
+                    && request.resource.data.keys().hasOnly([
+                         'targetUid','actorUid','actorName','type',
+                         'postId','postTitle','body','read','createdAt'
+                       ]);
       allow update: if isCnsaUser() && resource.data.targetUid == request.auth.uid;
       allow delete: if (isCnsaUser() && resource.data.targetUid == request.auth.uid) || isAdmin();
     }
