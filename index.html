@@ -723,6 +723,33 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
 <footer>© 2026 큰별문학상 온라인전시관 · CNSA &nbsp;|&nbsp; ver 3.4 (미션 모달 문구 수정)</footer>
 
 <script>
+(function(){
+  const _w = '%c⚠️  경고 / WARNING';
+  const _b = 'color:#dc2626;font-size:18px;font-weight:900;';
+  const _m = '%c\n이곳에서 데이터를 조작하면:\n'
+           + '  • 학교 계정(@cnsa.hs.kr)과 연동된 실명이 관리자에게 즉시 노출됩니다.\n'
+           + '  • 모든 조작 시도는 서버에 기록되며 자동 감지·교정됩니다.\n'
+           + '  • 적발 시 심사 제외 및 담임·생활부 통보 등 학교 규정에 따라 처리됩니다.\n\n'
+           + 'Any data manipulation attempt will be logged with your school account.\n'
+           + 'Violations result in disqualification and disciplinary action.\n';
+  const _s = 'color:#1e293b;font-size:13px;line-height:1.8;';
+  console.log(_w, _b);
+  console.log(_m, _s);
+
+  let _devOpen = false;
+  const _threshold = 160;
+  setInterval(function(){
+    const open = (window.outerWidth - window.innerWidth > _threshold)
+              || (window.outerHeight - window.innerHeight > _threshold);
+    if(open && !_devOpen){
+      _devOpen = true;
+      console.log(_w, _b);
+      console.log(_m, _s);
+    }
+    if(!open) _devOpen = false;
+  }, 1500);
+})();
+
 // Firebase Initialization
 const firebaseConfig = {
   apiKey: "AIzaSyBGwvzMxCG7J5LN1x21s88LT04iJhWdTMs",
