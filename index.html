@@ -2924,6 +2924,7 @@ function loadPenNameRequests() {
 }
 
 async function approvePenName(reqId, uid, newPenName) {
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   if(!confirm(`필명을 '${newPenName}'(으)로 변경 승인하시겠습니까?`)) return;
 
   try {
@@ -2978,6 +2979,7 @@ async function approvePenName(reqId, uid, newPenName) {
 }
 
 function rejectPenName(reqId) {
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   if(!confirm('해당 필명 변경 신청을 거부(취소)하시겠습니까?')) return;
   db.collection('penNameRequests').doc(reqId).update({
     status: 'rejected',
@@ -3000,6 +3002,7 @@ function setSiteMode(mode){
 }
 
 async function rebuildIndex() {
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   if(!confirm('모든 작품을 읽어 목차(Index) 문서를 새로 생성합니다. 시간이 걸릴 수 있습니다. 실행할까요?')) return;
   
   const btn = document.querySelector('button[onclick="rebuildIndex()"]');
@@ -3030,6 +3033,7 @@ async function rebuildIndex() {
 }
 
 async function archiveData() {
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   if(!confirm('해당 작업을 실행하면 DB에 복구불가능한 변화가 생깁니다. 실행합니까?')) return;
   const btn = document.getElementById('btn-archive');
   btn.disabled = true; btn.textContent = '아카이브 복사 중...';
@@ -3066,6 +3070,7 @@ async function archiveData() {
 }
 
 async function resetDB() {
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   if(!confirm('해당 작업을 실행하면 DB에 복구불가능한 변화가 생깁니다. 실행합니까?')) return;
   const promptText = prompt('초기화를 진행하려면 "초기화확인" 이라고 입력해주세요.');
   if(promptText !== '초기화확인') { toast('입력값이 일치하지 않아 취소되었습니다.', 'info'); return; }
@@ -3125,6 +3130,7 @@ function downloadCSV(rows, filename){
 }
 
 function downloadUsersDB(){
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   toast('사용자 DB 준비 중...','info');
   db.collection('users').get().then(snap=>{
     const rows=[['이메일','필명','가입일시']];
@@ -3139,6 +3145,7 @@ function downloadUsersDB(){
 }
 
 function downloadPostsDB(){
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   toast('응모작 DB 준비 중...','info');
   db.collection('posts').get().then(snap=>{
     const rows=[['필명','카테고리','제목','작품소개(비평은 원작)','작품본문','총반응수','댓글수']];
@@ -3158,6 +3165,7 @@ function downloadPostsDB(){
 }
 
 function downloadCritiquesDB(){
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   toast('비평 DB 준비 중...','info');
   db.collection('posts').where('docType', '==', 'critique').get().then(snap=>{
     const rows=[['비평대상글','비평문제목','필명','본문','총반응수','댓글수']];
@@ -3175,6 +3183,7 @@ function downloadCritiquesDB(){
 }
 
 async function downloadCommentsDB(){
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   toast('댓글 DB 준비 중...','info');
   try {
     const postsSnap=await db.collection('posts').get();
@@ -3283,6 +3292,7 @@ async function scanCheatPosts() {
 }
 
 async function fixOrphanIndex(){
+  if(!currentUserData || currentUserData.role !== 'admin') return;
   if(!confirm('posts 문서가 없는 인덱스 항목을 찾아 삭제합니다. 계속할까요?')) return;
   toast('인덱스 검사 중...','info');
   try {
