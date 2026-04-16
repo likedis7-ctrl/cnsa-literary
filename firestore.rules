@@ -16,77 +16,106 @@ service cloud.firestore {
       return !('role' in request.resource.data.diff(resource.data).affectedKeys());
     }
 
-    function isReactionOrCommentField() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['likes','tears','shocks','fears','likeCount','commentCount','commenters']);
+    // 반응 배열 1개에 대해 본인 uid만 추가·삭제됐는지 검증 (헬퍼)
+    function isValidArrayChange(newArr, oldArr, uid) {
+      let added   = newArr.removeAll(oldArr);
+      let removed = oldArr.removeAll(newArr);
+      return (added.size()   == 0 || (added.size()   == 1 && added[0]   == uid))
+          && (removed.size() == 0 || (removed.size() == 1 && removed[0] == uid));
+    }
+
+    // 반응·댓글 메타 필드만 수정하는지, 그리고 본인 uid만 배열에 추가/삭제하는지 검증
+    function isMetaOnlyUpdate() {
+      let oldD = resource.data;
+      let newD = request.resource.data;
+      let uid  = request.auth.uid;
+
+      // penName·commenters 제외 — 이 두 필드는 isMetaOnlyUpdate 경로로 변경 불가
+      let isOnlyMeta = newD.diff(oldD).affectedKeys()
+        .hasOnly(['likes','tears','shocks','fears','likeCount','commentCount']);
+
+      // likeCount = 배열 합계와 정확히 일치해야 함 (숫자 직접 조작 차단)
+      let expectedCount = newD.get('likes', []).size() + newD.get('tears', []).size()
+                        + newD.get('shocks',[]).size() + newD.get('fears', []).size();
+
+      // commentCount 는 ±1 이내만 허용
+      let c_diff = newD.get('commentCount', 0) - oldD.get('commentCount', 0);
+
+      return isOnlyMeta
+          && isValidArrayChange(newD.get('likes',  []), oldD.get('likes',  []), uid)
+          && isValidArrayChange(newD.get('tears',  []), oldD.get('tears',  []), uid)
+          && isValidArrayChange(newD.get('shocks', []), oldD.get('shocks', []), uid)
+          && isValidArrayChange(newD.get('fears',  []), oldD.get('fears',  []), uid)
+          && newD.get('likeCount', 0) == expectedCount
+          && c_diff >= -1 && c_diff <= 1;
     }
 
     // ── users ──────────────────────────────────────────────────────────────
-    // role 필드는 admin만 변경 가능
     match /users/{userId} {
       allow read: if isCnsaUser();
       allow create: if isCnsaUser()
                     && request.auth.uid == userId
-                    && (!('role' in request.resource.data) || request.resource.data.role == 'student');
+                    && (!('role' in request.resource.data) || request.resource.data.role == 'student')
+                    && (!('points' in request.resource.data) || request.resource.data.points == 0);
       allow update: if isCnsaUser()
                     && ((request.auth.uid == userId && roleNotChanged()) || isAdmin());
       allow delete: if isAdmin();
     }
 
-    // ── config (siteMode 등) ────────────────────────────────────────────────
-    // admin만 쓰기 가능 — 사이트 모드 무단 변경 차단
+    // ── config ─────────────────────────────────────────────────────────────
     match /config/{docId} {
       allow read: if isCnsaUser();
       allow write: if isAdmin();
     }
 
-    // ── indexes ─────────────────────────────────────────────────────────────
-    // update: cnsa 허용 (반응/댓글 카운트 반영)
-    // create/delete: admin 전용 — 목차 파괴 차단
+    // ── indexes ────────────────────────────────────────────────────────────
     match /indexes/{docId} {
       allow read: if isCnsaUser();
       allow update: if isCnsaUser();
       allow create, delete: if isAdmin();
     }
 
-    // ── posts ────────────────────────────────────────────────────────────────
-    // 삭제: 본인 또는 admin만 가능 — 타인 글 삭제 차단
-    // 수정: 본인/admin 또는 반응·댓글 카운트 필드만 변경하는 경우 허용
+    // ── posts ──────────────────────────────────────────────────────────────
     match /posts/{postId} {
       allow read: if isCnsaUser();
-      allow create: if isCnsaUser() && request.resource.data.uid == request.auth.uid;
+      allow create: if isCnsaUser()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.title.size() <= 50
+                    && request.resource.data.body.size()  <= 20000;
       allow update: if isCnsaUser()
-                    && (resource.data.uid == request.auth.uid || isAdmin() || isReactionOrCommentField());
-      allow delete: if isCnsaUser() && (resource.data.uid == request.auth.uid || isAdmin());
+                    && (resource.data.uid == request.auth.uid || isAdmin() || isMetaOnlyUpdate());
+      allow delete: if isCnsaUser()
+                    && (resource.data.uid == request.auth.uid || isAdmin());
 
-      // comments 서브컬렉션: 본인 댓글만 삭제 가능
+      // comments 서브컬렉션
       match /comments/{commentId} {
         allow read: if isCnsaUser();
-        allow create: if isCnsaUser() && request.resource.data.uid == request.auth.uid;
-        allow update: if isCnsaUser() && (resource.data.uid == request.auth.uid || isAdmin());
-        allow delete: if isCnsaUser() && (resource.data.uid == request.auth.uid || isAdmin());
+        allow create: if isCnsaUser()
+                      && request.resource.data.uid == request.auth.uid
+                      && request.resource.data.body.size() <= 500;
+        allow update: if isCnsaUser()
+                      && (resource.data.uid == request.auth.uid || isAdmin());
+        allow delete: if isCnsaUser()
+                      && (resource.data.uid == request.auth.uid || isAdmin());
       }
     }
 
-    // ── penNameRequests ──────────────────────────────────────────────────────
-    // 본인 uid로만 신청서 생성 가능 — 타인 명의 위조 차단
+    // ── penNameRequests ────────────────────────────────────────────────────
     match /penNameRequests/{reqId} {
       allow read: if isAdmin();
       allow create: if isCnsaUser() && request.resource.data.uid == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
-    // ── notifications ─────────────────────────────────────────────────────────
-    // 본인에게 온 알림만 읽기/수정/삭제 가능
+    // ── notifications ──────────────────────────────────────────────────────
     match /notifications/{notiId} {
-      allow read: if isCnsaUser() && resource.data.targetUid == request.auth.uid;
+      allow read:   if isCnsaUser() && resource.data.targetUid == request.auth.uid;
       allow create: if isCnsaUser();
       allow update: if isCnsaUser() && resource.data.targetUid == request.auth.uid;
       allow delete: if (isCnsaUser() && resource.data.targetUid == request.auth.uid) || isAdmin();
     }
 
-    // ── archive_2026 ──────────────────────────────────────────────────────────
-    // admin만 쓰기 가능
+    // ── archive_2026 ───────────────────────────────────────────────────────
     match /archive_2026/{docId} {
       allow read: if isCnsaUser();
       allow write: if isAdmin();
@@ -96,8 +125,7 @@ service cloud.firestore {
       }
     }
 
-    // ── fallback ──────────────────────────────────────────────────────────────
-    // 위에서 명시되지 않은 컬렉션은 admin만 접근
+    // ── fallback ───────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if isAdmin();
     }
