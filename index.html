@@ -638,6 +638,17 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <h2>🔄 필명 변경 신청 관리</h2>
       <div id="admin-penname-requests"><p class="empty-msg">불러오는 중...</p></div>
     </div>
+    <div class="admin-section" style="background:#1a0a0a; border-color:#7f1d1d;">
+      <h2 style="color:#fca5a5;">☢️ 특정 유저 데이터 일괄 삭제</h2>
+      <p class="admin-desc" style="color:#fca5a5; opacity:.8;">해당 유저가 작성한 <strong style="color:#f87171;">모든 글·비평·댓글·알림</strong>을 일괄 삭제합니다. 복구 불가합니다.</p>
+      <div style="display:flex; gap:.6rem; align-items:center; flex-wrap:wrap;">
+        <input id="nuke-penname-input" type="text" placeholder="삭제할 유저의 필명 입력"
+          style="flex:1; min-width:180px; padding:.65rem 1rem; border:1.5px solid #7f1d1d; border-radius:8px; background:#2d0a0a; color:#fca5a5; font-family:var(--font-sans); font-size:.9rem;"
+          onkeydown="if(event.key==='Enter') nukeUser()">
+        <button onclick="nukeUser()" style="padding:.65rem 1.25rem; border-radius:8px; border:none; background:#dc2626; color:white; font-family:var(--font-sans); font-size:.88rem; font-weight:600; cursor:pointer; white-space:nowrap;">🗑️ 싹쓸이 삭제</button>
+      </div>
+      <div id="nuke-result" style="margin-top:.75rem;"></div>
+    </div>
     <div class="admin-section" style="background:#fff5f5; border-color:#fecaca;">
       <h2>🚨 반응 수 부정행위 스캔</h2>
       <p class="admin-desc" style="color:var(--ink2);">likeCount와 실제 반응 배열 합계를 비교하고, 존재하지 않는 uid를 검증합니다. <strong style="color:var(--red);">조작이 감지되면 자동으로 교정합니다.</strong></p>
@@ -3201,6 +3212,93 @@ async function downloadCommentsDB(){
   } catch(e){ toast('오류: '+e.message,'error'); }
 }
 
+
+async function nukeUser() {
+  if(!currentUserData || currentUserData.role !== 'admin') return;
+  const penName = ($('nuke-penname-input').value || '').trim();
+  if(!penName) { toast('필명을 입력해주세요.', 'error'); return; }
+
+  const resultEl = $('nuke-result');
+  resultEl.innerHTML = '';
+
+  const userSnap = await db.collection('users').where('penName', '==', penName).get();
+  if(userSnap.empty) { toast(`'${penName}' 필명의 유저를 찾을 수 없습니다.`, 'error'); return; }
+
+  const targetDoc  = userSnap.docs[0];
+  const targetUid  = targetDoc.id;
+  const targetData = targetDoc.data();
+
+  if(targetData.role === 'admin') { toast('관리자 계정은 삭제할 수 없습니다.', 'error'); return; }
+  if(targetUid === currentUser.uid) { toast('본인 계정은 삭제할 수 없습니다.', 'error'); return; }
+
+  if(!confirm(`[경고] '${penName}' (${targetData.email}) 유저의 모든 글·비평·댓글·알림을 영구 삭제합니다.\n\n이 작업은 복구가 불가능합니다. 계속하시겠습니까?`)) return;
+  if(prompt('최종 확인: 삭제할 필명을 다시 입력하세요.') !== penName) {
+    toast('입력값이 일치하지 않아 취소됐습니다.', 'info'); return;
+  }
+
+  const btn = document.querySelector('button[onclick="nukeUser()"]');
+  if(btn) { btn.disabled = true; btn.textContent = '삭제 중...'; }
+  toast('데이터 삭제 중...', 'info');
+
+  try {
+    const [postsSnap, allPostsSnap, notisSnap] = await Promise.all([
+      db.collection('posts').where('uid', '==', targetUid).get(),
+      db.collection('posts').get(),
+      db.collection('notifications').where('targetUid', '==', targetUid).get()
+    ]);
+
+    const indexRef = db.collection('indexes').doc('posts');
+    let batch = db.batch();
+    let count = 0;
+    const flush = async () => { await batch.commit(); batch = db.batch(); count = 0; };
+
+    // 1. 본인 글·비평 삭제 + 인덱스 제거
+    for(const doc of postsSnap.docs) {
+      const commentsSnap = await doc.ref.collection('comments').get();
+      commentsSnap.forEach(c => { batch.delete(c.ref); if(++count >= 490) flush(); });
+      batch.delete(doc.ref);
+      batch.update(indexRef, { [`posts.${doc.id}`]: firebase.firestore.FieldValue.delete() });
+      count += 2; if(count >= 490) await flush();
+    }
+
+    // 2. 다른 글에 달린 본인 댓글 삭제
+    for(const postDoc of allPostsSnap.docs) {
+      const myComments = await postDoc.ref.collection('comments').where('uid', '==', targetUid).get();
+      for(const c of myComments.docs) {
+        batch.delete(c.ref);
+        batch.update(postDoc.ref, { commentCount: firebase.firestore.FieldValue.increment(-1) });
+        batch.update(indexRef, { [`posts.${postDoc.id}.commentCount`]: firebase.firestore.FieldValue.increment(-1) });
+        count += 3; if(count >= 490) await flush();
+      }
+    }
+
+    // 3. 본인 수신 알림 삭제
+    notisSnap.forEach(n => { batch.delete(n.ref); if(++count >= 490) flush(); });
+
+    if(count > 0) await batch.commit();
+
+    const stats = {
+      posts: postsSnap.size,
+      notis: notisSnap.size
+    };
+
+    resultEl.innerHTML = `<div style="background:#0a1a0a;border:1px solid #166534;border-radius:8px;padding:.75rem 1rem;margin-top:.25rem;">
+      <strong style="color:#4ade80;">✅ '${escHtml(penName)}' 삭제 완료</strong>
+      <div style="font-size:.82rem;color:#86efac;margin-top:.3rem;">
+        • 글·비평 ${stats.posts}개 삭제<br>
+        • 알림 ${stats.notis}개 삭제<br>
+        • 타 글에 작성된 댓글 및 인덱스 정리 완료
+      </div>
+    </div>`;
+    toast(`'${penName}' 데이터 삭제 완료`, 'success');
+    _invalidateIndex();
+    $('nuke-penname-input').value = '';
+  } catch(e) {
+    toast('삭제 오류: ' + e.message, 'error');
+  }
+
+  if(btn) { btn.disabled = false; btn.textContent = '🗑️ 싹쓸이 삭제'; }
+}
 
 async function scanCheatPosts() {
   if(!currentUserData || currentUserData.role !== 'admin') return;
