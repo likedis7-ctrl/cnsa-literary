@@ -81,7 +81,15 @@ service cloud.firestore {
       allow create: if isCnsaUser()
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.title.size() <= 50
-                    && request.resource.data.body.size()  <= 20000;
+                    && request.resource.data.body.size()  <= 20000
+                    && (request.resource.data.get('category','') != '산문'
+                        || request.resource.data.body.size() >= 3000)
+                    && request.resource.data.keys().hasOnly([
+                         'uid','penName','category','title','intro','body',
+                         'likeCount','likes','tears','shocks','fears',
+                         'commentCount','commenters','createdAt',
+                         'docType','targetPostId','targetPostTitle'
+                       ]);
       allow update: if isCnsaUser()
                     && (resource.data.uid == request.auth.uid || isAdmin() || isMetaOnlyUpdate());
       allow delete: if isCnsaUser()
@@ -92,7 +100,10 @@ service cloud.firestore {
         allow read: if isCnsaUser();
         allow create: if isCnsaUser()
                       && request.resource.data.uid == request.auth.uid
-                      && request.resource.data.body.size() <= 500;
+                      && request.resource.data.body.size() <= 500
+                      && request.resource.data.keys().hasOnly([
+                           'uid','penName','body','createdAt','likes','likeCount'
+                         ]);
         allow update: if isCnsaUser()
                       && (resource.data.uid == request.auth.uid || isAdmin());
         allow delete: if isCnsaUser()

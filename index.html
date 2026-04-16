@@ -2214,7 +2214,7 @@ function renderPost(postId){
     
     const bodyEl = document.getElementById('post-body-content');
     if(bodyEl){
-      const raw = p.body || '';
+      const raw = sanitizeHTML(p.body || '');
       const tmp = document.createElement('div');
       tmp.innerHTML = raw;
       bodyEl.innerHTML = tmp.innerHTML
