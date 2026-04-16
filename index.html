@@ -638,6 +638,14 @@ footer{background:#B3AB8D;color:rgba(26,23,20,.55);text-align:center;padding:1.5
       <h2>🔄 필명 변경 신청 관리</h2>
       <div id="admin-penname-requests"><p class="empty-msg">불러오는 중...</p></div>
     </div>
+    <div class="admin-section" style="background:#fff5f5; border-color:#fecaca;">
+      <h2>🚨 반응 수 부정행위 스캔</h2>
+      <p class="admin-desc" style="color:var(--ink2);">likeCount와 실제 반응 배열 합계를 비교하고, 존재하지 않는 uid를 검증합니다. <strong style="color:var(--red);">조작이 감지되면 자동으로 교정합니다.</strong></p>
+      <div class="admin-btn-group">
+        <button class="admin-dl-btn" onclick="scanCheatPosts()" style="border-color:var(--red);color:var(--red);">🔍 부정행위 스캔 및 자동 교정<span>likeCount 조작·가짜 uid 감지 후 데이터 정상화</span></button>
+      </div>
+      <div id="scan-result" style="margin-top:1rem;"></div>
+    </div>
     <div class="admin-section">
       <h2>🔧 인덱스 정리</h2>
       <div class="admin-btn-group">
@@ -3184,6 +3192,95 @@ async function downloadCommentsDB(){
   } catch(e){ toast('오류: '+e.message,'error'); }
 }
 
+
+async function scanCheatPosts() {
+  if(!currentUserData || currentUserData.role !== 'admin') return;
+  const btn = document.querySelector('button[onclick="scanCheatPosts()"]');
+  const resultEl = document.getElementById('scan-result');
+  if(btn) { btn.disabled = true; btn.textContent = '스캔 중...'; }
+  if(resultEl) resultEl.innerHTML = '';
+  toast('부정행위 스캔을 시작합니다...', 'info');
+
+  try {
+    const [postsSnap, usersSnap, indexDoc] = await Promise.all([
+      db.collection('posts').get(),
+      db.collection('users').get(),
+      db.collection('indexes').doc('posts').get()
+    ]);
+
+    const realUids = new Set(usersSnap.docs.map(d => d.id));
+    const cheats = [];
+    const fixBatch = [];
+
+    for(const doc of postsSnap.docs) {
+      const p = doc.data();
+      const likes   = p.likes   || [];
+      const tears   = p.tears   || [];
+      const shocks  = p.shocks  || [];
+      const fears   = p.fears   || [];
+      const allUids = [...likes, ...tears, ...shocks, ...fears];
+
+      const realCount = likes.length + tears.length + shocks.length + fears.length;
+      const fakeUids  = allUids.filter(uid => !realUids.has(uid));
+      const countMismatch = p.likeCount !== realCount;
+
+      if(!countMismatch && fakeUids.length === 0) continue;
+
+      const issues = [];
+      if(countMismatch) issues.push(`likeCount 불일치 (표기: ${p.likeCount}, 실제: ${realCount})`);
+      if(fakeUids.length > 0) issues.push(`가짜 uid ${fakeUids.length}개: ${fakeUids.slice(0,3).join(', ')}${fakeUids.length>3?'...':''}`);
+
+      cheats.push({ id: doc.id, title: p.title, penName: p.penName, issues, fakeUids, realCount });
+
+      const cleanedLikes  = likes.filter(u => realUids.has(u));
+      const cleanedTears  = tears.filter(u => realUids.has(u));
+      const cleanedShocks = shocks.filter(u => realUids.has(u));
+      const cleanedFears  = fears.filter(u => realUids.has(u));
+      const correctedCount = cleanedLikes.length + cleanedTears.length + cleanedShocks.length + cleanedFears.length;
+
+      fixBatch.push({ ref: doc.ref, id: doc.id, cleanedLikes, cleanedTears, cleanedShocks, cleanedFears, correctedCount });
+    }
+
+    if(cheats.length === 0) {
+      toast('모든 작품 데이터가 정상입니다.', 'success');
+      if(resultEl) resultEl.innerHTML = `<p style="color:var(--prose);font-weight:500;margin-top:.5rem;">✅ 이상 없음 — ${postsSnap.size}개 작품 모두 정상</p>`;
+    } else {
+      let batch = db.batch();
+      let count = 0;
+      const indexRef = db.collection('indexes').doc('posts');
+
+      for(const fix of fixBatch) {
+        batch.update(fix.ref, {
+          likes: fix.cleanedLikes, tears: fix.cleanedTears,
+          shocks: fix.cleanedShocks, fears: fix.cleanedFears,
+          likeCount: fix.correctedCount
+        });
+        batch.update(indexRef, { [`posts.${fix.id}.likeCount`]: fix.correctedCount });
+        count += 2;
+        if(count >= 490) { await batch.commit(); batch = db.batch(); count = 0; }
+      }
+      if(count > 0) await batch.commit();
+
+      let html = `<div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.5rem;">`;
+      cheats.forEach(c => {
+        html += `<div style="background:#fff0f0;border:1px solid #fecaca;border-radius:8px;padding:.75rem 1rem;">
+          <strong style="color:var(--red);">🚨 ${escHtml(c.title)}</strong>
+          <span style="color:var(--ink3);font-size:.82rem;margin-left:.5rem;">by ${escHtml(c.penName)}</span>
+          <div style="font-size:.82rem;color:var(--ink2);margin-top:.3rem;">${c.issues.map(i=>`• ${escHtml(i)}`).join('<br>')}</div>
+          <div style="font-size:.8rem;color:var(--prose);margin-top:.3rem;">→ 자동 교정 완료 (likeCount: ${c.realCount - c.fakeUids.length})</div>
+        </div>`;
+      });
+      html += `</div>`;
+      if(resultEl) resultEl.innerHTML = html;
+      toast(`부정행위 ${cheats.length}건 감지 및 자동 교정 완료`, 'error');
+      _invalidateIndex();
+    }
+  } catch(e) {
+    toast('스캔 오류: ' + e.message, 'error');
+  }
+
+  if(btn) { btn.disabled = false; btn.innerHTML = '🔍 부정행위 스캔 및 자동 교정<span>likeCount 조작·가짜 uid 감지 후 데이터 정상화</span>'; }
+}
 
 async function fixOrphanIndex(){
   if(!confirm('posts 문서가 없는 인덱스 항목을 찾아 삭제합니다. 계속할까요?')) return;
